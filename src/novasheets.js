@@ -1,5 +1,5 @@
 function debug() {
-    $('body').append(arguments[0]+'<br>');
+    $('body').append(arguments[0] + '<br>');
 }
 
 function parseNovaSheets() {
@@ -16,9 +16,31 @@ function parseNovaSheets() {
         req.open("GET", file, false);
         req.send();
         let response = req.responseText;
-        stylesheetContents.push(response.toString().replace(/\n/g, ' '));
+        stylesheetContents.push(response.toString());
     }
 
-    console.log(stylesheetContents)
+    for (let s in stylesheetContents) {
+
+        let lines = stylesheetContents[s].split('\n');
+        let varLines = [];
+        let styles = [];
+
+        for (let i in lines) {
+            if (lines[i].startsWith('@var')) {
+                varLines.push(i);
+            }
+        }
+
+        for (let i in varLines) {
+            let currentLine = varLines[i];
+            while (currentLine < varLines[i+1]) {
+                styles.push(lines);
+                currentLine++;//end
+            }
+        }
+
+        console.log(lines,varLines,styles)
+
+    }
 
 }
