@@ -1,8 +1,8 @@
-@var test1:
+@var test1
     text-align: center;
     color: #eee;
     background: green;
-@var test2:
+@var test2
     text-align: left;
     color: #222;
     background: blue;

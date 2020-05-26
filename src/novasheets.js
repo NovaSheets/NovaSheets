@@ -1,5 +1,10 @@
-function debug() {
-    $('body').append(arguments[0] + '<br>');
+String.prototype.hashCode = function () {
+    let hash = 0;
+    for (let i = 0; i < this.length; i++) {
+        var character = this.charCodeAt(i);
+        hash = ((hash << 5) - hash) + character;
+    }
+    return hash.toString(16);
 }
 
 function parseNovaSheets() {
@@ -21,32 +26,42 @@ function parseNovaSheets() {
         stylesheetContents.push(response.toString());
     }
 
-    // Loop through each sheet, parsing the NovaSheet Styles
+    // Loop through each sheet, parsing the NovaSheet styles
     for (let s in stylesheetContents) {
 
         let lines = stylesheetContents[s].split('\n');
-        let varLines = [];
+        let customVars = [];
         let styles = {};
+        const varDeclEnding = lines.indexOf('---');
+        const cssContent = lines.slice(varDeclEnding + 1).join('\n');
 
         // Generate a list of lines that start variable declarations
         for (let i in lines) {
             if (lines[i].startsWith('@var')) {
-                varLines.push({ line: i, name: lines[i].replace(/@var (.+):?/, '$1') });
+                customVars.push({ line: Number(i), name: lines[i].replace(/@var (.+)$/, '$1') });
             }
         }
 
-        let varDeclEnding = lines.indexOf('----');
         // For each variable declaration, add styles to object.
-        for (let i in varLines) {
-            let currentLine = varLines[i].line;
-            let currentStyle = varLines[i].name;
-            while (currentLine < varLines[i + 1] && currentLine < varDeclEnding) {
+        for (let i in customVars) {
+            let currentLine = customVars[i].line + 1;
+            let currentStyle = customVars[i].name;
+            console.log("A>", i, "curLn", currentLine, " varlines:", customVars[i].line, customVars[i + 1]?.line, " end=", varDeclEnding);//debug
+            while (currentLine < (customVars[i + 1]?.line ?? varDeclEnding)) {
+                if (!styles[currentStyle]) styles[currentStyle] = "";
                 styles[currentStyle] += lines[currentLine];
                 currentLine++;//end
             }
         }
 
-        console.log(lines, varLines, styles)
+        let styleElem = document.createElement('style');
+        styleElem.dataset.hash = cssContent.hashCode();
+        styleElem.innerHTML = (`
+            ${cssContent}
+        `);
+        document.head.appendChild(styleElem);
+
+        console.log("lines=", lines, " customVars=", customVars, " styles=", styles)//debug
 
     }
 
