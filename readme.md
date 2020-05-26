@@ -1,3 +1,5 @@
 # NovaSheets
 
-A simple, lightweight CSS preprocessor.
+A simple to use, lightweight CSS preprocessor.
+
+Currently in very early development.
