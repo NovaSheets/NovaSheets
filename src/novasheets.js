@@ -54,11 +54,18 @@ function parseNovaSheets() {
             }
         }
 
+        // Convert NovaSheets styles to CSS
+        let cssOutput = cssContent;
+        for (let i in customVars) {
+            cssOutput = cssOutput.replaceAll(`$(${customVars[i].name})`, styles[customVars[i].name] ?? '');
+        }
+
+        // Load converted styles to page
         let styleElem = document.createElement('style');
+        styleElem.dataset.source = fileNames[i];
+        styleElem.dataset.sourcetype = "text/nss";
         styleElem.dataset.hash = cssContent.hashCode();
-        styleElem.innerHTML = (`
-            ${cssContent}
-        `);
+        styleElem.innerHTML = cssContent;
         document.head.appendChild(styleElem);
 
         console.log("lines=", lines, " customVars=", customVars, " styles=", styles)//debug
