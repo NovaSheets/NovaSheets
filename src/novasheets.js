@@ -37,7 +37,7 @@ function parseNovaSheets() {
 
         // Generate a list of lines that start variable declarations
         for (let i in lines) {
-            if (lines[i].startsWith('@var')) {
+            if (lines[i].match(/ *@var /)) {
                 customVars.push({ line: Number(i), name: lines[i].replace(/@var (.+)$/, '$1') });
             }
         }
@@ -47,22 +47,22 @@ function parseNovaSheets() {
             let currentLine = customVars[i].line + 1;
             let currentStyle = customVars[i].name;
             while (currentLine < (customVars[i + 1]?.line ?? varDeclEnding)) {
+                if (currentLine.match(/ *@var /)) break;
                 if (!styles[currentStyle]) styles[currentStyle] = "";
                 styles[currentStyle] += lines[currentLine];
-                currentLine++;//end
+                currentLine++;
             }
         }
 
         // Convert NovaSheets styles to CSS
         let cssOutput = cssContent;
         for (let i in customVars) {
-            cssOutput = cssOutput.replace(new RegExp('$(' + customVars[i].name + ')', 'g'), styles[customVars[i].name] || '');
+            cssOutput = cssOutput.replace(new RegExp('$\\(' + customVars[i].name + '\\)', 'g'), styles[customVars[i].name] || '');
         }
 
         // Load converted styles to page
         let styleElem = document.createElement('style');
-        styleElem.dataset.source = fileNames[i];
-        styleElem.dataset.sourcetype = "text/nss";
+        styleElem.dataset.source = fileNames[s].split('/')[-2];
         styleElem.dataset.hash = cssContent.hashCode();
         styleElem.innerHTML = cssContent;
         document.head.appendChild(styleElem);
