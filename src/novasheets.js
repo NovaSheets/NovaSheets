@@ -62,9 +62,8 @@ function parseNovaSheets() {
 
         // Load converted styles to page
         let styleElem = document.createElement('style');
-        styleElem.dataset.source = fileNames[s].split('/')[-2];
-        styleElem.dataset.hash = cssContent.hashCode();
-        styleElem.innerHTML = cssContent;
+        styleElem.dataset.hash = cssOutput.hashCode();
+        styleElem.innerHTML = cssOutput;
         document.head.appendChild(styleElem);
 
     }
