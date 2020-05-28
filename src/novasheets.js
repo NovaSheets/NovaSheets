@@ -47,7 +47,7 @@ function parseNovaSheets() {
             let currentLine = customVars[i].line + 1;
             let currentStyle = customVars[i].name;
             while (currentLine < (customVars[i + 1]?.line ?? varDeclEnding)) {
-                if (currentLine.match(/ *@var /)) break;
+                if (lines[currentLine].match(/ *@var /)) break;
                 if (!styles[currentStyle]) styles[currentStyle] = "";
                 styles[currentStyle] += lines[currentLine];
                 currentLine++;
@@ -57,7 +57,7 @@ function parseNovaSheets() {
         // Convert NovaSheets styles to CSS
         let cssOutput = cssContent;
         for (let i in customVars) {
-            cssOutput = cssOutput.replace(new RegExp('$\\(' + customVars[i].name + '\\)', 'g'), styles[customVars[i].name] || '');
+            cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join( styles[customVars[i].name] || '');
         }
 
         // Load converted styles to page
