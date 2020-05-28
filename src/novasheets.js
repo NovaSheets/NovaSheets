@@ -46,7 +46,6 @@ function parseNovaSheets() {
         for (let i in customVars) {
             let currentLine = customVars[i].line + 1;
             let currentStyle = customVars[i].name;
-            console.log("A>", i, "curLn", currentLine, " varlines:", customVars[i].line, customVars[i + 1]?.line, " end=", varDeclEnding);//debug
             while (currentLine < (customVars[i + 1]?.line ?? varDeclEnding)) {
                 if (!styles[currentStyle]) styles[currentStyle] = "";
                 styles[currentStyle] += lines[currentLine];
@@ -57,7 +56,7 @@ function parseNovaSheets() {
         // Convert NovaSheets styles to CSS
         let cssOutput = cssContent;
         for (let i in customVars) {
-            cssOutput = cssOutput.replaceAll(`$(${customVars[i].name})`, styles[customVars[i].name] ?? '');
+            cssOutput = cssOutput.replace(new RegExp('$(' + customVars[i].name + ')', 'g'), styles[customVars[i].name] || '');
         }
 
         // Load converted styles to page
@@ -67,8 +66,6 @@ function parseNovaSheets() {
         styleElem.dataset.hash = cssContent.hashCode();
         styleElem.innerHTML = cssContent;
         document.head.appendChild(styleElem);
-
-        console.log("lines=", lines, " customVars=", customVars, " styles=", styles)//debug
 
     }
 
