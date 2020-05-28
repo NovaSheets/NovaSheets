@@ -1,20 +1,29 @@
-
 <!doctype html>
 <html>
 
 <head>
     <title>NovaSheets Testing</title>
-    <link rel="novasheet" href="style.nss">
     <script src="../src/novasheets.js"></script>
+    <link rel="novasheet" href="style.nss">
+    <template type="novasheet">
+        @var shading
+            linear-gradient(90deg, #55f, #5ff);
+        ---
+        .shaded {background: $(shading); color: white;}
+    </template>
 </head>
 
 <body>
-    <h2 class="title">Lorem ipsum</h2>
+    <h2 class="title">External stylesheet</h2>
     <div class="content">
         <p class="p-styled">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
     </div>
     <div class="content">
-        <p>Mauris at congue risus, non interdum urna.</p>
+        <p>Cras eu eros feugiat, aliquam nunc eu, interdum lorem.</p>
+    </div>
+    <h2 class="title">Internal stylesheet</h2>
+    <div class="shaded">
+        <p>Maecenas iaculis interdum tortor, ac gravida ipsum consequat vel.</p>
     </div>
 </body>
 

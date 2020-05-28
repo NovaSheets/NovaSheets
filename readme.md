@@ -21,11 +21,11 @@ External stylesheets are imported similarly to regular CSS stylesheets but with 
 <link rel="novasheet" href="style.css">
 ```
 
-Internal stylesheets are declared by setting the `type` attribute of a `style` tag to `text/novasheets`;
+Internal stylesheets are declared by setting the `type` attribute of a `template` tag to `novasheet`:
 ```
-<style type="text/novasheets">
+<template type="novasheet">
 /* ... */
-</style>
+</template>
 ```
 
 # Usage

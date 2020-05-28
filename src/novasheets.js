@@ -25,7 +25,7 @@ function parseNovaSheets() {
         stylesheetContents.push(response.toString());
     }
 
-    let inline = document.querySelectorAll('style[type="text/novasheets"]');
+    let inline = document.querySelectorAll('template[type="novasheet"]');
     for (let contents of inline) {
         stylesheetContents.push(contents.innerHTML);
     }
@@ -36,15 +36,20 @@ function parseNovaSheets() {
         let lines = contents.split('\n');
         let customVars = [];
         let styles = {};
-        const varDeclEnding = lines.indexOf('---');
-        const cssContent = lines.slice(varDeclEnding + 1).join('\n');
 
         // Generate a list of lines that start variable declarations
         for (let i in lines) {
+            lines[i] = lines[i].replace(/^(.*?) \/\/.+$/, '$1')
+            if (lines[i].match(/ *--- */)) {
+                lines[i] = "---"
+            }
             if (lines[i].match(/ *@var /)) {
-                customVars.push({ line: Number(i), name: lines[i].replace(/@var (.+)$/, '$1') });
+                customVars.push({ line: Number(i), name: lines[i].replace(/ *@var (.+?)(?: \/\/.*)?$/, '$1') });
             }
         }
+
+        const varDeclEnding = lines.indexOf('---');
+        const cssContent = lines.slice(varDeclEnding + 1).join('\n');
 
         // For each variable declaration, add styles to object.
         for (let i in customVars) {
@@ -62,7 +67,7 @@ function parseNovaSheets() {
         let cssOutput = cssContent;
         for (let i in customVars) {
             cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join(styles[customVars[i].name] || '')
-            cssOutput = cssOutput.replace(/; *;/g, ';').replace(/ +/g, ' ').replace(/^(.*?) \/\/.+$/m, '$1');
+            cssOutput = cssOutput.replace(/; *;/g, ';').replace(/ +/g, ' ');
         }
 
         // Load converted styles to page
