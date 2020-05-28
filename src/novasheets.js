@@ -3,13 +3,13 @@ String.prototype.hashCode = function () {
     for (let i = 0; i < this.length; i++) {
         hash = ((hash << 5) - hash) + this.charCodeAt(i);
     }
-    return hash.toString(16);
+    return Math.abs(hash).toString(16);
 }
 
 function parseNovaSheets() {
 
     // Generate list of NovaSheet files
-    const sheets = document.querySelectorAll('link[rel="novasheet"]');
+    let sheets = document.querySelectorAll('link[rel="novasheet"]');
     let fileNames = [];
     for (let i of sheets) {
         fileNames.push(i.href);
@@ -25,10 +25,15 @@ function parseNovaSheets() {
         stylesheetContents.push(response.toString());
     }
 
-    // Loop through each sheet, parsing the NovaSheet styles
-    for (let s in stylesheetContents) {
+    let inline = document.querySelectorAll('style[type="text/novasheets"]');
+    for (let contents of inline) {
+        stylesheetContents.push(contents.innerHTML);
+    }
 
-        let lines = stylesheetContents[s].split('\n');
+    // Loop through each sheet, parsing the NovaSheet styles
+    for (let contents of stylesheetContents) {
+
+        let lines = contents.split('\n');
         let customVars = [];
         let styles = {};
         const varDeclEnding = lines.indexOf('---');
@@ -56,14 +61,15 @@ function parseNovaSheets() {
         // Convert NovaSheets styles to CSS
         let cssOutput = cssContent;
         for (let i in customVars) {
-            cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join(styles[customVars[i].name] || '');
+            cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join(styles[customVars[i].name] || '')
+            cssOutput = cssOutput.replace(/; *;/g, ';').replace(/ +/g, ' ').replace(/^(.*?) \/\/.+$/m, '$1');
         }
 
         // Load converted styles to page
         let styleElem = document.createElement('style');
         styleElem.dataset.hash = cssOutput.hashCode();
         styleElem.innerHTML = cssOutput;
-        document.head.appendChild(styleElem);
+        (document.head || document.body).appendChild(styleElem);
 
     }
 
