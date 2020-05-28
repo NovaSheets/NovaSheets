@@ -1,8 +1,7 @@
 String.prototype.hashCode = function () {
     let hash = 0;
     for (let i = 0; i < this.length; i++) {
-        var character = this.charCodeAt(i);
-        hash = ((hash << 5) - hash) + character;
+        hash = ((hash << 5) - hash) + this.charCodeAt(i);
     }
     return hash.toString(16);
 }
@@ -57,7 +56,7 @@ function parseNovaSheets() {
         // Convert NovaSheets styles to CSS
         let cssOutput = cssContent;
         for (let i in customVars) {
-            cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join( styles[customVars[i].name] || '');
+            cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join(styles[customVars[i].name] || '');
         }
 
         // Load converted styles to page
@@ -70,6 +69,7 @@ function parseNovaSheets() {
 
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+// Parse NovaSheets styles on page load
+document.addEventListener("DOMContentLoaded", function () {
     parseNovaSheets();
-  });
+});
