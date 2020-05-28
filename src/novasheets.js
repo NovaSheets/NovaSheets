@@ -69,3 +69,7 @@ function parseNovaSheets() {
     }
 
 }
+
+document.addEventListener("DOMContentLoaded", function() {
+    parseNovaSheets();
+  });
