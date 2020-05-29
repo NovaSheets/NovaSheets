@@ -13,7 +13,7 @@ To install NovaSheets, just the following script tag to your HTML document:
 <script src="https://github.com/Nixinova/NovaSheets/raw/master/src/novasheets.js">
 ```
 
-Note that the above code is subject to change at any time. Check the releases section for a static code URL or a downloadable file; the current version is **0.1.0**.
+Note that the above code is subject to change at any time. Check the releases section for a static code URL or a downloadable file; the current version is **0.1.1**.
 
 # Loading
 NovaSheets styles can be loaded from both external and internal stylesheets.
