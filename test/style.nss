@@ -7,14 +7,16 @@
     display: grid; // default
 @var border-size
     1px
-@var theme-color
+@var theme color
     #7f5d4a
+@var border
+    $(border-size) dotted $(theme color) // use the above variables
 @var base-font-size
     2em
 ---
-body {$(grid); border: $(border-size) solid $(theme-color); padding: 2em;}
-.title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border-size) dotted $(theme-color); $(transition);}
+body {$(grid); border: $(border); padding: 2em;}
+.title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border); $(transition);}
 .title:hover {font-size: calc( $(base-font-size) * 1.25 )}
 .content {padding: 2em;}
 .content p {font-family: sans-serif;}
-.content .p-styled {color: $(theme-color);}
+.content .p-styled {color: $(theme color);}

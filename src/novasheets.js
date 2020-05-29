@@ -18,11 +18,15 @@ function parseNovaSheets() {
     // Generate contents of each sheet
     let stylesheetContents = [];
     for (let file of fileNames) {
-        let req = new XMLHttpRequest();
-        req.open("GET", file, false);
-        req.send();
-        let response = req.responseText;
-        stylesheetContents.push(response.toString());
+        try {
+            let req = new XMLHttpRequest();
+            req.open("GET", file, false);
+            req.send();
+            let response = req.responseText;
+            stylesheetContents.push(response.toString());
+        } catch (error) {
+            console.error(`NovaSheets parsing failed: File "${file}" cannot be accessed.`);
+        }
     }
 
     let inline = document.querySelectorAll('template[type="novasheet"]');
@@ -67,15 +71,17 @@ function parseNovaSheets() {
 
         // Convert NovaSheets styles to CSS
         let cssOutput = cssContent;
-        for (let i in customVars) {
-            cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join(styles[customVars[i].name] || '');
-            cssOutput = cssOutput.replace(/; *;/g, ';').replace(/ +/g, ' ');
+        while (cssOutput.indexOf('$(') > -1) {
+            for (let i in customVars) {
+                cssOutput = cssOutput.split('$(' + customVars[i].name + ')').join(styles[customVars[i].name] || '');
+            }
         }
+        cssOutput = cssOutput.replace(/; *;/g, ';').replace(/ +/g, ' ');
 
         // Load converted styles to page
         let styleElem = document.createElement('style');
         styleElem.dataset.hash = cssOutput.hashCode();
-        styleElem.innerHTML = cssOutput;
+        styleElem.innerHTML = '\n' + cssOutput + '\n';
         (document.head || document.body).appendChild(styleElem);
 
     }
