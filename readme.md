@@ -47,15 +47,17 @@ NovaSheets lets you declare variables in the front matter (the contents above th
     text-align: left;
     background: aqua;
     color: #222;
+@var margin
+    1em
 ---
-div.lime {margin: 1em; $(test1)}
-div.aqua {margin: 2em; $(test2)}
+div.lime {margin: $(margin); $(style1)}
+div.aqua {$(style2)}
 ```
 
 **Output**:
 ```
 div.lime {margin: 1em; text-align: center; background: lime; color: #eee;}
-div.aqua {margin: 2em; text-align: left; background: aqua; color: #222;}
+div.aqua {text-align: left; background: aqua; color: #222;}
 ```
 
 ## Syntax
@@ -72,8 +74,11 @@ Variables are referenced using a dollar sign (`$`) followed by the variable name
 
 ### Comments
 
-NovaSheets implements single-line comments using double slashes (`//`). Note that the slashes must be prefaced with a space (` `) to prevent URLs being treated as comments. For instance, `@var themeColor1 // the main theme color` will compile to `@var themeColor1` and `body {text-align: left;} // change if needed` compiles to `body {text-align: left;}` in the output CSS.
+NovaSheets implements single-line comments using double slashes (`//`). Note that the slashes must be prefaced with a space (` `) to prevent URLs being treated as comments. For instance, `@var themeColor1 // the main theme color`, will compile to `@var themeColor1`, and `body {text-align: left;} // change if needed`, compiles to `body {text-align: left;}` in the output CSS.
 
 ### Whitespace
 
 Newlines in the front matter and redundant spaces anywhere in the document are removed by the preprocessor in the output CSS.
+
+# VSCode extension
+A VSCode extension for NovaSheets is available at repository (NovaSheets-vscode)[https://github.com/Nixinova/NovaSheets-vscode]. The extension only works for extensions `.nss` and `.nss.txt`.
