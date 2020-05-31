@@ -1,5 +1,8 @@
 # Changelog for NovaSheets
 
+## 0.2.0
+- Added support for variable parameters.
+
 ## 0.1.2
 - Fixed regular expressions not treating tabs as spaces when parsing input.
 - Fixed CRLF character breaking variable substitution.

@@ -1,23 +1,21 @@
 @var transition // automatic vendor prefixes
     -webkit-transition: all .5s;
     -o-transition: all .5s;
-    transition: all .5s; // default
+    transition: all .5s; // fallback
 @var grid // automatic vendor prefixes
     display: -ms-grid;
-    display: grid; // default
-@var border-size
-    1px
+    display: grid; // fallback
 @var theme color
     #7f5d4a
-@var border
-    $(border-size) dotted $(theme color) // use the above variables
+@var border | size | type // variable arguments
+    $[size] $[type] $(theme color)
 @var base-font-size
     2em
 @var gradient
     background: linear-gradient(90deg, #fff, #000);
 ---
-body {$(grid); border: $(border); padding: 2em;}
-.title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border); $(transition);}
+body {$(grid); border: $(border | size=2em | type=solid); padding: 2em;}
+.title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border|type=dotted|size=1px); $(transition);}
 .title:hover {font-size: calc( $(base-font-size) * 1.25 )}
 .content {padding: 2em;}
 .content p {font-family: "sans-serif";}
