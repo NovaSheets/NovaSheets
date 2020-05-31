@@ -1,5 +1,9 @@
 # Changelog for NovaSheets
 
+## UPCOMING
+- Duplicate stylesheets are no longer outputted when running the parsing command again.
+- Fixed parameters sometimes not being fully parsed.
+
 ## 0.2.0
 - Added support for variable parameters.
 

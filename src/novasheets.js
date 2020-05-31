@@ -67,7 +67,7 @@ function parseNovaSheets() {
 
         const varDeclEnding = lines.indexOf('---');
         const cssContent = lines.slice(varDeclEnding + 1).join('\n');
-        const randomHash = Math.random().toString().hashCode(6);
+        window.randomHash = window.randomHash || Math.random().toString().hashCode(6);
 
         // For each variable declaration, add styles to object.
         for (let i in customVars) {
@@ -108,16 +108,19 @@ function parseNovaSheets() {
                     let [key, val] = varArgs[j].split('=')
                     for (let k in localVars) {
                         let localvar = localVars[k].trim(); //= 'hash-key-val'
-                        let localvarFormatted = '$(\s*' + localvar + ')'; //= '$(hash-key-val)'
+                        let localvarFormatted = '\\$\\(\\s*' + localvar.escapeRegex() + '\\)'; //= '$(hash-key-val)'
                         let argvar = localvar.trim().split('-').splice(2).join('-'); //= 'val'
                         if (argvar !== key.trim()) continue;
-                        cssOutput = cssOutput.replace(new RegExp(localvarFormatted.escapeRegex(), 'g'), val); // substitude val
+                        cssOutput = cssOutput.replace(new RegExp(localvarFormatted, 'g'), val); // substitude val
                     }
                 }
 
             }
         }
         cssOutput = cssOutput.replace(/; *;/g, ';').replace(/ +/g, ' ');
+
+        // Prevent duplicate outputs
+        if (document.querySelectorAll(`[data-hash="${cssOutput.hashCode()}"]`).length) break;
 
         // Load converted styles to page
         let styleElem = document.createElement('style');

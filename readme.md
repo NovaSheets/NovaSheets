@@ -21,7 +21,7 @@ Unlike other CSS prepocessors which compile stylesheets when the site is built, 
 
 ## Installation
 
-For information on installing NovaSheets, see the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this repository.
+See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this repository to choose a version to download.
 
 ## Importing stylesheets
 NovaSheets styles can be loaded from both external and internal stylesheets.
@@ -90,4 +90,4 @@ NovaSheets implements single-line comments using double slashes (`//`). Note tha
 Newlines in the front matter and redundant spaces anywhere in the document are removed by the preprocessor in the output CSS.
 
 ## VSCode extension
-A VSCode extension for NovaSheets is available at repository (NovaSheets-vscode)[https://github.com/Nixinova/NovaSheets-vscode]. The extension only works for extensions `.nss` and `.nss.txt`.
+A VSCode extension for NovaSheets is available at repository [NovaSheets-vscode](https://github.com/Nixinova/NovaSheets-vscode). The extension only works for extensions `.nss` and `.nss.txt`.
