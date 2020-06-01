@@ -1,6 +1,6 @@
 # Changelog for NovaSheets
 
-## UPCOMING
+## 0.2.1
 - Duplicate stylesheets are no longer outputted when running the parsing command again.
 - Fixed parameters sometimes not being fully parsed.
 
@@ -8,7 +8,7 @@
 - Added support for variable parameters.
 
 ## 0.1.2
-- Fixed regular expressions not treating tabs as spaces when parsing input.
+- Fixed treating tabs not being treated as spaces when parsing input.
 - Fixed CRLF character breaking variable substitution.
 - Fixed infinite recursion on variable substitution.
 
