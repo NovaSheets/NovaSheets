@@ -1,5 +1,14 @@
 # Changelog for NovaSheets
 
+## UPCOMING
+- Added a plethora of built-in variables, all prefixed with `@`.
+ - Math functions and variables: `min`, `max`, `clamp`, `sin`, `asin`, `cos`, `acos`, `tan`, `atan`, `abs`, `floor`, `ceil`, `round`, `log`, `root`, and `pi`.
+ - Text functions: `encode`, `replace`, and `length`.
+ - Color functions: `color` and `colorpart`.
+- Added support for math conversions using exponents (`^` or `**`), modulo (`%`), multiplication (`*`), division (`/`), addition (`+`), and subtraction (`-`); order of operations applies in that order.
+- Changed NovaSheets `type` and `rel` declarations to be case insensitive and to allow the word "NovaSheet" being pluralised.
+- Changed NovaSheets `type` declarations to apply to any element instead of applying only to `template` elements.
+
 ## 0.2.1
 - Duplicate stylesheets are no longer outputted when running the parsing command again.
 - Fixed parameters sometimes not being fully parsed.
