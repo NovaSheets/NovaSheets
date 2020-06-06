@@ -1,8 +1,16 @@
 # Changelog for NovaSheets
 
+## Upcoming
+- Changed output element to include the source of the stylesheet in the element's dataset.
+- Removed negative lookbehinds as this feature is not supported in all major browsers.
+- Fixed query selector not working in older browsers.
+- Fixed bracketed numbers having their brackets removed.
+- Fixed parsing of numbers with many prefixed plus or minus signs.
+
 ## 0.3.0
 - Added a plethora of built-in variables, all prefixed with `@`.
   - Math functions and variables: `mod`, `min`, `max`, `clamp`, `sin`, `asin`, `cos`, `acos`, `tan`, `atan`, `abs`, `floor`, `ceil`, `round`, `log`, `root`, and `pi`.
+  - Logical functions: `if`.
   - Text functions: `encode`, `replace`, and `length`.
   - Color functions: `color` and `colorpart`.
 - Added support for math conversions using exponents (`^` or `**`), multiplication (`*`), division (`/`), addition (`+`), and subtraction (`-`); order of operations applies in that order.

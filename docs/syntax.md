@@ -3,9 +3,10 @@
 ## Contents
 - [Layout](#layout)
 - [Variables](#variables)
- - [Declaring variables](#declaring-variables)
- - [Using variables](#using-variables)
-   - [Built-in variables](#built-in-variables)
+  - [Declaring variables](#declaring-variables)
+  - [Using variables](#using-variables)
+    - [Arguments](#arguments)
+    - [Built-in variables](#built-in-variables)
 - [Mathematical operators](#mathematical-operators)
 - [Parser constants](#parser-constants)
 - [Comments](#comments)
@@ -25,7 +26,7 @@ There are two main sections to a NovaSheets document: the front matter and the c
 
 NovaSheets variables are created by starting a line in the front matter with `@var `. Anything after that space will be the name of the variable. For example, `@var test` creates a new variable called "test". Variables can have any name; the only limitations are that using parentheses may not work correctly due to how NovaSheets are parsed. `myvar`, `my_var`, `my var`, and `my♦var!` are all valid variable names.
 
-Variables can have up to 10 arguments attached to them. Arguments are declared in the front matter by appending a pipe (`|`) followed by the argument name. For example, `@var border | type` declares a variable named `border` with an argument named `type`. By default, there is a maximum of 10 arguments per variable; this can be changed by modifying [parser constants](#parser-constants).
+Variables can have up to 10 arguments attached to them (*added in 0.2.0*). Arguments are declared in the front matter by appending a pipe (`|`) followed by the argument name. For example, `@var border | type` declares a variable named `border` with an argument named `type`. By default, there is a maximum of 10 arguments per variable; this can be changed by modifying [parser constants](#parser-constants).
 
 Each variable houses the lines below it as its contents, all the way up until another variable declaration. The contents of each variable can be anything at all; the content is just substituted in to the CSS content by a simple replacement. Arguments are referenced similar to variables but using square brackets instead of parentheses (`$[ ]`); for example, `2px $[type]` references declared argument `type`. Valid contents of a variable include `text-align: left`, `$(previous-variable) center`, `$[width] $[height]`, and `rgb(128, 64, 255)`.
 
@@ -39,7 +40,7 @@ In the following example, a variable called `border` is declared, with its first
 
 Variables are referenced using a dollar sign (`$`) followed by the variable name in parentheses (`( )`). For example, variable `test1` would be called by writing `$(test1)`. Variables can be used anywhere in the document, including in the front matter.
 
-Arguments are specified by appending a pipe (`|`) to the variable name and then writing the parameter name followed by an equals sign (`=`) and then the argument contents. For example, if variable `border` has parameter `color` specified in the front matter, this can be set to `blue` by writing `$(border|color=blue)`, which, when using the code at the end of the above section, outputs `1px solid blue`.
+Arguments (*added in 0.2.0*) are specified by appending a pipe (`|`) to the variable name and then writing the parameter name followed by an equals sign (`=`) and then the argument contents. For example, if variable `border` has parameter `color` specified in the front matter, this can be set to `blue` by writing `$(border|color=blue)`, which, when using the code at the end of the above section, outputs `1px solid blue`.
 
 #### Built-in variables
 *(Added in 0.3.0)*
@@ -65,6 +66,9 @@ NovaSheets includes many built-in variables which take the form of a variety of 
 - `$( @round | val | num )`: Rounds `val` to `num` decimal places. Example: `$( @round | $(@pi) | 5 )` -> `3.14159`.
 - `$( @sin | a )`: Outputs the sine of `a` in radians. Example: `$( @sin | 0.5*$(@pi) )` -> `1`.
 - `$( @tan | a )`: Outputs the tangent of `a` in radians. Example: `$( @tan | 12 )` -> `-0.6358599286615808`.
+
+**Logical functions:**
+- `$( @if | test | iftrue | iffalse)`: Outputs the either content of `iftrue` if `test` resolves to boolean "true" or `iffalse` if it resolves to false. Allowed values for `test` are `false`, `null` (*0.3.1+*), `undefined`, `NaN`, or an empty string for "false"; everything else resolves to "true". Allowed operators for `test` include `==`, `<`, and `>`.
 
 **Text functions:**
 - `$( @encode | string )`: Encodes `string` as a URL segment. Example: `$( @encode | <text>=true )` -> `%3Ctext%3E%3Dtrue`.
@@ -95,7 +99,7 @@ The parser contains two constants, `MAX_RECURSION` and `MAX_ARGUMENTS`, which af
 
 ## Comments
 
-NovaSheets implements single-line comments using double slashes (`//`). Note that the slashes must be prefaced with a space (` `) to prevent URLs being treated as comments. For instance, `@var themeColor1 // the main theme color`, will compile to `@var themeColor1`, and `body {text-align: left;} // change if needed`, compiles to `body {text-align: left;}` in the output CSS.
+NovaSheets implements single-line comments using double slashes (`//`) alongside CSS's block comments `/* */`. Single-line comments are removed by the parser while CSS block comments remain in the output. Note that the slashes must be prefaced with a space (` `) to prevent URLs being treated as comments. For instance, `@var themeColor1 // the main theme color`, will compile to `@var themeColor1`, and `body {text-align: left;} // change if needed`, compiles to `body {text-align: left;}` in the output CSS.
 
 ## Whitespace
 
