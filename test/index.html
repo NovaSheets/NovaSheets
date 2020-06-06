@@ -8,14 +8,12 @@
     <template type="novasheet">
         @var shading
             linear-gradient(90deg, #55f, #5ff);
-        @var border color
-            #ff55aa
-        @var border
-            1px solid $(border color)
+        @var border | color
+            1px solid $[color]
         ---
         // body {color: blue;}
         .shaded {background: $(shading); color: white;} // basic shading
-        .title {margin-left: 3em; color: blue; border-bottom: $(border);}
+        .title {margin-left: 3em; color: blue; border-bottom: $(border|color=#f5a);}
     </template>
 </head>
 

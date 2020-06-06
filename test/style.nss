@@ -14,14 +14,14 @@
 @var gradient
     background: linear-gradient(90deg, #fff, #000);
 @var url
-     url(" https://example.com ")
+    url("https://example.com")
 ---
-@media (max-width: 800px) {
+@media only screen and (max-width: 800px) {
     .body {background: blue;}
 }
-body {$(grid); border: $(border | size=2em | type=solid); padding: 2em;}
+body {$(grid); border: $(border | size=$(base-font-size) | type=solid); padding: 4/2em;}
 .title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border|type=dotted|size=1px); $(transition);}
-.title:hover {font-size: calc( $(base-font-size) * 1.25 + 1.2 / 1.5 - 0.1 )}
+.title:hover {font-size: calc( $(base-font-size) * 1.25 + 1.2 / 1.5 - 0.4 );}
 .content {padding: 2em;}
 .content p {font-family: "sans-serif";}
 .content .p-styled {color: $(theme color);}

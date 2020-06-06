@@ -1,11 +1,13 @@
 # Changelog for NovaSheets
 
-## UPCOMING
+## 0.3.0
 - Added a plethora of built-in variables, all prefixed with `@`.
- - Math functions and variables: `min`, `max`, `clamp`, `sin`, `asin`, `cos`, `acos`, `tan`, `atan`, `abs`, `floor`, `ceil`, `round`, `log`, `root`, and `pi`.
- - Text functions: `encode`, `replace`, and `length`.
- - Color functions: `color` and `colorpart`.
-- Added support for math conversions using exponents (`^` or `**`), modulo (`%`), multiplication (`*`), division (`/`), addition (`+`), and subtraction (`-`); order of operations applies in that order.
+  - Math functions and variables: `mod`, `min`, `max`, `clamp`, `sin`, `asin`, `cos`, `acos`, `tan`, `atan`, `abs`, `floor`, `ceil`, `round`, `log`, `root`, and `pi`.
+  - Text functions: `encode`, `replace`, and `length`.
+  - Color functions: `color` and `colorpart`.
+- Added support for math conversions using exponents (`^` or `**`), multiplication (`*`), division (`/`), addition (`+`), and subtraction (`-`); order of operations applies in that order.
+  - Supports base 10 (no prefix), base 2 (prefix `0b`), base 8 (prefix `0o`), and base 16 (prefix `0x`).
+- Added `@const` declarator to modify parser constants `MAX_RECURSION` and `MAX_ARGUMENTS`.
 - Changed NovaSheets `type` and `rel` declarations to be case insensitive and to allow the word "NovaSheet" being pluralised.
 - Changed NovaSheets `type` declarations to apply to any element instead of applying only to `template` elements.
 
