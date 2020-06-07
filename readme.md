@@ -10,7 +10,7 @@ Unlike other CSS prepocessors which compile stylesheets when the site is built, 
 
 ## Installation
 
-See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this repository to choose a version.
+See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this repository to choose a version to use.
 
 ## Usage
 

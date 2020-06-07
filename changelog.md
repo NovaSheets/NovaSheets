@@ -1,6 +1,6 @@
 # Changelog for NovaSheets
 
-## Upcoming
+## 0.3.1
 - Added tentative support for older browsers, such as pre-Chromium Edge.
 - Changed output element to include the source of the stylesheet in the element's dataset.
 - Fixed query selector not working in older browsers.
