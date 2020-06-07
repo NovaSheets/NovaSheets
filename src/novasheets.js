@@ -1,31 +1,34 @@
-String.prototype.hashCode = function (length = 8) {
+String.prototype.hashCode = function (length) {
     let hash = 0;
     for (let i = 0; i < this.length; i++) {
         hash = ((hash << 5) - hash) + this.charCodeAt(i);
     }
-    return Math.abs(hash).toString(16).substring(0, length).padStart(length, '0');
+    return Math.abs(hash).toString(16).substring(0, length || 8).padStart(length, '0');
 };
-String.prototype.trim = function () {
-    return this.replace(/^ *(.+?) *$/, '$1');
-}
 String.prototype.escapeRegex = function () {
     return this.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
-function nssError(...str) {
-    console.error("<NovaSheets> Parsing failed: " + str.join(' '));
+function nssError(str) {
+    console.error("<NovaSheets> Parsing failed: " + str);
 }
 
 function parseNovaSheets() {
 
-    // Generate list of NovaSheet files
-    let sheets = document.querySelectorAll('link[rel="novasheet" i], link[rel="novasheets" i]');
+    // Generate list of NovaSheet files and get the contents of each stylesheet
+    let sheets, inline;
+    try { // For browsers that do not support attribute flags
+        sheets = document.querySelectorAll('link[rel="novasheet" i], link[rel="novasheets" i]');
+        inline = document.querySelectorAll('[type="novasheet" i], [type="novasheets" i]');
+    } catch (err) {
+        sheets = document.querySelectorAll('link[rel="novasheet"], link[rel="novasheets"]');
+        inline = document.querySelectorAll('[type="novasheet"], [type="novasheets"]');
+    }
     let fileNames = [];
+    let sources = [];
     for (let i of sheets) {
         fileNames.push(i.href);
     }
-
-    // Generate contents of each sheet
     let stylesheetContents = [];
     for (let file of fileNames) {
         try {
@@ -34,20 +37,20 @@ function parseNovaSheets() {
             req.send();
             let response = req.responseText;
             stylesheetContents.push(response.toString());
+            sources.push('external');
         } catch (error) {
             nssError(`File "${file}" cannot be accessed.`);
         }
     }
-
-    let inline = document.querySelectorAll('[type="novasheet" i], [type="novasheets" i]');
     for (let contents of inline) {
         stylesheetContents.push(contents.innerHTML);
+        sources.push('inline');
     }
 
     // Loop through each sheet, parsing the NovaSheet styles
-    for (let contents of stylesheetContents) {
+    for (let s in stylesheetContents) {
 
-        let lines = contents.split('\n');
+        let lines = stylesheetContents[s].split('\n');
         let customVars = [];
         let localVars = [];
         let styles = {};
@@ -70,17 +73,16 @@ function parseNovaSheets() {
             }
             else if (lines[i].match(/^\s*@const\s*MAX_RECURSION\s/)) MAX_RECURSION = Number(lines[i].split('MAX_RECURSION')[1]);
             else if (lines[i].match(/^\s*@const\s*MAX_ARGUMENTS\s/)) MAX_ARGUMENTS = Number(lines[i].split('MAX_ARGUMENTS')[1]);
-
         }
 
         // Begin variable parsing
         window.randomHash = window.randomHash || Math.random().toString().hashCode(6);
         const varDeclEnding = lines.indexOf('---');
         const cssContent = lines.slice(varDeclEnding + 1).join('\n');
-        let loop = 0;
         let cssOutput = cssContent;
+        let loop = 0;
 
-        // For each variable declaration, add styles to an object.
+        /// For each variable declaration, add styles to an object.
         for (let i in customVars) {
             let currentLine = customVars[i].line + 1;
             let currentStyle = customVars[i].name.trim();
@@ -100,7 +102,7 @@ function parseNovaSheets() {
             }
         }
 
-        // Convert NovaSheets styles to CSS; phrases below come from using format 'var(name|key=val)'
+        /// Convert NovaSheets styles to CSS; phrases below come from using format 'var(name|key=val)'
         while ((cssOutput.indexOf('$(') > -1 || loop < 2) && loop++ < MAX_RECURSION) {
             for (let i in customVars) {
                 let varName = customVars[i].name.escapeRegex();
@@ -127,7 +129,7 @@ function parseNovaSheets() {
 
             // Parse built-in functions
 
-            const number = '(?<![+-])[0-9]*(?:\\.[0-9]*)?';
+            const number = '[0-9]*(?:\\.[0-9]*)?';
             const nssFunction = (name, params, count) => {
                 if (!Array.isArray(params)) params = Array(count || MAX_ARGUMENTS).fill(params || '[^|)]*?');
                 return RegExp(`\\$\\(\\s*${name}\\s*(?:\\|(\\s*${params.join('))?\\s*(?:\\|(\\s*')}))?\\s*\\)`, 'g');
@@ -140,13 +142,18 @@ function parseNovaSheets() {
 
             /// Logical functions
             cssOutput = cssOutput
-                .replace(nssFunction('@if'), output => {
-                    let a = getArgs(output, 1).replace(/^['"]+(.+)['"]+$/, '$1').replace(/&gt;/g, '>').replace(/&lt;/g, '<');
-                    let b = getArgs(output, 2);
-                    let c = getArgs(output, 3);
-                    if (['false', 'NaN', 'undefined', ''].includes(a)) a = false;
-                    if (a.match(/<|<=|>|>=|=/)) a = eval(a);
-                    return a ? b : c;
+                .replace(nssFunction('@if'), args => {
+                    let a = getArgs(args, 1);
+                    let b = getArgs(args, 2);
+                    let c = getArgs(args, 3);
+                    let test = a
+                        .replace(/(?:'(.+?)'|"(.+?)")+/, '$1$2') // remove quotes
+                        .replace(/&gt;/g, '>').replace(/&lt;/g, '<') // fix html
+                        .replace(/(?!=)(!?)=(==)?(?!=)/g, '$1$2==') // normalise equality signs
+                        ;
+                    if (test.match(/(<|<=|>|>=|==|!=)/)) test = eval(test);
+                    if (['false', 'undefined', 'null', 'NaN', ''].includes(test)) test = false; else test = true;
+                    return test ? b : c;
                 })
                 ;
 
@@ -157,19 +164,17 @@ function parseNovaSheets() {
             const parseMath = (ops, b) => {
                 for (let op of ops) {
                     if (!Array.isArray(op)) op = [op, op];
-                    cssOutput = cssOutput.replace(RegExp('\\(\\s*(' + numberRegex + ')\\s*\\)', 'g'), '$1');
                     let regex = b ? mathRegexBracketed(op[0]) : mathRegex(op[0]);
                     let nums = cssOutput.match(RegExp(regex));
-                    try {
-                        let func = eval(`Number(${nums[1]}) ${op[1]} Number(${nums[2]})`);
-                        if (nums) cssOutput = cssOutput.replace(RegExp(regex), func);
-                    } catch (err) { }
+                    if (!nums) continue;
+                    let func = eval(`Number(${nums[1]}) ${op[1]} Number(${nums[2]})`);
+                    if (nums) cssOutput = cssOutput.replace(RegExp(regex), func);
                 }
             }
             for (let i = 0; i < 5; i++) {
                 cssOutput = cssOutput
-                    .replace(/([^.0-9]+?|^)(?:\+|--)+([.0-9]+)/, '$1+$2')
-                    .replace(/([^.0-9]+?|^)(?:\+-|-\+)+([.0-9]+)/, '$1-$2')
+                    .replace(/(?:\+|--)+([.0-9]+)/, '+$1')
+                    .replace(/(?:\+-|-\+)+(?:\++)?([.0-9]+)/, '-$1')
                     ;
                 parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], true);
                 parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], false);
@@ -177,51 +182,51 @@ function parseNovaSheets() {
 
             /// Math functions
             cssOutput = cssOutput
-                .replace(nssFunction('@mod', number, 2), output => getArgs(output, 1) % getArgs(output, 2))
-                .replace(nssFunction('@min', number), output => Math.min(...getArgs(output)))
-                .replace(nssFunction('@max', number), output => Math.max(...getArgs(output)))
-                .replace(nssFunction('@clamp', number, 3), output => {
-                    let a = getArgs(output, 1);
-                    let b = getArgs(output, 2);
-                    let c = getArgs(output, 3);
+                .replace(nssFunction('@mod', number, 2), args => getArgs(args, 1) % getArgs(args, 2))
+                .replace(nssFunction('@min', number), args => Math.min(...getArgs(args)))
+                .replace(nssFunction('@max', number), args => Math.max(...getArgs(args)))
+                .replace(nssFunction('@clamp', number, 3), args => {
+                    let a = getArgs(args, 1);
+                    let b = getArgs(args, 2);
+                    let c = getArgs(args, 3);
                     if (c < b) [b, c] = [c, b];
                     return a <= b ? b : (a >= c ? c : a);
                 })
-                .replace(nssFunction('@sin', number, 1), output => Math.sin(getArgs(output, 1)))
-                .replace(nssFunction('@asin', number, 1), output => Math.asin(getArgs(output, 1)))
-                .replace(nssFunction('@cos', number, 1), output => Math.cos(getArgs(output, 1)))
-                .replace(nssFunction('@acos', number, 1), output => Math.acos(getArgs(output, 1)))
-                .replace(nssFunction('@tan', number, 1), output => Math.tan(getArgs(output, 1)))
-                .replace(nssFunction('@atan', number, 1), output => Math.atan(getArgs(output, 1)))
-                .replace(nssFunction('@abs', number, 1), output => Math.abs(getArgs(output, 1)))
-                .replace(nssFunction('@floor', number, 1), output => Math.floor(getArgs(output, 1)))
-                .replace(nssFunction('@ceil', number, 1), output => Math.ciel(getArgs(output, 1)))
-                .replace(nssFunction('@round', number, 2), output => {
-                    let a = Number(getArgs(output, 1)) + Number.EPSILON;
-                    let b = getArgs(output, 2) || 0;
+                .replace(nssFunction('@sin', number, 1), args => Math.sin(getArgs(args, 1)))
+                .replace(nssFunction('@asin', number, 1), args => Math.asin(getArgs(args, 1)))
+                .replace(nssFunction('@cos', number, 1), args => Math.cos(getArgs(args, 1)))
+                .replace(nssFunction('@acos', number, 1), args => Math.acos(getArgs(args, 1)))
+                .replace(nssFunction('@tan', number, 1), args => Math.tan(getArgs(args, 1)))
+                .replace(nssFunction('@atan', number, 1), args => Math.atan(getArgs(args, 1)))
+                .replace(nssFunction('@abs', number, 1), args => Math.abs(getArgs(args, 1)))
+                .replace(nssFunction('@floor', number, 1), args => Math.floor(getArgs(args, 1)))
+                .replace(nssFunction('@ceil', number, 1), args => Math.ciel(getArgs(args, 1)))
+                .replace(nssFunction('@round', number, 2), args => {
+                    let a = Number(getArgs(args, 1)) + Number.EPSILON;
+                    let b = getArgs(args, 2) || 0;
                     return Math.round(a * 10 ** b) / (10 ** b);
                 })
-                .replace(nssFunction('@log', number, 1), output => Math.log(getArgs(output, 1)))
-                .replace(nssFunction('@root', number, 2), output => Math.pow(getArgs(output, 2), 1 / getArgs(output, 1)))
+                .replace(nssFunction('@log', number, 1), args => Math.log(getArgs(args, 1)))
+                .replace(nssFunction('@root', number, 2), args => Math.pow(getArgs(args, 2), 1 / getArgs(args, 1)))
                 .replace(/\$\(@pi\)/g, Math.PI)
                 .replace(/\$\(@e\)/g, Math.E)
                 ;
 
             /// Text functions
             cssOutput = cssOutput
-                .replace(nssFunction('@encode'), output => encodeURIComponent(getArgs(output, 1)))
-                .replace(nssFunction('@replace'), output => getArgs(output, 1).replace(getArgs(output, 2), (getArgs(output, 3))))
-                .replace(nssFunction('@length'), output => getArgs(output, 1).length)
+                .replace(nssFunction('@encode'), args => encodeURIComponent(getArgs(args, 1)))
+                .replace(nssFunction('@replace'), args => getArgs(args, 1).replace(getArgs(args, 2), (getArgs(args, 3))))
+                .replace(nssFunction('@length'), args => getArgs(args, 1).length)
                 ;
 
             // Colour functions
             cssOutput = cssOutput
-                .replace(nssFunction('@color'), output => {
-                    let type = getArgs(output, 1);
-                    let a = getArgs(output, 2) || 0;
-                    let b = getArgs(output, 3) || 0;
-                    let c = getArgs(output, 4) || 0;
-                    let d = getArgs(output, 5) || 0;
+                .replace(nssFunction('@color'), args => {
+                    let type = getArgs(args, 1);
+                    let a = getArgs(args, 2) || 0;
+                    let b = getArgs(args, 3) || 0;
+                    let c = getArgs(args, 4) || 0;
+                    let d = getArgs(args, 5) || 0;
                     if (type === 'hash' | type === '#') {
                         if (!a) return '#000';
                         a = Math.abs(Math.round(a.replace('#', ''))).toString();
@@ -235,9 +240,9 @@ function parseNovaSheets() {
                         return `${type}(${a}, ${b}, ${c}, ${d})`;
                     }
                 })
-                .replace(nssFunction('@colorpart'), output => {
-                    let part = getArgs(output, 1);
-                    let color = getArgs(output, 2) || 0;
+                .replace(nssFunction('@colorpart'), args => {
+                    let part = getArgs(args, 1);
+                    let color = getArgs(args, 2) || 0;
                     let parts = [];
                     const getPart = (str, a) => (Number("0x" + str.substr(a, 2))).toString()
 
@@ -287,6 +292,7 @@ function parseNovaSheets() {
         // Load converted styles to page
         let styleElem = document.createElement('style');
         styleElem.dataset.hash = cssOutput.hashCode();
+        styleElem.dataset.source = sources[s];
         styleElem.innerHTML = '\n' + cssOutput + '\n';
         (document.head || document.body).appendChild(styleElem);
 
@@ -296,5 +302,10 @@ function parseNovaSheets() {
 
 // Parse NovaSheets styles on page load
 document.addEventListener("DOMContentLoaded", function () {
-    parseNovaSheets();
+    try {
+        parseNovaSheets();
+    }
+    catch (err) {
+        console.error(err.name);
+    }
 });
