@@ -2,7 +2,7 @@
 
 A simple to use, lightweight CSS preprocessor.
 
-**[View documentation](https://nixinova.github.io/NovaSheets)**
+**[View documentation here](https://github.com/Nixinova/NovaSheets/wiki)**
 
 ## Why NovaSheets?
 
@@ -14,7 +14,7 @@ See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this
 
 ## Usage
 
-NovaSheets lets you declare variables in the front matter (the contents above the `---` line) of a CSS file, and reuse these later in the document.
+NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/wiki/Syntax#Variables) in the front matter (the contents above the `---` line) of a CSS file, and reuse these later in the document. For more information, see the [wiki](https://github.com/Nixinova/NovaSheets/wiki).
 
 ### Example
 
