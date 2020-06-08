@@ -1,9 +1,13 @@
 # Changelog for NovaSheets
 
+## 0.3.2
+- Changed output element to use the file path of the external stylesheet as the `source` data attribute.
+- Fixed nested variables with arguments not being parsed correctly.
+
 ## 0.3.1
 - Added tentative support for older browsers, such as pre-Chromium Edge.
 - Changed output element to include the source of the stylesheet in the element's dataset.
-- Fixed query selector not working in older browsers.
+- Fixed NovaSheets declaration not working in older browsers.
 - Fixed bracketed numbers having their brackets removed.
 - Fixed parsing of numbers with many prefixed plus or minus signs.
 
