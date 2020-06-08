@@ -1,8 +1,14 @@
 # Changelog for NovaSheets
 
+## 0.3.3
+- Added support for using math operators on the right side of values with units.
+- Fixed multiple calls of the same variable outputting the same result.
+- Fixed nested variables with arguments still sometimes not being parsed correctly.
+- Fixed the parentheses in math operations not being removed when it contains leading or trailing whitespace.
+
 ## 0.3.2
 - Changed output element to use the file path of the external stylesheet as the `source` data attribute.
-- Fixed nested variables with arguments not being parsed correctly.
+- Fixed nested variables with arguments sometimes not being parsed correctly.
 
 ## 0.3.1
 - Added tentative support for older browsers, such as pre-Chromium Edge.

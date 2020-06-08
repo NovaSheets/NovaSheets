@@ -1,7 +1,7 @@
 @var transition
-    -webkit-transition: all .5s; /* chromium */
-    -o-transition: all .5s; /* opera */
-    transition: all .5s; /* fallback */
+    -webkit-transition: all 1s; /* chromium */
+    -o-transition: all 1s; /* opera */
+    transition: all 1s; /* fallback */
 @var grid
     display: -ms-grid; /* edge */
     display: grid; /* fallback */
