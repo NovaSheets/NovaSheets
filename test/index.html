@@ -10,26 +10,24 @@
             linear-gradient(90deg, #55f, #5ff);
         @var border | color
             1px solid $[color]
-        @var color | bb
-            #ff77$[bb]
         ---
         // body {color: blue;}
         .shaded {background: $(shading); color: white;} // basic shading
-        .title {margin-left: 3em; color: blue; border-bottom: $(border|color=$(color|bb=11));}
+        .title {margin-left: 3em; color: blue; border-bottom: $(border|color=#ff7711);}
     </template>
 </head>
 
 <body>
     <h2 class="title">External stylesheet</h2>
     <div class="content">
-        <p class="p-styled">Lorem ipsum dolor sit amet, consectetur adipiscing elit.</p>
+        <p class="p-styled">Example paragraph 1.</p>
     </div>
     <div class="content">
-        <p>Cras eu eros feugiat, aliquam nunc eu, interdum lorem.</p>
+        <p>Example paragraph 2.</p>
     </div>
     <h2 class="title">Internal stylesheet</h2>
     <div class="shaded">
-        <p>Maecenas iaculis interdum tortor, ac gravida ipsum consequat vel.</p>
+        <p>Example paragraph 3.</p>
     </div>
 </body>
 

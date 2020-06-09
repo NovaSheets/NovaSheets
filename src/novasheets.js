@@ -25,22 +25,23 @@ function parseNovaSheets() {
         sheets = document.querySelectorAll('link[rel="novasheet"], link[rel="novasheets"]');
         inline = document.querySelectorAll('[type="novasheet"], [type="novasheets"]');
     }
-    let fileNames = [];
+    let fileNames = { full: [], rel: [] };
     let sources = [];
     for (let i of sheets) {
-        fileNames.push(i.href);
+        fileNames.full.push(i.href);
+        fileNames.rel.push(i.getAttribute('href'));
     }
     let stylesheetContents = [];
-    for (let file of fileNames) {
+    for (let i in fileNames.full) {
         try {
             let req = new XMLHttpRequest();
-            req.open("GET", file, false);
+            req.open("GET", fileNames.full[i], false);
             req.send();
             let response = req.responseText;
             stylesheetContents.push(response.toString());
-            sources.push(file);
+            sources.push(fileNames.rel[i]);
         } catch (error) {
-            nssError(`File "${file}" cannot be accessed.`);
+            nssError(`File "${fileNames.rel[i]}" cannot be accessed.`);
         }
     }
     for (let contents of inline) {
@@ -72,8 +73,12 @@ function parseNovaSheets() {
                     subvars: varContent.split('|').splice(1)
                 });
             }
-            else if (lines[i].match(/^\s*@const\s*MAX_RECURSION\s/)) MAX_RECURSION = Number(lines[i].split('MAX_RECURSION')[1]);
-            else if (lines[i].match(/^\s*@const\s*MAX_ARGUMENTS\s/)) MAX_ARGUMENTS = Number(lines[i].split('MAX_ARGUMENTS')[1]);
+            else if (lines[i].match(/^\s*@const\s*MAX_RECURSION\s/)) {
+                MAX_RECURSION = Number(lines[i].split('MAX_RECURSION')[1]);
+            }
+            else if (lines[i].match(/^\s*@const\s*MAX_ARGUMENTS\s/)) {
+                MAX_ARGUMENTS = Number(lines[i].split('MAX_ARGUMENTS')[1]);
+            }
         }
 
         // Begin variable parsing
@@ -91,11 +96,11 @@ function parseNovaSheets() {
             styles[currentStyle] = "";
             while (currentLine < lastLine) {
                 if (lines[currentLine].match(/\s*@var\s/)) break;
-                styles[currentStyle] += lines[currentLine].trim();
+                styles[currentStyle] += lines[currentLine].replace(/^\s*@const.+/, '').trim();
                 currentLine++;
             }
             for (let subvar of customVars[i].subvars) {
-                let newName = [randomHash, i, customVars[i].name, subvar.trim()].join('~');
+                let newName = [i, customVars[i].name, randomHash, subvar.trim()].join('~');
                 let splitText = `$[${subvar.trim()}]`;
                 let joinText = `$(${newName})`;
                 styles[currentStyle] = styles[currentStyle].split(splitText).join(joinText);
@@ -103,15 +108,15 @@ function parseNovaSheets() {
             }
         }
 
-        /// Convert NovaSheets styles to CSS; phrases below come from using format 'var(name|key=val)'
+        /// Convert NovaSheets styles to CSS; phrases below come from using format 'var(name|key=val)' where each 'key=val' = 'arg'
         while ((cssOutput.indexOf('$(') > -1 || loop < 2) && loop++ < MAX_RECURSION) {
             for (let i in customVars) {
                 let varName = customVars[i].name.escapeRegex();
-                let varArgsRegex = "(?:\\|([^|=$()]+?[^|$()]+))?".repeat(MAX_ARGUMENTS); //= '|key1=val1|...|key10=val10'
-                let matchRegex = `\\$\\((${varName})\\s?${varArgsRegex}\\)`; //= '$(name|key1=val1|...|key10=val10)'
-                let varArgs = cssOutput.match(RegExp(matchRegex)); // generate list of args
+                let varArgsRegex = "(?:\\s*\\|([^|=$()]+?[^|$()]+))?".repeat(MAX_ARGUMENTS); //= '|arg1|...|arg10'
+                let varContentRegex = `\\$\\(\\s*(${varName})\\s*${varArgsRegex}\\)`; //= '$(name|arg1|...|arg10)'
+                let varArgs = cssOutput.match(RegExp(varContentRegex)); // generate list of args
                 if (!varArgs) continue;
-                let replaceRegex = '\\$\\(' + customVars[i].name + '[^$()]*?\\)'; //= '$(name)'
+                let replaceRegex = '\\$\\(\\s*' + varName + '[^$()]*?\\)'; //= '$(name)'
                 cssOutput = cssOutput.replace(RegExp(replaceRegex), styles[customVars[i].name]); // substitude name
 
                 // Parse local variables
@@ -121,7 +126,7 @@ function parseNovaSheets() {
                     for (let k in localVars) {
                         let localvar = localVars[k].trim(); //= 'hash-key-val'
                         let localvarFormatted = '\\$\\(\\s*' + localvar.escapeRegex() + '\\)'; //= '$(hash-key-val)'
-                        let argvar = localvar.trim().split('~').splice(3).join('~'); //= 'val'
+                        let argvar = localvar.trim().split('~').splice(3).join('~'); //= 'val' // uses newName
                         if (argvar !== key.trim()) continue;
                         cssOutput = cssOutput.replace(RegExp(localvarFormatted, 'g'), val); // substitude val
                     }
@@ -160,28 +165,40 @@ function parseNovaSheets() {
 
             /// Raw math operators
             const numberRegex = '(?:0x|0b|0o)?(?:[0-9]*[.])?[0-9]+';
-            const unitsRegex = '(?:cm|mm|in|ex|en|em|rem|ch|pt|pc|px|vh|vw|vmin|vmax|%)'
+            const unitsRegex = '(?:cm|mm|m|ft|in|ex|en|em|rem|ch|pt|pc|px|vh|vw|vmin|vmax|%)';
+            const lengthUnitsRegex = '(cm|mm|ft|in)';
             const mathRegex = op => '(' + numberRegex + ')\\s*' + op.escapeRegex() + '\\s*(' + numberRegex + ')';
-            const unitMathRegex = op => '(' + numberRegex + unitsRegex + ')\\s*' + op.escapeRegex() + '\\s*(' + numberRegex + ')';
+            const unitMathRegex = op => '(' + numberRegex + 'm)\\s*' + op.escapeRegex() + '\\s*(' + numberRegex + 'm)';
             const mathRegexBracketed = op => '\\(\\s*' + mathRegex(op) + '\\s*\\)';
-            const parseMath = (ops, type) => {
+            const parseMath = (ops, b) => {
                 for (let op of ops) {
                     if (!Array.isArray(op)) op = [op, op];
-                    let regex = type === 'unit' ? unitMathRegex(op[0]) : (type === 'brac' ? mathRegexBracketed(op[0]) : mathRegex(op[0]));
+                    let regex = b ? mathRegexBracketed(op[0]) : mathRegex(op[0]);
                     let nums = cssOutput.match(RegExp(regex));
                     if (!nums) continue;
-                    let result = eval(`Number(${nums[1].replace(RegExp(unitsRegex), '')}) ${op[1]} Number(${nums[2]})`) + nums[1].match(RegExp(unitsRegex, 'g'));
+                    let result = eval(`Number(${nums[1]}) ${op[1]} Number(${nums[2]})`);
                     if (nums) cssOutput = cssOutput.replace(RegExp(regex), result);
                 }
             }
             for (let i = 0; i < 5; i++) {
                 cssOutput = cssOutput
-                    .replace(/(?:\+|--)+([.0-9]+)/, '+$1')
-                    .replace(/(?:\+-|-\+)+(?:\++)?([.0-9]+)/, '-$1')
+                    .replace(/(?:\+|--)+([.0-9]+)/, '+$1') // convert double negatives
+                    .replace(/(?:\+-|-\+)+(?:\++)?([.0-9]+)/, '-$1') // convert values which evaluate to negative
+                    .replace(RegExp('(' + numberRegex + ')deg', 'g'), val => Number(val.replace('deg', '')) * Math.PI / 180) // convert degrees to radians
+                    .replace(RegExp('(' + numberRegex + ')grad', 'g'), val => Number(val.replace('grad', '')) * Math.PI / 200) // convert degrees to radians
+                    .replace(RegExp(numberRegex + lengthUnitsRegex), args => {
+                        args = args.split(RegExp(lengthUnitsRegex)).splice(0, 2);
+                        switch (args[1]) {
+                            case "cm": return args[0] / 100 + 'm';
+                            case "mm": return args[0] / 1000 + 'm';
+                            case "ft": return args[0] * 0.3048 + 'm';
+                            case "in": return args[0] * 0.0254 + 'm';
+                        }
+                    }) // convert all length units to metres
+                    .replace(RegExp(numberRegex + 'm\\s*(\\*\\*|^|/|\\*|\\+|-)\\s*' + numberRegex + '(?=m[^m])'), args => args.replace(/m/g, '')) // parse length math
                     ;
-                parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], 'unit');
-                parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], 'brac');
-                parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], 'dflt');
+                parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], true);
+                parseMath(['**', ['^', '**'], '/', '*', '+', '-', ['--', '- -']], false);
             }
 
             /// Math functions
@@ -200,11 +217,12 @@ function parseNovaSheets() {
                 .replace(nssFunction('@asin', number, 1), args => Math.asin(getArgs(args, 1)))
                 .replace(nssFunction('@cos', number, 1), args => Math.cos(getArgs(args, 1)))
                 .replace(nssFunction('@acos', number, 1), args => Math.acos(getArgs(args, 1)))
-                .replace(nssFunction('@tan', number, 1), args => Math.tan(getArgs(args, 1)))
+                .replace(nssFunction('@tan', number, 1), args =>  Math.tan(getArgs(args, 1)))
                 .replace(nssFunction('@atan', number, 1), args => Math.atan(getArgs(args, 1)))
                 .replace(nssFunction('@abs', number, 1), args => Math.abs(getArgs(args, 1)))
                 .replace(nssFunction('@floor', number, 1), args => Math.floor(getArgs(args, 1)))
                 .replace(nssFunction('@ceil', number, 1), args => Math.ciel(getArgs(args, 1)))
+                .replace(nssFunction('@percent', number, 1), args => Number(getArgs(args, 1))*100+'%')
                 .replace(nssFunction('@round', number, 2), args => {
                     let a = Number(getArgs(args, 1)) + Number.EPSILON;
                     let b = getArgs(args, 2) || 0;

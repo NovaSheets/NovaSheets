@@ -1,5 +1,14 @@
 # Changelog for NovaSheets
 
+## 0.3.4
+- Added `deg` and `grad` keywords which change the preceeding number to radians and gradians, respectively.
+- Added support for length conversions between `cm`, `mm`, `ft`, and `in` to metres using math operators.
+- Added in-built function `percent` for converting a value to a percentage.
+- Changed the `source` data attribute of the output style element to use a relative link.
+- Removed support for using math operators on the right side of values with units.
+- Fixed variables not being substituted when they contain trailing whitespace.
+- Fixed `@const` declarations that appear after `@var` declarations being part of that variables content.
+
 ## 0.3.3
 - Added support for using math operators on the right side of values with units.
 - Fixed multiple calls of the same variable outputting the same result.
@@ -7,7 +16,7 @@
 - Fixed the parentheses in math operations not being removed when it contains leading or trailing whitespace.
 
 ## 0.3.2
-- Changed output element to use the file path of the external stylesheet as the `source` data attribute.
+- Changed output style element to use the file path of the external stylesheet as the `source` data attribute.
 - Fixed nested variables with arguments sometimes not being parsed correctly.
 
 ## 0.3.1

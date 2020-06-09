@@ -6,7 +6,7 @@ A simple to use, lightweight CSS preprocessor.
 
 ## Why NovaSheets?
 
-Unlike other CSS prepocessors which compile stylesheets when the site is built, NovaSheets is purely JavaScript and stylesheets are converted in the browser. NovaSheets has very simple syntax that is easy to pick up and use as it builds largely off of CSS itself.
+Unlike other CSS prepocessors which compile stylesheets when the site is built, NovaSheets is purely JavaScript and stylesheets are converted in the browser. NovaSheets has very simple syntax that is easy to pick up and use as it builds largely off of CSS itself. NovaSheets parses in plain text which means you do not have to worry about type conversions or escaping.
 
 ## Installation
 
@@ -21,23 +21,23 @@ NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/w
 **Input**:
 
 ```
-@var default
+@var normal
     text-align: center;
     color: #eee;
-@var shaded | color
+@var shaded | bgcolor
     text-align: left;
-    background: $[color];
+    background: $[bgcolor];
     color: #222;
 @var margin
     1em
 ---
-div.default {margin: $(margin); $(default)}
-div.shaded {$(shaded | color=blue)}
+div.default {$(normal); margin: $(margin);}
+div.shaded {$(shaded | bgcolor=blue)}
 ```
 
 **Output**:
 ```
-div.default {margin: 1em; text-align: center; color: #eee;}
+div.default {text-align: center; color: #eee; margin: 1em;}
 div.shaded {text-align: left; background: blue; color: #222;}
 ```
 
