@@ -1,5 +1,9 @@
 # Changelog for NovaSheets
 
+## 0.3.5
+- Changed output to put each CSS declaration on its own line.
+- Fixed empty variables being truncated completely to an empty string instead of one space.
+
 ## 0.3.4
 - Added `deg` and `grad` keywords which change the preceeding number to radians and gradians, respectively.
 - Added support for length conversions between `cm`, `mm`, `ft`, and `in` to metres using math operators.
