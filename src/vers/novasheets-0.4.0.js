@@ -166,6 +166,8 @@ function parseNovaSheets() {
                 cssOutput = cssOutput
                     .replace(/(?:\+|--)+([.0-9]+)/, '+$1') // convert double negatives
                     .replace(/(?:\+-|-\+)+(?:\++)?([.0-9]+)/, '-$1') // convert values which evaluate to negative
+                    .replace(RegExp(numberRegex + 'deg', 'g'), val => Number(val.replace('deg', '')) * Math.PI / 180) // convert degrees to radians
+                    .replace(RegExp(numberRegex + 'grad', 'g'), val => Number(val.replace('grad', '')) / Math.PI * 200) // convert degrees to radians
                     .replace(RegExp(numberRegex + lengthUnitsRegex), args => {
                         args = args.split(RegExp(lengthUnitsRegex)).splice(0, 2);
                         switch (args[1]) {

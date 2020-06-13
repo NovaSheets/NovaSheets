@@ -5,16 +5,12 @@
 @var grid
     display: -ms-grid; /* edge */
     display: grid; /* fallback */
-@var theme color
-    #7f5d4a
+@var theme color = #7f5d4a
 @var border | size | type // variable arguments
     $[size] $[type] $(theme color)
-@var base-font-size
-    2em
-@var gradient
-    background: linear-gradient(90deg, #fff, #000);
-@var url
-    url("https://example.com")
+@var base-font-size = 2em
+@var gradient = background: linear-gradient(90deg, #fff, #000);
+@var url = url("https://example.com")
 ---
 @media only screen and (max-width: 800px) {
     .body {background: blue;}

@@ -1,5 +1,15 @@
 # Changelog for NovaSheets
 
+## 0.4.0
+- Added support for declaring variables anywhere in the document.
+- Added support for placing variable content on the same line as the variable declaration by seperating the two with "`=`".
+- Added the `@endvar` keyword for declaring the end of the contents of a variable.
+- Added built-in functions `radians`/`gradians` and `bitwise` for converting from degrees and performing operations, respectively.
+- Added support for logical operators `not`/`!`, `and`/`&&`, `or`/`||`, `nand`, and `nor`, and bitwise operators `~`, `&`, and `|` in the first argument of built-in funcion `if`.
+- Removed the `---` separator keyword as it is superceded by `@endvar`.
+- Removed the `deg` and `grad` keywords as they interfere with raw CSS.
+- Fixed conversion to gradians using the `grad` keyword.
+
 ## 0.3.5
 - Changed output to put each CSS declaration on its own line.
 - Fixed empty variables being truncated completely to an empty string instead of one space.
