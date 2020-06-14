@@ -5,7 +5,7 @@
     <title>NovaSheets Testing</title>
     <script src="../src/novasheets.js"></script>
     <link rel="novasheet" href="style.nss">
-    <template type="novasheet">
+    <script type="novasheet">
         @var shading
             linear-gradient(90deg, #55f, #5ff);
         @var border | color = 1px solid $[color]
@@ -13,7 +13,7 @@
         // body {color: blue;}
         .shaded {background: $(shading); color: white;} // basic shading
         .title {margin-left: 3em; color: blue; border-bottom: $(border|color=#ff7711);}
-    </template>
+    </script>
 </head>
 
 <body>

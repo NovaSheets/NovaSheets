@@ -3,21 +3,21 @@
 
 # NovaSheets
 
-A simple to use, lightweight CSS preprocessor.
+A CSS preprocessor that is simple and lightweight but very powerful.
 
-**[View documentation here](https://github.com/Nixinova/NovaSheets/wiki)**
+**[View full documentation](https://github.com/Nixinova/NovaSheets/wiki)**
 
 ## Why NovaSheets?
 
-Unlike other CSS prepocessors which compile stylesheets when the site is built, NovaSheets is purely JavaScript and stylesheets are converted in the browser. NovaSheets has very simple syntax that is easy to pick up and use as it builds largely off of CSS itself. NovaSheets parses in plain text which means you do not have to worry about type conversions or escaping.
+Unlike other CSS prepocessors which compile stylesheets when the site is built, NovaSheets is purely JavaScript and stylesheets are converted in the browser. NovaSheets has very simple, versatile syntax that is easy to pick up and use, as it builds largely off of CSS itself, with the addition of custom variables and functions. NovaSheets parses in plain text which means you do not have to worry about type conversions or escaping, giving you complete power over your stylesheets.
 
 ## Installation
 
-See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this repository to choose a version to use.
+See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this repository to choose a version to use. Simply import the script into your HTML document and any embedded NovaSheets stylesheets will be parsed.
 
 ## Usage
 
-NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/wiki/Syntax#Variables) in the front matter (the contents above the `---` line) of a CSS file, and reuse these later in the document. For more information, see the [wiki](https://github.com/Nixinova/NovaSheets/wiki).
+NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/wiki/Syntax#Variables) (with optional parameters) and reuse these elsewhere in the document. For more information, see the [wiki](https://github.com/Nixinova/NovaSheets/wiki).
 
 ### Example
 
@@ -27,13 +27,12 @@ NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/w
 @var normal
     text-align: center;
     color: #eee;
+@var margin = 1em
 @var shaded | bgcolor
     text-align: left;
     background: $[bgcolor];
     color: #222;
-@var margin
-    1em
----
+@endvar
 div.default {$(normal); margin: $(margin);}
 div.shaded {$(shaded | bgcolor=blue)}
 ```
@@ -45,4 +44,4 @@ div.shaded {text-align: left; background: blue; color: #222;}
 ```
 
 ## VSCode extension
-A VSCode extension for NovaSheets syntax highlighting is available in the [VSCode Marketplace](https://marketplace.visualstudio.com/items/Nixinova.novasheets) via repository [NovaSheets-vscode](https://github.com/Nixinova/NovaSheets-vscode). The extension only works for files with extensions `.nss` and `.nss.txt`.
+A VSCode extension for NovaSheets syntax highlighting is available in the [VSCode Marketplace](https://marketplace.visualstudio.com/items/Nixinova.novasheets) via repository [NovaSheets-vscode](https://github.com/Nixinova/NovaSheets-vscode). This extension works for files with extensions `.nss` and `.nss.txt`.
