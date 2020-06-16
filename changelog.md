@@ -1,11 +1,19 @@
 # Changelog for NovaSheets
 
+## Upcoming
+- Added support for anonymous variable arguments.
+- Changed math parsing to allow a space between the last number and its unit to improve readability.
+- Fixed inline comments breaking variable declarations.
+- Fixed URLs in variable contents being treated as comments.
+- Fixed order of operations not being properly applied.
+
 ## 0.4.1
 - Added build-in function `degrees` for converting a value to degrees.
 - Changed syntax of built-in functions `degrees`, `radians`, and `gradians` to mandate the keywords `deg`, `rad`, or `grad` in its first argument.
 - Fixed ampersands not working when using an HTML element as input.
 - Fixed chained logical statements not being parsed correctly.
 - Fixed bitwise `or` not working properly.
+- Fixed math inside the contents CSS `calc` function being incorrectly parsed.
 
 ## 0.4.0
 - Added support for declaring variables anywhere in the document.
@@ -15,6 +23,7 @@
 - Added support for operators `not`/`!`/`~`, `and`/`&&`/`&`, `or`/`||`/`|`, `nand`, `nor`, `xor`, and `xnor` in the first argument of built-in funcion `if`.
 - Removed the `---` separator keyword as it is superceded by `@endvar`.
 - Removed the `deg` and `grad` keywords as they interfere with raw CSS.
+- Fixed unparsed or invalid variables and arguments appearing in the output CSS.
 
 ## 0.3.5
 - Changed output to put each CSS declaration on its own line.

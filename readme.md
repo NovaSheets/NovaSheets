@@ -3,7 +3,7 @@
 
 # NovaSheets
 
-A CSS preprocessor that is simple and lightweight but very powerful.
+A lightweight CSS preprocessor that is simple but powerful.
 
 **[View full documentation](https://github.com/Nixinova/NovaSheets/wiki)**
 
