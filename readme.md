@@ -9,7 +9,7 @@ A lightweight CSS preprocessor that is simple but powerful.
 
 ## Why NovaSheets?
 
-Unlike other CSS prepocessors which compile stylesheets when the site is built, NovaSheets is purely JavaScript and stylesheets are converted in the browser. NovaSheets has very simple, versatile syntax that is easy to pick up and use, as it builds largely off of CSS itself, with the addition of custom variables and functions. NovaSheets parses in plain text which means you do not have to worry about type conversions or escaping, giving you complete power over your stylesheets.
+Unlike other CSS prepocessors which compile stylesheets when the site is built, NovaSheets is purely JavaScript and stylesheets are converted in the browser. NovaSheets has very simple, versatile syntax that is easy to pick up and use, as it builds largely off of CSS itself, with the addition of custom variables, which act as functions, templates, and mixins all in one. NovaSheets parses in plain text which means you do not have to worry about type conversions or escaping, giving you complete power over your stylesheets.
 
 ## Installation
 

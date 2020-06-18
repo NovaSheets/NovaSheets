@@ -1,6 +1,12 @@
 # Changelog for NovaSheets
 
-## Upcoming
+## 0.4.3
+- Added support for scientific notation using `E`/`e` for values below `1e21`.
+- Fixed declarators in the middle of a line not being parsed.
+- Fixed anonymous arguments not adapting to the maximum argument parser constant.
+- Fixed parsing of multiple order of operations.
+
+## 0.4.2
 - Added support for anonymous variable arguments.
 - Changed math parsing to allow a space between the last number and its unit to improve readability.
 - Fixed inline comments breaking variable declarations.
