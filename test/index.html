@@ -1,33 +1,111 @@
 <!doctype html>
-<html>
+<html lang="en">
 
 <head>
     <title>NovaSheets Testing</title>
+    <style data-keep="true">
+        h1, h2 {text-align: center; font-family: sans-serif;}
+        button {width: 30%; margin: 1px auto; border: 1px solid #222; font-size: 1.1em;}
+        .code {display: block; padding: 1em; white-space: pre-wrap; font-family: monospace; border: 1px solid;}
+
+        .comment {color: #009000;}
+        .query {color: #8c0b76;}
+        .selector {color: #a26900;}
+        .property {color: #095d98;}
+        .value {color: #b74401;}
+    </style>
     <script src="../src/novasheets.js"></script>
-    <link rel="novasheet" href="style.nss">
-    <script type="novasheet">
-        @var shading
-            linear-gradient(90deg, #55f, #5ff);
-        @var border | color = 1px solid $[color]
-        @endvar
-        // body {color: blue;}
-        .shaded {background: $(shading); color: white;} // basic shading
-        .title {margin-left: 3em; color: blue; border-bottom: $(border|color=#ff7711);}
+    <link id="import" rel="novasheet" href="style.nss">
+    <script>
+        window.useDefault = true;
+        function clearStyles() {
+            for (let style of document.querySelectorAll('style')) {
+                if (!style.dataset.keep) style.parentNode.removeChild(style);
+            }
+            document.getElementById('output').innerHTML = '';
+        }
+        function logStyles() {
+            for (let style of document.querySelectorAll('style')) {
+                if (!style.dataset.keep) {
+                    let content = style.innerHTML;
+                    content = content
+                        .replace(/\/\*.*?\*\//gm, '<span class="comment">$&</span>')
+                        .replace(/@media[^{}]+?(?=\{)/gm, '<span class="query">$&</span>')
+                        .replace(/[^{}():;]+?(?=\{)/gm, '<span class="selector">$&</span>')
+                        .replace(/[^{}():;]+?(?=:)/gm, '<span class="property">$&</span>')
+                        .replace(/[^{}:;]+?(?=;)/gm, '<span class="value">$&</span>')
+                    document.getElementById('output').innerHTML += content;
+                }
+            }
+        }
+        function cleanInput(a) {
+            input.innerHTML = input.innerHTML.replace(/<div>/g, '$&\n');
+            input.innerHTML = input.textContent.replace(/\u00a0/g,' ');
+            if (a === undefined) parse()
+        }
+        function parse() {
+            clearStyles();
+            cleanInput(false);
+            document.getElementById('import').setAttribute('rel', useDefault ? 'novasheet' : 'error');
+            parseNovaSheets();
+            logStyles();
+        }
+        function toggleDefault() {
+            clearStyles();
+            useDefault = !useDefault;
+            document.getElementById('use-default').innerHTML = useDefault;
+            parse();
+        }
+        document.addEventListener("DOMContentLoaded", function () {
+            window.input = document.getElementById('input');
+            input.innerHTML =  input.innerHTML.replace(/^\s*/gm,'').replace(/^\s*\n/, '');
+            parse();
+        });
     </script>
 </head>
 
-<body>
-    <h2 class="title">External stylesheet</h2>
-    <div class="content">
-        <p class="p-styled">Example paragraph 1.</p>
+<body style="display: grid;">
+
+    <h1>NovaSheets Demo</h1>
+
+    <div id="input-wrapper">
+        <h2>Input</h2>
+        <div contenteditable type="novasheet" id="input" class="code" onblur="cleanInput()">
+            @var shading = linear-gradient(90deg, #55f, #5ff);
+            @var solid border | color = 1px solid $[color]
+            // body {color: blue;}
+            .shaded {background: $(shading); color: white;} // basic shading
+            .title {margin-left: 2em; color: #e55; border-bottom: $(solid border|color=#ff7711);}
+        </div>
+        <br>
     </div>
-    <div class="content">
-        <p>Example paragraph 2.</p>
+
+    <div id="options-wrapper">
+        <div style="text-align: center;">
+            <button onclick="toggleDefault()">Use external stylesheet? (<span id="use-default">true</span>)</button><br>
+            <button onclick="parse();">Parse</button>
+        </div>
     </div>
-    <h2 class="title">Internal stylesheet</h2>
-    <div class="shaded">
-        <p>Example paragraph 3.</p>
+
+    <div id="output-wrapper">
+        <h2 style="text-align: center; font-family: sans-serif;">Output</h2>
+        <div id="output" class="code" style="background: #eee;"></div>
+        <br>
     </div>
+
+    <div class="preview-wrapper">
+        <h2 class="title">Example content</h2>
+        <div class="content">
+            <p class="p-styled">Example paragraph 1.</p>
+        </div>
+        <div class="content">
+            <p>Example paragraph 2.</p>
+        </div>
+        <div class="shaded">
+            <p>Example paragraph 3.</p>
+        </div>
+    </div>
+
 </body>
 
 </html>

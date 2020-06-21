@@ -1,5 +1,21 @@
 # Changelog for NovaSheets
 
+## 
+- Changed variable declarations using the existing `=` notation to be strictly single-line declarations.
+- Changed unit parsing to be more intuitive, allowing more units in any permutation (`1/2em`, `1em/2`, `1em/2em`, etc).
+- Changed synatax of build-in function `log` to allow a base as its first argument.
+- Changed built-in function `replace` to allow regular expressions.
+- Changed built-in functions `degrees`, `radians`, and `gradians` to default to radians, degrees and degrees respectively.
+- Changed built-in function `color` to allow colors being created from hash values.
+- Changed built-in function `colorpart` to allow more aliases for its first parameter, such as `GREEN`/`grn`/etc for "green", etc.
+- Fixed bracketed numbers not having math operations applied to them.
+- Fixed boolean values outputting incorrect results when containing leading and/or trailing whitespace.
+- Fixed built-in function `if` outputting `undefined` when falsey and the "if false" argument is missing.
+- Fixed conversions to radians in built-in functions `degrees` and `gradians`.
+- Fixed built-in function `ceil` not working.
+- Fixed leading and/or trailing whitespace affecting the output of built-in functions.
+- Fixed built-in function `colorpart` breaking when being passed a raw CSS color function.
+
 ## 0.4.3
 - Added support for scientific notation using `E`/`e` for values below `1e21`.
 - Fixed declarators in the middle of a line not being parsed.
