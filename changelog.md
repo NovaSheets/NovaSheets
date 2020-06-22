@@ -1,6 +1,15 @@
 # Changelog for NovaSheets
 
-## 
+## 0.4.5
+- Changed built-in function `color` to default missing hex values to `0` and allow more flexibility in its arguments.
+- Changed built-in function `colorpart` allowing `hex`/`hexadecimal` as aliases for `hash`.
+- Fixed built-in function `bitwise` outputting its name as well as its parsed content.
+- Fixed built-in function `color` not allowing percentages and not parsing its arguments properly.
+- Fixed built-in function `colorpart` not parsing parts properly, not allowing `rgb`/`rgba` CSS functions when using type `hash`/`#`, and not outputting the raw hash value if passed with type `hash`/`#`.
+- Fixed built-in function `round` outputting `NaN` when the "decimal places" argument is missing.
+- Fixed floating-point math outputting strings of zeroes or nines.
+
+## 0.4.4
 - Changed variable declarations using the existing `=` notation to be strictly single-line declarations.
 - Changed unit parsing to be more intuitive, allowing more units in any permutation (`1/2em`, `1em/2`, `1em/2em`, etc).
 - Changed synatax of build-in function `log` to allow a base as its first argument.
@@ -41,7 +50,7 @@
 - Added support for declaring variables anywhere in the document.
 - Added support for placing variable content on the same line as the variable declaration by seperating the two with "`=`".
 - Added the `@endvar` keyword for declaring the end of the contents of a variable.
-- Added built-in functions `radians`/`gradians` and `bitwise` for converting from degrees and performing bitwise operations, respectively.
+- Added built-in functions `radians`/`gradians` and `bitwise`/`boolean` for converting from degrees and performing bitwise/logical operations, respectively.
 - Added support for operators `not`/`!`/`~`, `and`/`&&`/`&`, `or`/`||`/`|`, `nand`, `nor`, `xor`, and `xnor` in the first argument of built-in funcion `if`.
 - Removed the `---` separator keyword as it is superceded by `@endvar`.
 - Removed the `deg` and `grad` keywords as they interfere with raw CSS.
