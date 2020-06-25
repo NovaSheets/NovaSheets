@@ -16,7 +16,7 @@
 @media only screen and (max-width: 800px) {
     .body {background: blue;}
 }
-body {$(grid); border: $(border | size=$(base-font-size) | type=solid); padding: 4/2em;}
+body {$(grid); border: $(border | size=$(base-font-size) | type=solid); padding: 4em / 2;}
 .title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border|type=dotted|size=1px); $(transition);}
 .title:hover {font-size: $(base-font-size) * 125e-2 + 0.3 / 1.2 - 0.4;}
 .content {padding: 1/2em 1em;}

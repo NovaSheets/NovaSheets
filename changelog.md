@@ -1,5 +1,12 @@
 # Changelog for NovaSheets
 
+## 0.4.6
+- Changed parsing of numbers to always convert from base 2, 8, and 16 to base 10.
+- Fixed built-in function `replace` not replacing all instances of the specified string.
+- Fixed `e` characters in hexidecimal values being parsed as order-of-magnitude exponentation.
+- Fixed newlines and spaced units being truncated completely in the output CSS.
+- Fixed pseudo-classes being malformed in the output CSS.
+
 ## 0.4.5
 - Changed built-in function `color` to default missing hex values to `0` and allow more flexibility in its arguments.
 - Changed built-in function `colorpart` allowing `hex`/`hexadecimal` as aliases for `hash`.

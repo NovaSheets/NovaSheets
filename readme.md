@@ -17,7 +17,7 @@ See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this
 
 ## Usage
 
-NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/wiki/Syntax#Variables) (with optional parameters) and reuse these elsewhere in the document. For more information, see the [wiki](https://github.com/Nixinova/NovaSheets/wiki).
+NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/wiki/Syntax#Variables) (with optional parameters) and reuse these elsewhere in the document. For more information, see the [wiki](https://github.com/Nixinova/NovaSheets/wiki). For testing NovaSheets syntax, see [this demo page](https://nixinova.github.io/NovaSheets/test/).
 
 ### Example
 
