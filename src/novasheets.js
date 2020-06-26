@@ -1,4 +1,4 @@
-// NovaSheets 0.4.6 //
+// NovaSheets 0.4.7 //
 String.prototype.hashCode = function (length) {
     let hash = 0;
     for (let i = 0; i < this.length; i++) hash = ((hash << 5) - hash) + this.charCodeAt(i);
@@ -59,18 +59,18 @@ function parseNovaSheets() {
         stylesheetContents[s] = stylesheetContents[s]
             .replace(/^(.*?)\/\/.*$/gm, '$1') // remove single-line comments
             .replace(/^@var.+?=.*$/gm, '$& @endvar') // single-line @var declarations
-            .replace(/@(var|const|endvar)/g, '\n@$1') // put each declarator on its own line for parsing
-
+            .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
+            .replace(/@const\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         let lines = stylesheetContents[s].split('\n');
         let cssOutput = '';
         for (let i in lines) {
             lines[i] = lines[i].replace(/[\r\n]/g, ' ').trim(); // remove CRLF and trim
             cssOutput += ' ' + lines[i];
         }
-        cssOutput = cssOutput.replace(/\s*@(var|const)[\s\S]*?((?=\s*@(var|const))|@endvar)/gm, ' '); // remove NSS declarations;
+        cssOutput = cssOutput.replace(/\s*@var[\s\S]*?((?=\s*@var)|@endvar)|@const\s*[A-Z_]+\s*(true|false|[0-9]+)/gm, ' '); // remove NSS declarations
         let customVars = [];
         let localVars = [];
-        let MAX_RECURSION = 50, MAX_ARGUMENTS = 10; // parser constants
+        let MAX_RECURSION = 50, MAX_ARGUMENTS = 10, KEEP_NAN = false; // parser constants
 
         // Generate a list of lines that start variable declarations
         for (let i in lines) {
@@ -94,10 +94,13 @@ function parseNovaSheets() {
                 });
             }
             else if (lines[i].match(/^\s*@const\s*MAX[_]RECURSION\s/)) {
-                MAX_RECURSION = Number(lines[i].split('MAX_RECURSION')[1]);
+                MAX_RECURSION = Number(lines[i].split('MAX' + '_' + 'RECURSION')[1]);
             }
             else if (lines[i].match(/^\s*@const\s*MAX[_]ARGUMENTS\s/)) {
-                MAX_ARGUMENTS = Number(lines[i].split('MAX_ARGUMENTS')[1]);
+                MAX_ARGUMENTS = Number(lines[i].split('MAX' + '_' + 'ARGUMENTS')[1]);
+            }
+            else if (lines[i].match(/^\s*@const\s*KEEP[_]NAN\s/)) {
+                KEEP_NAN = !["0", "false"].includes(lines[i].split('KEEP' + '_' + 'NAN')[1].trim());
             }
         }
 
@@ -154,25 +157,26 @@ function parseNovaSheets() {
 
             /// Raw math operators
             const number = '[0-9]*[.]?[0-9]+';
-            const basedNumber = '(?:0x|0b|0o)?' + number;
+            const basedNumber = '0x[0-9a-f]*\.?[0-9a-f]+|0b[01]*\.?[01]+|0o[0-7]*\.?[0-7]+|' + number;
             const bracketedNumberRegex = `\\(${basedNumber}\\)|${basedNumber}`;
-            const numberUnitRegex = `([+-]?${bracketedNumberRegex})(m|cm|mm|ft|in|em|rem|en|ex|px|pt|pc)?`;
+            const numberUnitRegex = `([+-]?${bracketedNumberRegex})(?:\\s*(cm|mm|m|ft|in|em|rem|en|ex|px|pt|pc))?`;
+            const toNumber = val => KEEP_NAN ? Number(val) : (isNaN(Number(val)) ? '' : Number(val));
             const mathRegex = op => `(${bracketedNumberRegex})\\s*${op.escapeRegex()}\\s*(${bracketedNumberRegex})`;
-            const unitMathRegex = op => `${numberUnitRegex}\\s*${op.escapeRegex()}\\s*${numberUnitRegex}`;
             const mathRegexBracketed = op => '\\(\\s*' + mathRegex(op) + '\\s*\\)';
+            const unitMathRegex = op => `${numberUnitRegex}\\s*${op.escapeRegex()}\\s*${numberUnitRegex}`;
             const parseMath = (ops, b) => {
                 for (let op of ops) {
                     if (!Array.isArray(op)) op = [op, op];
                     cssOutput = cssOutput
-                        .replace(RegExp(basedNumber, 'g'), a => Number(a)) // convert base 2,8,16 to 10
+                        .replace(RegExp(basedNumber, 'g'), a => toNumber(a)) // convert base 2,8,16 to 10
                         .replace(RegExp(`(?<!(?:#|0x)[0-9a-f.]*)(${number})[Ee]([+-]?${number})`), (_, n1, n2) => { // convert scientific notation
-                            let val = Number(n1) * Math.pow(10, Number(n2));
+                            let val = toNumber(n1) * Math.pow(10, toNumber(n2));
                             return val.toFixed(20).replace(/\.?0+$/, '');
                         })
-                        .replace(/(?:\+|--)+([.0-9]+)/, '+$1') // convert double negatives
-                        .replace(/(?:\+-|-\+)+(?:\++)?([.0-9]+)/, '-$1') // convert values which evaluate to negative
+                        .replace(/(?:\+\s*|-\s*-\s*)+([.0-9]+)/, '+$1') // convert double negatives
+                        .replace(/(?:\+\s*-|-\s*\+)+(?:\+\s*)*\s*([.0-9]+)/, '-$1') // convert values which evaluate to negative
                         .replace(RegExp(unitMathRegex(op[0])), (_, n1, u1, n2, u2) => {
-                            n1 = Number(n1), n2 = Number(n2);
+                            n1 = toNumber(n1), n2 = toNumber(n2);
                             let output = (n1, n2) => eval(n1 + op[0] + n2);
                             if (!u1 && !u2) return _; // skip if no units are present
                             switch (u1 + ',' + u2) {
@@ -200,7 +204,7 @@ function parseNovaSheets() {
                     let regex = b ? mathRegexBracketed(op[0]) : mathRegex(op[0]);
                     let nums = cssOutput.match(RegExp(regex));
                     if (!nums) continue;
-                    let result = eval(`Number(${nums[1]}) ${op[1]} Number(${nums[2]})`);
+                    let result = eval(`toNumber(${nums[1]}) ${op[1]} toNumber(${nums[2]})`);
                     cssOutput = cssOutput.replace(RegExp(regex), result);
                 }
             }
@@ -224,11 +228,11 @@ function parseNovaSheets() {
                 .replace(nssFunction('@abs', number, 1), (_, a) => Math.abs(a))
                 .replace(nssFunction('@floor', number, 1), (_, a) => Math.floor(a))
                 .replace(nssFunction('@ceil', number, 1), (_, a) => Math.ceil(a))
-                .replace(nssFunction('@percent', number, 1), (_, a) => Number(a) * 100 + '%')
+                .replace(nssFunction('@percent', number, 1), (_, a) => toNumber(a) * 100 + '%')
                 .replace(nssFunction('@log', number, 2), (_, base, num) => Math.log(num) / (base ? Math.log(base) : 1))
                 .replace(nssFunction('@root', number, 2), (_, a, b) => Math.pow(b, 1 / a))
                 .replace(nssFunction('@round', number, 2), (_, a, b) => {
-                    return Math.round((Number(a) + Number.EPSILON) * Math.pow(10, b || 0)) / Math.pow(10, b || 0);
+                    return Math.round((toNumber(a) + Number.EPSILON) * Math.pow(10, b || 0)) / Math.pow(10, b || 0);
                 })
                 .replace(nssFunction('@min', number), (_, ...a) => {
                     let nums = [];
@@ -278,16 +282,16 @@ function parseNovaSheets() {
                     if (type === 'hash' || type.startsWith('hex') || type === '#') {
                         if (!a) return '#000';
                         if (a.startsWith('rgb')) [a, b, c, d] = a.replace(/rgba?\(|\)/g, '').split(',')
-                        const val = num => (Number(num) || 0).toString(16).padStart(2, '0');
+                        const val = num => (toNumber(num) || 0).toString(16).padStart(2, '0');
                         return '#' + val(a) + val(b) + val(c) + (val(d) < 1 ? '' : val(d));
                     }
                     else if (['rgb', 'rgba'].includes(type)) {
-                        if (b.includes('%')) b = Number(b.replace(/%/, '')) / 100 * 256 - 1;
-                        if (c.includes('%')) c = Number(c.replace(/%/, '')) / 100 * 256 - 1;
-                        return `${type}(${Number(a)}, ${Number(b)}, ${Number(c)}${d && type === 'rgba' ? ',' + Number(d.replace(/%/g, '')) : ''}${d.includes('%') ? '%' : ''})`;
+                        if (b.includes('%')) b = toNumber(b.replace(/%/, '')) / 100 * 256 - 1;
+                        if (c.includes('%')) c = toNumber(c.replace(/%/, '')) / 100 * 256 - 1;
+                        return `${type}(${toNumber(a)}, ${toNumber(b)}, ${toNumber(c)}${d && type === 'rgba' ? ',' + toNumber(d.replace(/%/g, '')) : ''}${d.includes('%') ? '%' : ''})`;
                     }
                     else if (['hsl', 'hsla'].includes(type)) {
-                        return `${type}(${Number(a)}, ${Number(b.replace(/%/, ''))}%, ${Number(c.replace(/%/, ''))}%${d && type === 'hsla' ? ', ' + Number(d.replace(/%/g, '')) : ''}${d.includes('%') ? '%' : ''})`;
+                        return `${type}(${toNumber(a)}, ${toNumber(b.replace(/%/, ''))}%, ${toNumber(c.replace(/%/, ''))}%${d && type === 'hsla' ? ', ' + toNumber(d.replace(/%/g, '')) : ''}${d.includes('%') ? '%' : ''})`;
                     }
                 })
                 .replace(nssFunction('@color', ['\\w+', colorArgRegex]), (_, type, a) => {
@@ -310,7 +314,7 @@ function parseNovaSheets() {
                 .replace(nssFunction('@colorpart', ['\\w+', colorArgRegex]), (_, part, color) => {
                     part = part.trim().toLowerCase(), color = color.trim().toLowerCase();
                     let parts = [];
-                    const toHex = (str, a) => (Number("0x" + str.substr(a, 2))).toString()
+                    const toHex = (str, a) => (toNumber("0x" + str.substr(a, 2))).toString()
 
                     if (color.startsWith('#')) {
                         let hex = color.replace('#', '');
@@ -369,13 +373,13 @@ function parseNovaSheets() {
                     a = a.replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<') // fix html
                     for (let i = 0; i < MAX_ARGUMENTS / 10; i++) {
                         a = a
-                            .replace(RegExp(`(?:~|!|not)\\s*([+-]?${bracketedNumberRegex})`), (_, a) => eval('~' + Number(a))) // bitwise not
-                            .replace(logicRegex('or|\\|'), (_, a, b) => eval(`(${Number(a)}) | (${Number(b)})`)) // bitwise or
-                            .replace(logicRegex('nor'), (_, a, b) => eval(`~ (${Number(a)}) | (${Number(b)})`)) // bitwise nor
-                            .replace(logicRegex('and|&'), (_, a, b) => eval(`(${Number(a)}) & (${Number(b)})`)) // bitwise and
-                            .replace(logicRegex('nand'), (_, a, b) => eval(`~ (${Number(a)}) & (${Number(b)})`)) // bitwise nand
-                            .replace(logicRegex('xor'), (_, a, b) => eval(`(${Number(a)}) ^ (${Number(b)})`)) // bitwise xor
-                            .replace(logicRegex('xnor'), (_, a, b) => eval(`~ (${Number(a)}) ^ (${Number(b)})`)) // bitwise xnor
+                            .replace(RegExp(`(?:~|!|not)\\s*([+-]?${bracketedNumberRegex})`), (_, a) => eval('~' + toNumber(a))) // bitwise not
+                            .replace(logicRegex('or|\\|'), (_, a, b) => eval(`(${toNumber(a)}) | (${toNumber(b)})`)) // bitwise or
+                            .replace(logicRegex('nor'), (_, a, b) => eval(`~ (${toNumber(a)}) | (${toNumber(b)})`)) // bitwise nor
+                            .replace(logicRegex('and|&'), (_, a, b) => eval(`(${toNumber(a)}) & (${toNumber(b)})`)) // bitwise and
+                            .replace(logicRegex('nand'), (_, a, b) => eval(`~ (${toNumber(a)}) & (${toNumber(b)})`)) // bitwise nand
+                            .replace(logicRegex('xor'), (_, a, b) => eval(`(${toNumber(a)}) ^ (${toNumber(b)})`)) // bitwise xor
+                            .replace(logicRegex('xnor'), (_, a, b) => eval(`~ (${toNumber(a)}) ^ (${toNumber(b)})`)) // bitwise xnor
                     }
                     return a;
                 })
@@ -387,7 +391,7 @@ function parseNovaSheets() {
         cssOutput = cssOutput
             .replace(/\$\(.+?\)/g, '').replace(/@endvar/g, '') // remove unparsed variables
             .replace(/(\s*;)+/g, ';').replace(/\s+/g, ' ').replace(/} *(?!$)/g, '}\n') // remove redundant chars
-            .replace(/\.?0{8,}\d/, '').replace(/(\d)(9{8,})\d?\b/g, (_, a) => Number(a) + 1); // fix floating point errors
+            .replace(/\.?0{8,}\d/, '').replace(/(\d)(9{8,})\d?\b/g, (_, a) => toNumber(a) + 1); // fix floating point errors
 
         // Load converted styles to page
         if (document.querySelectorAll(`[data-hash="${cssOutput.hashCode()}"]`).length) break; // prevent duplicate output stylesheets

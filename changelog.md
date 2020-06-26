@@ -1,7 +1,21 @@
 # Changelog for NovaSheets
+- [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
+- [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
+- [0.2.0](#020) • [0.2.1](#021)
+- [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+## 0.4.7
+- Added parser constant `KEEP_NAN` for deciding whether or not to parse malformed numbers to `NaN`.
+- Changed parsing of units to once again allow having a space before the unit.
+- Fixed inline variable declarations including the content after the `@endvar` keyword.
+- Fixed single zero-padded numbers being truncated.
+- Fixed spaced `+` and `-` math operators not being parsed.
+- Fixed units with millimetres being incorrectly converted.
+- Fixed hexidecimal values containing letters not being treated as numbers.
 
 ## 0.4.6
 - Changed parsing of numbers to always convert from base 2, 8, and 16 to base 10.
+- Changed parsing of units to disallow having a space before the unit.
 - Fixed built-in function `replace` not replacing all instances of the specified string.
 - Fixed `e` characters in hexidecimal values being parsed as order-of-magnitude exponentation.
 - Fixed newlines and spaced units being truncated completely in the output CSS.
@@ -19,7 +33,7 @@
 ## 0.4.4
 - Changed variable declarations using the existing `=` notation to be strictly single-line declarations.
 - Changed unit parsing to be more intuitive, allowing more units in any permutation (`1/2em`, `1em/2`, `1em/2em`, etc).
-- Changed synatax of build-in function `log` to allow a base as its first argument.
+- Changed syntax of build-in function `log` to allow a base as its first argument.
 - Changed built-in function `replace` to allow regular expressions.
 - Changed built-in functions `degrees`, `radians`, and `gradians` to default to radians, degrees and degrees respectively.
 - Changed built-in function `color` to allow colors being created from hash values.
