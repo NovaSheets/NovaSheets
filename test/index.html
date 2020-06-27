@@ -6,7 +6,7 @@
     <style data-keep="true">
         h1, h2 {text-align: center; font-family: sans-serif;}
         button {width: 30%; margin: 1px auto; border: 1px solid #222; font-size: 1.1em;}
-        .code {display: block; padding: 1em; white-space: pre-wrap; font-family: monospace; border: 1px solid;}
+        .code {display: block; padding: 1em; white-space: pre-wrap; font-family: monospace; border: 1px solid; color: #111;}
 
         .comment {color: #009000;}
         .query {color: #8c0b76;}
@@ -31,7 +31,7 @@
                     content = content
                         .replace(/\/\*.*?\*\//gm, '<span class="comment">$&</span>')
                         .replace(/@media[^{}]+?(?=\{)/gm, '<span class="query">$&</span>')
-                        .replace(/[^{}():;]+?(?=\{)/gm, '<span class="selector">$&</span>')
+                        .replace(/[^{}:;]+?(?=\{)/gm, '<span class="selector">$&</span>')
                         .replace(/[^{}():;]+?(?=:)/gm, '<span class="property">$&</span>')
                         .replace(/[^{}:;]+?(?=;)/gm, '<span class="value">$&</span>')
                     document.getElementById('output').innerHTML += content;

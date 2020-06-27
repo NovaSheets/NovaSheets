@@ -5,8 +5,12 @@
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
 ## 0.4.7
+- Added parser constant `MAX_MATH_RECURSION` for controlling how many times to perform each part of the order of operations before continuing on to the next operator.
 - Added parser constant `KEEP_NAN` for deciding whether or not to parse malformed numbers to `NaN`.
+- Changed built-in function `color` to output a generic CSS level-4 color function when given a `type` other than `rgb`, `rgba`, `hsl`, `hsla`, or `hash`, and to allow inputting any value as a percentage (which can be either implicit, i.e. below 1, or explicit using `%`).
 - Changed parsing of units to once again allow having a space before the unit.
+- Fixed the parser crashing when it comes across invalid unit math, regular expressions in built-in functions `replace`, empty arguments in built-in function `color`, or certain values in built-in functions `@min` and `@max`.
+- Fixed built-in functions incorrectly parsing negative numeric arguments.
 - Fixed inline variable declarations including the content after the `@endvar` keyword.
 - Fixed single zero-padded numbers being truncated.
 - Fixed spaced `+` and `-` math operators not being parsed.

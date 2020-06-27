@@ -31,7 +31,7 @@ NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/w
 @var shaded | bgcolor
     text-align: left;
     background: $[bgcolor];
-    color: #222;
+    color: $(@color | hash | 50% | 20% | 30%);
 @endvar
 div.default {$(normal); margin: $(margin);}
 div.shaded {$(shaded | bgcolor=blue)}

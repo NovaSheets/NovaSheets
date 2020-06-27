@@ -159,7 +159,7 @@ function parseNovaSheets() {
             };
 
             /// Raw math operators
-            const number = '-?[0-9]*\\.?[0-9]+';
+            const number = '-?[0-9]*[.]?[0-9]+';
             const basedNumber = '-?(?:0x[0-9a-f]*\.?[0-9a-f]+|0b[01]*\.?[01]+|0o[0-7]*\.?[0-7]+|' + number + ')';
             const bracketedNumberRegex = `\\((?:${basedNumber})\\)|${basedNumber}`;
             const numberUnitRegex = `(${bracketedNumberRegex})(?:\\s*(cm|mm|m|ft|in|em|rem|en|ex|px|pt|pc))`;
@@ -268,6 +268,7 @@ function parseNovaSheets() {
                 .replace(nssFunction('@encode'), (_, a) => encodeURIComponent(a))
                 .replace(nssFunction('@length'), (_, a) => a.trim().length)
                 .replace(nssFunction('@replace'), (_, a, b, c) => {
+                    console.log([a, b, c].join('|'))
                     let isRegex = b.startsWith('/');
                     if (isRegex) {
                         let regex = b.replace(/\/(.+?)\/([gimusy]*)/, '$1').trim();
@@ -283,27 +284,18 @@ function parseNovaSheets() {
                 .replace(nssFunction('@color', ['\\w+', ...(number + '%?|').repeat(4).split('|')], 4), (_, type, a = '', b = '', c = '', d = '') => {
                     if (type === 'hash' || type.startsWith('hex') || type === '#') {
                         if (!a) return '#000';
-                        if (a.startsWith('rgb')) [a, b, c, d] = a.replace(/rgba?\(|\)/g, '').split(',');
-                        const val = num => {
-                            let output = toNumber(num);
-                            if (num.includes('%')) output = Math.ceil(toNumber(num.replace(/%/, '')) / 100 * 255);
-                            return output.toString(16).padStart(2, '0');
-                        };
+                        if (a.startsWith('rgb')) [a, b, c, d] = a.replace(/rgba?\(|\)/g, '').split(',')
+                        const val = num => (toNumber(num) || 0).toString(16).padStart(2, '0');
                         return '#' + val(a) + val(b) + val(c) + (val(d) < 1 ? '' : val(d));
                     }
                     else if (type.includes('rgb') || type.includes('hsl')) {
                         const percent = x => {
                             let val = toNumber(x.replace(/%/, ''));
                             let char = x.includes('%') ? '%' : '';
-                            if (type.includes('rgb') && ((a + b + c).includes('%') || a <= 1 || b <= 1 || c <= 1) && !char) {
-                                val = Math.ceil(val / 255 * 100);
+                            if (type.includes('rgb') && (a + b + c).includes('%') && !char) {
+                                val = Math.ceil(val / 256 * 100);
                                 char = '%';
                             }
-                            if (type.includes('hsl') && x == a && char) {
-                                val = Math.ceil(val / 100 * 360);
-                                char = '';
-                            }
-
                             let output = val + char;
                             return output;
                         }
