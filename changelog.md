@@ -1,15 +1,30 @@
 # Changelog for NovaSheets
+- [0.5.0](#050-upcoming)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+### 0.5.0 (Upcoming)
+- Added static comments (`/*/ text /*/`) which hide content from the parser but not from the output CSS.
+- Added support for default arguments, added by adding a pipe (`|`) followed by the default content to the argument substitution (e.g., `$[text|default]`).
+- Added built-in function `extract` for extracting the nth item from a delimited string.
+- Added built-in function `each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v` or `$v[1]` or `$v[$i+1]` etc.
+- Added built-in function `luma` for calculating the relative luminance (between 0 and 1) of a CSS color function.
+- Added `colour` and `colourpart` as aliases of built-in functions `color` and `colorpart` respectively.
+- Added console warnings for unparsed undeclared variables.
+- Changed built-in function `replace` to allow more complex regular expressions using escaped notation for parentheses (`{{` -> `(`; `}}` -> `)`) and pipes (`!!` -> `|`).
+- Changed built-in function `color` to allow creating a hash color from a CSS color function.
+- Fixed the contents of regular CSS comments being parsed.
+- Fixed built-in function `color` not working when passed a CSS color function with a hash color output.
+- Fixed built-in functions `e` and `pi` not being parsed when they have leading or trailing whitespace.
 
 ## 0.4.7
 - Added parser constant `MAX_MATH_RECURSION` for controlling how many times to perform each part of the order of operations before continuing on to the next operator.
 - Added parser constant `KEEP_NAN` for deciding whether or not to parse malformed numbers to `NaN`.
 - Changed built-in function `color` to output a generic CSS level-4 color function when given a `type` other than `rgb`, `rgba`, `hsl`, `hsla`, or `hash`, and to allow inputting any value as a percentage (which can be either implicit, i.e. below 1, or explicit using `%`).
 - Changed parsing of units to once again allow having a space before the unit.
-- Fixed the parser crashing when it comes across invalid unit math, regular expressions in built-in functions `replace`, empty arguments in built-in function `color`, or certain values in built-in functions `@min` and `@max`.
+- Fixed the parser crashing when it comes across invalid unit math, regular expressions in built-in function `replace`, empty arguments in built-in function `color`, or certain values in built-in functions `min` and `max`.
 - Fixed built-in functions incorrectly parsing negative numeric arguments.
 - Fixed inline variable declarations including the content after the `@endvar` keyword.
 - Fixed single zero-padded numbers being truncated.

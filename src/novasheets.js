@@ -11,9 +11,9 @@ String.prototype.escapeRegex = function () {
     return this.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
 };
 
-function nssError(str, args) {
-    if (!args) return console.error("<NovaSheets> Parsing failed: " + str);
-    if (str == 'func') return nssError(`Unknown argument "${args[1]}" in function "${args[0]}" ${args[2]}`.trim() + '.');
+function nssLog(str, args) {
+    if (str == 'func') return nssLog(`Unknown argument "${args[1]}" in function "${args[0]}" ${args[2]}`.trim() + '.');
+    return console.warn("<NovaSheets>", str);
 }
 
 function parseNovaSheets() {
@@ -42,9 +42,7 @@ function parseNovaSheets() {
             let response = req.responseText;
             stylesheetContents.push(response.toString());
             sources.push(fileNames.rel[i]);
-        } catch (error) {
-            nssError(`File "${fileNames.rel[i]}" cannot be accessed.`);
-        }
+        } catch (error) { }
     }
     for (let contents of inlineSheets) {
         stylesheetContents.push(contents.innerHTML);
@@ -63,13 +61,23 @@ function parseNovaSheets() {
             .replace(/@const\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         let lines = stylesheetContents[s].split('\n');
         let cssOutput = '';
+        let commentedContent = [], staticContent = [];
         for (let i in lines) {
-            lines[i] = lines[i].replace(/[\r\n]/g, ' ').trim(); // remove CRLF and trim
+            lines[i] = lines[i].trim().replace(/[\r\n]/g, ' '); // remove whitespace
             cssOutput += ' ' + lines[i];
         }
-        cssOutput = cssOutput.replace(/\s*@var[\s\S]*?((?=\s*@var)|@endvar)|@const\s*[A-Z_]+\s*(true|false|[0-9]+)/gm, ' '); // remove NSS declarations
+        cssOutput = cssOutput
+            .replace(/\s*@var[\s\S]*?((?=\s*@var)|@endvar)|@const\s*[A-Z_]+\s*(true|false|[0-9]+)/gm, ' ') // remove NSS declarations
+            .replace(/\/\*([^\/].+?[^\/])\*\//g, (_, a) => {
+                if (commentedContent.indexOf(a) < 0) commentedContent.push(a);
+                return '/*COMMENT#' + commentedContent.indexOf(a) + '*/';
+            }) // store commented content for later use
+            .replace(/\/\*\/(.+?)\/\*\//g, (_, a) => {
+                if (staticContent.indexOf(a) < 0) staticContent.push(a);
+                return '/*STATIC#' + staticContent.indexOf(a) + '*/';
+            }) // store static content for later use
         let customVars = [];
-        let localVars = [];
+        let localVars = [], defaultArgs = [];
         let _MAX_RECURSION = 50, _MAX_MATH_RECURSION = 5, _MAX_ARGUMENTS = 10, _KEEP_NAN = false; // parser constants
 
         // Generate a list of lines that start variable declarations
@@ -114,9 +122,11 @@ function parseNovaSheets() {
             for (let j in customVars[i].params) {
                 let param = customVars[i].params[j].trim();
                 let newName = [j, customVars[i].name, window.randomHash, param].join('~'); //= 'j-name-hash-param'
-                let splitText = `$[${param}]`;
+                let splitText = `(\\$\\[${param}(?:\\s*\\|([^\\]]*))?\\])`;
+                let splitContent = customVars[i].content.split(RegExp(splitText));
                 let joinText = `$(${newName})`;
-                customVars[i].content = customVars[i].content.split(splitText).join(joinText);
+                customVars[i].content = splitContent[0] + joinText + splitContent[3];
+                defaultArgs.push(splitContent[2] || '');
                 localVars.push(newName);
             }
         }
@@ -142,7 +152,9 @@ function parseNovaSheets() {
                 for (let j = 0; j < varParts.length; j++) {
                     if (j < 2 || !varParts[j]) continue;
                     let [param, arg] = varParts[j].split('=');
-                    for (let localVar of localVars) {
+                    for (let k in localVars) {
+                        arg = arg || defaultArgs[k]; // if 'arg' is not set, use default
+                        let localVar = localVars[k];
                         let localVarFormatted = '\\$\\(\\s*' + localVar.escapeRegex() + '\\)'; //= '$(i-name-hash-param)'
                         let varParam = localVar.split('~').splice(3).join('~'); // 'i-name-hash-param' -> 'param'
                         if (varParam !== param.trim()) continue; // skip if the current param does not match the substituting var's param
@@ -153,9 +165,14 @@ function parseNovaSheets() {
             }
 
             // Parse built-in functions
-            const nssFunction = (name, params = '[^|)]*?', count) => {
-                if (!Array.isArray(params)) params = Array(count || _MAX_ARGUMENTS).fill(params);
-                return RegExp(`\\$\\(\\s*${name}\\s*(?:\\|\\s*(${params.join('))?\\s*(?:\\|\\s*(')}))?\\s*\\)`, 'g');
+            const nssFunction = (name, paramArgs) => {
+                if (!Array.isArray(paramArgs)) paramArgs = [paramArgs];
+                let params = Array(_MAX_ARGUMENTS);
+                for (let i = 0; i < params.length; i++) {
+                    params[i] = paramArgs[i] || '[^|())]*?';
+                }
+                let output = `\\$\\(\\s*${name}\\s*(?:\\|\\s*(${params.join('))?\\s*(?:\\|\\s*(')}))?\\s*\\)`;
+                return RegExp(output, 'g');
             };
 
             /// Raw math operators
@@ -173,7 +190,7 @@ function parseNovaSheets() {
                         if (!Array.isArray(op)) op = [op, op];
                         cssOutput = cssOutput
                             .replace(RegExp('(?<!(?:#|0x)[0-9a-f.]*)' + basedNumber, 'g'), a => toNumber(a)) // convert base 2,8,16 to 10
-                            .replace(RegExp(`(${number})[Ee]([+-]?${number})`), (_, n1, n2) => { // convert scientific notation
+                            .replace(RegExp(`\\b(${number})[Ee]([+-]?${number})\\b`), (_, n1, n2) => { // convert scientific notation
                                 let val = toNumber(n1) * Math.pow(10, toNumber(n2));
                                 return val.toFixed(20).replace(/\.?0+$/, '');
                             })
@@ -223,8 +240,8 @@ function parseNovaSheets() {
 
             /// Math functions
             cssOutput = cssOutput
-                .replace(/\$\(@pi\)/g, Math.PI)
-                .replace(/\$\(@e\)/g, Math.E)
+                .replace(/\$\(\s*@pi\s*\)/g, Math.PI)
+                .replace(/\$\(\s*@e\s*\)/g, Math.E)
                 .replace(nssFunction('@mod', number, 2), (_, a, b) => a % b)
                 .replace(nssFunction('@sin', number, 1), (_, a) => Math.sin(a))
                 .replace(nssFunction('@asin', number, 1), (_, a) => Math.asin(a))
@@ -265,23 +282,46 @@ function parseNovaSheets() {
 
             /// Text functions
             cssOutput = cssOutput
+                .replace(nssFunction('@extract'), (_, a, b, c) => a.split(b)[toNumber(c) - 1] || '')
                 .replace(nssFunction('@encode'), (_, a) => encodeURIComponent(a))
                 .replace(nssFunction('@length'), (_, a) => a.trim().length)
                 .replace(nssFunction('@replace'), (_, a, b, c) => {
                     let isRegex = b.startsWith('/');
                     if (isRegex) {
-                        let regex = b.replace(/\/(.+?)\/([gimusy]*)/, '$1').trim();
-                        let flags = b.replace(/\/(.+?)\/([gimusy]*)/, '$2').trim() || 's';
+                        let parts = b.trim().match(/\/(.+?)\/([gimusy]*)/).slice(1);
+                        let regex = parts[0].replace(/!!/g, '|').replace(/{{/g, '(').replace(/(}?)}}/g, '$1)'); // escaping
+                        let flags = parts[1] || 's';
                         b = RegExp(regex, flags);
                     }
                     return a.trim().replace(isRegex ? b : RegExp((b || ' ').escapeRegex(), 'g'), c.trim());
                 })
 
+            /// Loop functions
+            cssOutput = cssOutput
+                .replace(nssFunction('@each', [0, 0, '.*?']), (_, a, b, ...c) => {
+                    c = c.slice(0, -2).join('|').replace(/\|+$/, '');
+                    let output = [], arr = a.split(b);
+                    for (let i in arr) {
+                        let parsed = c
+                            .replace(/\$i/gi, Number(i) + 1)
+                            .replace(/\$v\[([0-9]+)([-+*/][0-9]+)?\]/g, (_, a, b) => arr[eval(Number(a - 1) + b)])
+                            .replace(/.?\s*undefined/g, '')
+                            .replace(/\$v/gi, arr[i])
+                        output.push(parsed);
+                    }
+                    return output.join(' ');
+                })
+                .replace(nssFunction('@repeat'), (_, a, b) => {
+                    let output = '';
+                    for (let i = 0; i < Number(a); i++) output += b;
+                    return output;
+                })
+
             // Colour functions
-            const colorArgRegex = `(?:rgba?|hsla?)\\(\\s*\\d{1,3}\\s*,${(`\\s*,\\s*${number}%?\\s*`).repeat(3)}(?:\\s*,\\s*${number})?\\s*\\)|#[0-9a-f]{3,8}`;
+            const colorArgRegex = `(?:rgba?|hsla?)\\(\\s*${number}%?\\s*,\\s*${number}%?\\s*,\\s*${number}%?\\s*(?:,\\s*${number}\\s*%?)?\\s*\\)|#[0-9a-f]{3,8}`;
             cssOutput = cssOutput
                 .replace(nssFunction('@color', ['\\w+', ...(number + '%?|').repeat(4).split('|')], 4), (_, type, a = '', b = '', c = '', d = '') => {
-                    if (type === 'hash' || type.startsWith('hex') || type === '#') {
+                    if (['hash', '#'].includes(type) || type.startsWith('hex')) {
                         if (!a) return '#000';
                         if (a.startsWith('rgb')) [a, b, c, d] = a.replace(/rgba?\(|\)/g, '').split(',');
                         const val = num => {
@@ -311,7 +351,7 @@ function parseNovaSheets() {
                     }
                     else return `${type.toLowerCase()}(${a} ${b} ${c}${d ? ' / ' + d : ''})`;
                 })
-                .replace(nssFunction('@color', ['\\w+', colorArgRegex]), (_, type, a) => {
+                .replace(nssFunction('@(?:colou?r|luma)', ['\\w+', colorArgRegex]), (_, type, a) => {
                     if (a.startsWith('#')) {
                         let parts;
                         if (a.length - 1 === 3) parts = [a[1].repeat(2), a[2].repeat(2), a[3].repeat(2)];
@@ -326,9 +366,18 @@ function parseNovaSheets() {
                         parts = a.replace(/^\s*...a?\s*/, '').replace(/[()]/g, '').split(','); // replace 'rgba' etc & '('/')'
                         [a, b, c, d] = parts;
                     }
+                    if (_.includes('@luma')) {
+                        const adjustGamma = a => ((a + 0.055) / 1.055) ** 2.4;
+                        const parseLuma = a => a <= 0.03928 ? a / 12.92 : adjustGamma(a);
+                        return 0.2126 * parseLuma(a / 255) + 0.7152 * parseLuma(b / 255) + 0.0722 * parseLuma(c / 255); // ITU-R BT.709
+                    }
+                    if (['hash', '#'].includes(type) || type.startsWith('hex')) {
+                        const toHex = a => toNumber(a % 256).toString(16).padStart(2, '0');
+                        return '#' + toHex(a) + toHex(b) + toHex(c) + (d ? toHex(d) : '')
+                    }
                     return `${type}(${a}, ${b}, ${c}${d ? ', ' + d : ''})`;
                 })
-                .replace(nssFunction('@colorpart', ['\\w+', colorArgRegex]), (_, part, color) => {
+                .replace(nssFunction('@colou?rpart', ['\\w+', colorArgRegex]), (_, part, color) => {
                     part = part.trim().toLowerCase(), color = color.trim().toLowerCase();
                     let parts = [];
                     const toHex = (str, a) => (toNumber("0x" + str.substr(a, 2))).toString()
@@ -348,7 +397,7 @@ function parseNovaSheets() {
                         else if (part.startsWith('b')) return parts[2];
                         else if (part.startsWith('a')) return parts[3];
                         else {
-                            nssError('func', ['colorpart', part, 'of color type rgb/rgba/#']);
+                            nssLog('func', ['colorpart', part, 'of color type rgb/rgba/#']);
                             return color;
                         }
                     }
@@ -358,11 +407,11 @@ function parseNovaSheets() {
                         else if (part.startsWith('l')) return parts[2];
                         else if (part.startsWith('a')) return parts[3];
                         else {
-                            nssError('func', ['colorpart', part, 'of color type hsl/hsla']);
+                            nssLog('func', ['colorpart', part, 'of color type hsl/hsla']);
                             return color;
                         }
                     } else {
-                        nssError('func', ['colorpart', part, 'of unknown color type']);
+                        nssLog('func', ['colorpart', part, 'of unknown color type']);
                         return color;
                     }
                 })
@@ -404,11 +453,26 @@ function parseNovaSheets() {
                 .replace(nssFunction('@if'), (_, a, b, c) => parseLogic(a) ? b : c || '')
         }
 
-        // Finalise output
+        // Remove unparsed variables
+        let unparsedContent = cssOutput.match(/\$\((.+?)\)/g)
+        if (unparsedContent) for (let val of unparsedContent) {
+            let varName = val.replace(/\$\((.*?)(\|.*)?\)/, '$1')
+            nssLog(`Instances of undeclared variable "${varName}" have been removed from the output.`);
+            cssOutput = cssOutput.replace(val, '');
+        }
+
+        // Cleanup output
         cssOutput = cssOutput
-            .replace(/\$\(.+?\)/g, '').replace(/@endvar/g, '') // remove unparsed variables
-            .replace(/(\s*;)+/g, ';').replace(/\s+/g, ' ').replace(/} *(?!$)/g, '}\n') // remove redundant chars
-            .replace(/\.?0{8,}\d/, '').replace(/(\d)(9{8,})\d?\b/g, (_, a) => Number(a) + 1); // fix floating point errors
+            .replace(/(\s*;)+/g, ';').replace(/\s+/g, ' ').replace(/} *(?!$)/g, '}\n').replace(/@endvar/g, '') // remove redundant chars
+            .replace(/\.?0{8,}\d/, '').replace(/(\d)(9{8,})\d?\b/g, (_, a) => Number(a) + 1) // fix floating point errors
+
+        // Readd comments to the output
+        for (let i in staticContent) {
+            cssOutput = cssOutput.replace(RegExp(`\\/\\*STATIC#${i}\\*\\/`, 'g'), staticContent[i].trim());
+        }
+        for (let i in commentedContent) {
+            cssOutput = cssOutput.replace(RegExp(`\\/\\*COMMENT#${i}\\*\\/`, 'g'), '/*' + commentedContent[i] + '*/');
+        }
 
         // Load converted styles to page
         if (document.querySelectorAll(`[data-hash="${cssOutput.hashCode()}"]`).length) break; // prevent duplicate output stylesheets
