@@ -18,6 +18,7 @@
     <link id="import" rel="novasheet" href="style.nss">
     <script>
         window.useDefault = true;
+        document.title += ' (' + location.protocol + ')';
         function clearStyles() {
             for (let style of document.querySelectorAll('style')) {
                 if (!style.dataset.keep) style.parentNode.removeChild(style);

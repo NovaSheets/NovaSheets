@@ -1,23 +1,28 @@
 # Changelog for NovaSheets
-- [0.5.0](#050-upcoming)
+- [0.5.0](#050)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
-### 0.5.0 (Upcoming)
-- Added static comments (`/*/ text /*/`) which hide content from the parser but not from the output CSS.
-- Added support for default arguments, added by adding a pipe (`|`) followed by the default content to the argument substitution (e.g., `$[text|default]`).
-- Added built-in function `extract` for extracting the nth item from a delimited string.
-- Added built-in function `each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v` or `$v[1]` or `$v[$i+1]` etc.
-- Added built-in function `luma` for calculating the relative luminance (between 0 and 1) of a CSS color function.
+### 0.5.0
+- Added different categories of block comments, each with a different purpose:
+  - Regular comments (`/*content*/`): output the raw content inside of them as a CSS comment; i.e, itself.
+  - Static comments (`/*/content/*/`): output the raw content inside of them as raw CSS or NovaSheets syntax; i.e., itself but without the "`/*/`"s.
+  - Parsed comments (`/*[content]*/`): output the parsed content inside of them as a CSS comment.
+- Added support for default argument content, declared by adding a pipe (`|`) followed by the default content into the argument substitutor (e.g., `$[text|default]`).
+- Added built-in function `extract` for extracting the nth item from a delimited string. Syntax: `$(@extract | <list> | <delimiter> | <index> )`.
+- Added built-in function `each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v`, `$v[1]`, `$v[$i+1]`, etc. Syntax: `$(@each | <list> | <delimiter> | <replacment> )`.
+- Added built-in function `luma` for calculating the relative luminance (between 0 and 1) of a color. Syntax: `$(@luma | <color> )`.
 - Added `colour` and `colourpart` as aliases of built-in functions `color` and `colorpart` respectively.
-- Added console warnings for unparsed undeclared variables.
-- Changed built-in function `replace` to allow more complex regular expressions using escaped notation for parentheses (`{{` -> `(`; `}}` -> `)`) and pipes (`!!` -> `|`).
-- Changed built-in function `color` to allow creating a hash color from a CSS color function.
-- Fixed the contents of regular CSS comments being parsed.
+- Added console warnings for when variables are not parsed.
 - Fixed built-in function `color` not working when passed a CSS color function with a hash color output.
+- Fixed built-in function `replace` not allowing full regular expression syntax such as grouping and boolean 'or'.
+- Fixed built-in functions `degrees` and `gradians` having incorrect conversions between each other.
 - Fixed built-in functions `e` and `pi` not being parsed when they have leading or trailing whitespace.
+- Fixed small decimal values being truncated incorrectly (e.g., `0.000000001234` turning into `0234` instead of just `0`).
+- Fixed equals signs in the contents of a single-line variable causing the content that follows to not show up in the output CSS.
+- Refactored internal parsing of variables to bracket-match completely, allowing for nested parentheses.
 
 ## 0.4.7
 - Added parser constant `MAX_MATH_RECURSION` for controlling how many times to perform each part of the order of operations before continuing on to the next operator.
@@ -111,7 +116,7 @@
 
 ## 0.3.3
 - Added support for using math operators on the right side of values with units.
-- Fixed multiple calls of the same variable outputting the same result.
+- Fixed multiple calls of the same variable with different arguments outputting the same result each time.
 - Fixed nested variables with arguments still sometimes not being parsed correctly.
 - Fixed the parentheses in math operations not being removed when it contains leading or trailing whitespace.
 
@@ -120,7 +125,6 @@
 - Fixed nested variables with arguments sometimes not being parsed correctly.
 
 ## 0.3.1
-- Added tentative support for older browsers, such as pre-Chromium Edge.
 - Changed output element to include the source of the stylesheet in the element's dataset.
 - Fixed NovaSheets declaration not working in older browsers.
 - Fixed bracketed numbers having their brackets removed.
@@ -139,7 +143,7 @@
 - Changed NovaSheets `type` declarations to apply to any element instead of applying only to `template` elements.
 
 ## 0.2.1
-- Duplicate stylesheets are no longer outputted when running the parsing command again.
+- Changed output to prevent multiple duplicate stylesheets being outputted when running the parsing command multiple times.
 - Fixed parameters sometimes not being fully parsed.
 
 ## 0.2.0
