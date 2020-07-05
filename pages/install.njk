@@ -1,0 +1,63 @@
+---
+layout: layouts/base.njk
+permalink: /install/
+title: Install
+description: "Install NovaSheets"
+keywords: "nixinova,novasheets,install novasheets"
+---
+
+<h1>Installing NovaSheets</h1>
+<p>
+    NovaSheets is installed simply by embedding a JavaScript file into your HTML.
+    This file can be downloaded and hosted locally by you
+    (see <a href="#downloading">§&nbsp;Downloading</a>)
+    or you can link directly to the source code
+    (see <a href="#importing">§&nbsp;Importing</a>).
+    That's it!
+</p>
+
+<h2 id="downloading">Downloading</h2>
+<p>
+    See the <a href="/versions/">Versions</a> page to choose a version to download.
+    Once you have done this, you can download one of the files given and add them to your project,
+    or embed NovaSheets into your project directly using the code provided.
+</p>
+
+<h2 id="importing">Importing</h2>
+<p>
+    The latest version is <strong>{% include "templates/version.txt" %}</strong>
+    and can be imported using the code below:
+    <pre>
+        &lt;script src="https://novasheets.netlify.app/src/{% include "templates/version.txt" %}/min">&lt;/script>
+    </pre>
+</p>
+
+<p>
+    While the minified version above is recommended for general use, you can also choose to use the more verbose regular version, which includes comments and the like:
+    <pre>
+        &lt;script src="https://novasheets.netlify.app/src/{% include "templates/version.txt" %}">&lt;/script>
+    </pre>
+</p>
+
+<p>
+    Alternatively, you can choose to import the main live source code directly,
+    but be warned that it is continually updated and may contain incomplete or buggy features,
+    so use it at your own risk:
+    <pre>
+        &lt;script src="https://novasheets.netlify.app/src/latest">&lt;/script>
+    </pre>
+</p>
+
+<h2 id="browser-support">Browser support</h1>
+<p>
+    NovaSheets is supported in all major browsers, including Chrome, Edge (Chromium), Firefox, Opera, and Safari.
+    NovaSheets does not work in Internet Explorer, as it is written using the following features from <a href="https://www.w3schools.com/js/js_es6.asp">ECMAScript 6 (2015)</a>:
+
+    <ul>
+        <li>Arrow functions (<code>=></code>)</li>
+        <li>
+            <code>let</code> and <code>const</code> declarations</li>
+        <li>Rest operator (<code>...</code>)</li>
+        <li>RegEx negative lookbehinds <code>(?&lt;!.)</code> and <code>(?&lt;=.)</code></li>
+    </ul>
+</p>

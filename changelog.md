@@ -1,21 +1,29 @@
 # Changelog for NovaSheets
-- [0.5.0](#050)
+- [0.5.0](#050) • [0.5.1](#051)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
-### 0.5.0
+## 0.5.1
+- Added console warnings for when the parser detects a recursive variable.
+- Fixed missing `@endvar` declarations causing infinite recursion.
+- Fixed argument substitutions requiring the pipe (`|`) to be prefixed with a space.
+- Fixed arguments being skipped if they are placed after an empty anonymous argument.
+- Fixed unary negative operator being treated as subtraction.
+
+## 0.5.0
 - Added different categories of block comments, each with a different purpose:
   - Regular comments (`/*content*/`): output the raw content inside of them as a CSS comment; i.e, itself.
   - Static comments (`/*/content/*/`): output the raw content inside of them as raw CSS or NovaSheets syntax; i.e., itself but without the "`/*/`"s.
   - Parsed comments (`/*[content]*/`): output the parsed content inside of them as a CSS comment.
 - Added support for default argument content, declared by adding a pipe (`|`) followed by the default content into the argument substitutor (e.g., `$[text|default]`).
 - Added built-in function `extract` for extracting the nth item from a delimited string. Syntax: `$(@extract | <list> | <delimiter> | <index> )`.
-- Added built-in function `each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v`, `$v[1]`, `$v[$i+1]`, etc. Syntax: `$(@each | <list> | <delimiter> | <replacment> )`.
+- Added built-in function `each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v`, `$v[1]`, `$v[$i+1]`, etc. Syntax: `$(@each | <list> | <delimiter> | <replacement> )`.
 - Added built-in function `luma` for calculating the relative luminance (between 0 and 1) of a color. Syntax: `$(@luma | <color> )`.
 - Added `colour` and `colourpart` as aliases of built-in functions `color` and `colorpart` respectively.
 - Added console warnings for when variables are not parsed.
+- Removed the need to explicitly initialize variables in variable declarations.
 - Fixed built-in function `color` not working when passed a CSS color function with a hash color output.
 - Fixed built-in function `replace` not allowing full regular expression syntax such as grouping and boolean 'or'.
 - Fixed built-in functions `degrees` and `gradians` having incorrect conversions between each other.

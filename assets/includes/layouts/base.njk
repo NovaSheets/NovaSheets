@@ -1,0 +1,14 @@
+<!DOCTYPE html>
+<html lang="en-NZ">
+    <head>
+        {% include "components/head.html" %}
+        {% if nss %}<link rel="novasheet" href="/assets/css/{{nss}}.nss">{% endif %}
+        <script src="https://nixinova.github.io/NovaSheets/src/vers/novasheets-{% include "templates/version.txt" %}.js"></script>
+    </head>
+
+    <body>
+        <header>{% include "components/header.html" %}</header>
+        <main>{{ content | safe }}</main>
+        <footer>{% include "components/footer.html" %}</footer>
+    </body>
+</html>

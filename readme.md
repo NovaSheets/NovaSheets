@@ -5,7 +5,7 @@
 
 A lightweight CSS preprocessor that is simple but powerful.
 
-**[View full documentation](https://github.com/Nixinova/NovaSheets/wiki)**
+**[View full documentation](https://novasheets.netlify.app/docs/)**
 
 ## Why NovaSheets?
 
@@ -17,7 +17,7 @@ See the [releases](https://github.com/Nixinova/NovaSheets/releases) page of this
 
 ## Usage
 
-NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/wiki/Syntax#Variables) (with optional parameters) and reuse these elsewhere in the document. For more information, see the [wiki](https://github.com/Nixinova/NovaSheets/wiki). For testing NovaSheets syntax, see [this demo page](https://nixinova.github.io/NovaSheets/test/).
+NovaSheets lets you declare [variables](https://novasheets.netlify.app/docs/variables/) (with optional parameters) and reuse these elsewhere in the document. For testing NovaSheets syntax, see [this demo page](https://novasheets.netlify.app/test/).
 
 ### Example
 
@@ -28,7 +28,7 @@ NovaSheets lets you declare [variables](https://github.com/Nixinova/NovaSheets/w
     text-align: center;
     color: #eee;
 @var margin = 1em
-@var shaded | bgcolor
+@var shaded
     text-align: left;
     background: $[bgcolor];
     color: $(@color | hash | 50% | 20% | 30%);
@@ -40,7 +40,7 @@ div.shaded {$(shaded | bgcolor=blue)}
 **Output**:
 ```
 div.default {text-align: center; color: #eee; margin: 1em;}
-div.shaded {text-align: left; background: blue; color: #222;}
+div.shaded {text-align: left; background: blue; color: #80334d;}
 ```
 
 ## VSCode extension

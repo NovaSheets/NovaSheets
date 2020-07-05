@@ -1,0 +1,84 @@
+---
+layout: layouts/base.njk
+permalink: /
+title: Home
+description: "The official website of NovaSheets"
+keywords: "nixinova,novasheets"
+nss: "home"
+---
+
+<div id="showcase">
+    <div class="section-container">
+        <div class="item-container main-container">
+            <div class="item">
+                <h1>NovaSheets</h1>
+                <p>A lightweight CSS preprocessor that is simple but powerful.</p>
+            </div>
+        </div>
+    </div>
+    <div class="section-container">
+        <div class="item-container">
+            <div class="item">
+                <h2>Simple</h2>
+                <p>Variables? Functions? Mixins? Templates?<br>Find them all under one name.</p>
+            </div>
+            <div class="item">
+                <pre>
+                    @var color = hsl( $[hue|245], 75%, 40% )<br>
+                    body {background: $(color|hue=300);}
+                </pre>
+            </div>
+        </div>
+    </div>
+    <div class="section-container">
+        <div class="item-container">
+            <div class="item">
+                <h2>Lightweight</h2>
+                <p>With one import, gain access to the full parsing power.</p>
+            </div>
+            <div class="item">
+                <pre>
+                    &lt;script src="novasheets.js"&gt;&lt;/script&gt;
+                </pre>
+            </div>
+        </div>
+    </div>
+    <div class="section-container">
+        <div class="item-container">
+            <div class="item">
+                <h2>Powerful</h2>
+                <p>Utilize the wide variety of built-in functions offered to you.</p>
+            </div>
+            <div class="item">
+                <pre>
+                    $(@color | rgb | $(@round|0xff/2) | 50% | 255 )
+                </pre>
+            </div>
+        </div>
+    </div>
+    <div class="section-container">
+        <div class="item-container">
+            <div class="item">
+                <h2>Versatile</h2>
+                <p>Peform powerful variable interpolation.</p>
+            </div>
+            <div class="item">
+                <pre>
+                    $(@each | .item1, .item2, .item3 | , | $v > $v[$i-1] , ) .item {display: flex;}
+                </pre>
+            </div>
+        </div>
+    </div>
+    <div class="section-container" style="background: inherit;">
+        <div class="item-container">
+            <div class="item">
+                <h2>Get started</h2>
+                <p>See the <a href="/install/">Installation</a> page.</p>
+            </div>
+            <div class="item">
+                <h2>Need help?</h2>
+                <p>See the <a href="/docs/">Documentation</a> pages.</p>
+            </div>
+        </div>
+    </div>
+</div>
