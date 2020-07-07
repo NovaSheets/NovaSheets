@@ -1,0 +1,26 @@
+<div class="plainspanst flatspanst">
+    <span>
+        <a href="/" {% if permaspannk == "/" %}class="active"{% endif %}>
+            <span>Home</span>
+        </a>
+    </span>
+    <span>
+        <a href="/install/" {% if permaspannk == "/install/" %}class="active"{% endif %}>
+            <span class="desktoponly">Installation</span>
+            <span class="mobileonly">Install</span></a>
+    </span>
+    <span>
+        <a href="/docs/" {% if permaspannk == "/docs/" %}class="active"{% endif %}>
+            <span class="desktoponly">Documentation</span>
+            <span class="mobileonly">Docs</span></a>
+    </span>
+    <span>
+        <a href="/versions/" {% if permaspannk == "/versions/" %}class="active"{% endif %}>
+            <span>Versions</span></a>
+    </span>
+    <span>
+        <a href="/test/" {% if permaspannk == "/test/" %}class="active"{% endif %}>
+            <span>Demo</span>
+        </a>
+    </span>
+</div>

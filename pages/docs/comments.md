@@ -2,12 +2,11 @@
 layout: layouts/docs.njk
 permalink: /docs/comments/
 title: Comments
-description: "NovaSheets comments"
-keywords: "nixinova,novasheets,novasheets comments"
+js: colouring
 ---
 # NovaSheets Comments
 
-```js
+```nss
 // Single-line comment
 /* Multi-line comment */
 /*/ Static comment /*/

@@ -1,17 +1,27 @@
-main {padding-left: 5%; padding-right: 5%; margin-bottom: 2em; display: grid; grid-template-areas: "sidebar content"; grid-gap: 3em; grid-template-columns: 2fr 8fr;}
-
-main>div {margin-top: 2em;}
-
-aside {margin: 15vh 1em;}
+// Elements //
+main {padding-left: 5%; padding-right: 5%; margin-bottom: 2em; display: grid;}
 aside>:first-child {margin-left: -1em;}
-aside ul {margin: 0; padding :0;}
+aside ul {margin: 0; padding: 0;}
 
-pre {white-space: pre-wrap;}
+@media (max-width: 800px) {
+    main #content {margin: 0 1em;}
+    aside {border: 1px solid; margin: auto;  padding: 1em 3em; margin-top: 2em;}
+}
+@media (min-width: 801px) {
+    main {grid-template-areas: "sidebar content"; grid-gap: 3em; grid-template-columns: 2fr 8fr;}
+    main #content {grid-area: content; margin-top: 2em;}
+    aside {grid-area: sidebar; margin: 15vh 1em;}
+}
+
+// Code blocks //
 :not(pre)>code {border: 1px solid #8888; padding: 2px;}
 
-h2 + p, h3 + p, h4 + p {margin-top: -1em; margin-left: 1em; margin-bottom: -1em;}
+// Headings //
+h2 + p, h3 + p, h4 + p {margin-top: -1.5em; margin-left: 1em; margin-bottom: 0em;}
 
-#toc + ul {display: inline-block; padding: 1em 1em 1em 2em; border: 1px solid #ddd; margin-top: -1em;}
-
+// Links //
 a {scroll-margin-top: 70px;}
 a:not([href]) {font-weight: bold; text-decoration: none;}
+
+// TOC //
+#toc + ul {display: inline-block; padding: 1em 1em 1em 2em; border: 1px solid #ddd; margin-top: -1em;}

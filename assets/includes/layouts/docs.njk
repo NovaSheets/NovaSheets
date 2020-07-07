@@ -3,13 +3,15 @@
     <head>
         {% include "components/head.html" %}
         <link rel="novasheet" href="/assets/css/docs.nss">
-        <script src="https://nixinova.github.io/NovaSheets/src/vers/novasheets-{% include "templates/version.txt" %}.js"></script>
+        {% if js %}<script src="/assets/js/{{js}}.js"></script>{% endif -%}
+        {% if js2 %}<script src="/assets/js/{{js2}}.js"></script>{% endif -%}
+        <script src="/src/vers/novasheets-{% include "templates/version.txt" %}.js"></script>
     </head>
 
     <body>
-        <header>{% include "components/header.html" %}</header>
+        <header>{% include "components/header.njk" %}</header>
         <main>
-            <aside style="grid-area: sidebar;">
+            <aside>
                 <a {% if permalink != "/docs/" %}href="/docs/"{% endif %}>Documentation</a>
                 <ul style="list-style-type: none;">
                     <li>
@@ -29,7 +31,7 @@
                     </li>
                 </ul>
             </aside>
-            <div style="grid-area: content;">
+            <div id="content">
                 {{ content | safe }}
             </div>
         </main>

@@ -2,20 +2,19 @@
 layout: layouts/docs.njk
 permalink: /docs/variables/
 title: Variables
-description: "NovaSheets variables"
-keywords: "nixinova,novasheets,novasheets variables"
+js: colouring
 ---
 # NovaSheets Variables
 
 ## Declaring
 - Single-line:
   ```nss
-  @var <variable name> = <variable contents>
+  @var <name> = <contents>
   ```
 - Multi-line:
   ```nss
-  @var <variable name>
-  <variable contents>
+  @var <name>
+    <contents>
   [@endvar]
   ```
 
@@ -29,17 +28,17 @@ Parameters of a variable are referenced similar to variables but by using square
 ## Substitution
 - Explicit arguments:
   ```nss
-  $(variable name | parameter1 = argument1 | parameter2 = argument2 | ... )
+  $( <name> | <parameter1> = <argument1> | <parameter2> = <argument2> | ... )
   ```
 - Anomymous arguments (where the parameter defaults to the index of the argument, i.e. `1`, `2`, ...):
   ```nss
-  $(variable name | argument1 | argument2 | ...)
+  $( <name> | <argument1> | <argument2> | ... )
   ```
 
 Variables are referenced using a dollar sign (`$`) followed by the variable name in parentheses (`(...)`).
 Arguments are passed by listing parameter names followed by the argument contents, with each prefixed with a pipe.
 
-## Example
+## Examples
 
 ```nss
 /* Declare variables */
@@ -68,10 +67,10 @@ $(color1) // '#123'
 // substitute variable 'color2' with argument 'hue' set to '100':
 $(color2 | hue = 100 ) // 'hsl(100, 50%, 75%)'
 
-// substitute variable 'color3' with argument 'red' defaults to '0':
+// substitute variable 'color3' with argument 'red' defaulting to '0':
 $(color3 ) // 'rgb(0, 128, 0)'
 
-// substitute variable 'color4' with argument '1' defaults to the first anonymous argument, which is set to 'f':
+// substitute variable 'color4' with argument '1' defaulting to the first anonymous argument, which is set to 'f':
 $(color3 | f ) // '#000f'
 
 // substitute variable 'color5':

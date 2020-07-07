@@ -14,7 +14,8 @@
         .property {color: #095d98;}
         .value {color: #b74401;}
     </style>
-    <script src="https://nixinova.github.io/NovaSheets/src/novasheets.js"></script>
+    <script src="../src/novasheets.js"></script>
+    <script src="/assets/js/colouring.js"></script>
     <link id="import" rel="novasheet" href="style.nss">
     <script>
         window.useDefault = true;
@@ -28,14 +29,7 @@
         function logStyles() {
             for (let style of document.querySelectorAll('style')) {
                 if (!style.dataset.keep) {
-                    let content = style.innerHTML;
-                    content = content
-                        .replace(/\/\*.*?\*\//gm, '<span class="comment">$&</span>')
-                        .replace(/@media[^{}]+?(?=\{)/gm, '<span class="query">$&</span>')
-                        .replace(/[^{}:;]+?(?=\{)/gm, '<span class="selector">$&</span>')
-                        .replace(/[^{}():;]+?(?=:)/gm, '<span class="property">$&</span>')
-                        .replace(/[^{}:;]+?(?=;)/gm, '<span class="value">$&</span>')
-                    document.getElementById('output').innerHTML += content;
+                    document.getElementById('output').innerHTML += style.innerHTML;
                 }
             }
         }

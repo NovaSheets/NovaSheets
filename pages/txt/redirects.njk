@@ -1,6 +1,13 @@
 ---
 permalink: _redirects
 ---
-/src/latest     https://nixinova.github.io/NovaSheets/src/novasheets.js
-/src/:ver       https://github.com/Nixinova/NovaSheets/releases/download/:ver/novasheets-:ver.js
-/src/:ver/min   https://github.com/Nixinova/NovaSheets/releases/download/:ver/novasheets-:ver.min.js
+/src/latest                     /src/novasheets.js
+/src/stable                     /src/vers/novasheets-0.5.0.js
+/src/stable/min                 /src/vers/novasheets-0.5.0.min.js
+/src/:ver                       /src/vers/novasheets-:ver.js
+/src/:ver/min                   /src/vers/novasheets-:ver.min.js
+/src/vers/novasheets-0.1.x*     /src/vers/novasheets-0.1.2:splat
+/src/vers/novasheets-0.2.x*     /src/vers/novasheets-0.2.1:splat
+/src/vers/novasheets-0.3.x*     /src/vers/novasheets-0.3.5:splat
+/src/vers/novasheets-0.4.x*     /src/vers/novasheets-0.4.7:splat
+/src/vers/novasheets-0.5.x*     /src/vers/novasheets-0.5.0:splat

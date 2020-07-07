@@ -3,32 +3,22 @@
         <th>Version</th>
         <th>Released</th>
         <th>Changelog</th>
-        <th colspan=2>Download</th>
+        <th colspan="2" class="desktoponly">Download</th>
         <th>Docs</th>
     </tr>
 </thead>
 {% for item in versions | reverse %}
     {% set ver %}{{ item.slice(0, 5) }}{% endset %}
-    {% set date %}{{ item.slice(6, 14) }}{% endset %}
-    {% set docs %}{{ item.slice(15, 19) }}{% endset %}
-    {% set hash %}{{ item.slice(20) }}{% endset %}
+    {% set date %}{{ item.slice(6, 16) }}{% endset %}
+    {% set docs %}{{ item.slice(17, 21) }}{% endset %}
+    {% set hash %}{{ item.slice(22) }}{% endset %}
     {% set repo = "https://github.com/Nixinova/NovaSheets" %}
     <tr  {% if ver.slice(-1) == 0 %} style="background: #1114;" {% endif %}>
-        <td>
-            {{ver}}
-        </td>
-        <td>
-            {{date.slice(0,4)}}-{{date.slice(4,6)}}-{{date.slice(6,8)}}
-        </td>
-        <td>
-            <a href="{{repo}}/releases/tag/{{ver}}">View</a>
-        </td>
-        <td>
-            <a href="{{repo}}/releases/download/{{ver}}/novasheets-{{ver}}.js">Full</a>
-        </td>
-        <td>
-            <a href="{{repo}}/releases/download/{{ver}}/novasheets-{{ver}}.min.js">Min</a>
-        </td>
+        <td>{{ver}}</td>
+        <td>{{date}}</td>
+        <td><a href="/versions/changelog/#{{ver | replace('.', '')}}">View</a></td>
+        <td class="desktoponly"><a href="/src/{{ver}}">Full</a></td>
+        <td class="desktoponly"><a href="/src/{{ver}}/min">Min</a></td>
         <td>
             {% if docs == "rdme" or docs == "sntx" %}
                 <a href="{{repo}}/blob/{{ver}}/{{
@@ -38,8 +28,10 @@
                 <a href="{{repo}}/wiki/Syntax/{{hash}}">Wiki</a>
             {% elif docs == "docs" %}
                 <a href="/docs/">Docs</a>
+            {% elif docs == "cmit" %}
+                <a href="{{repo}}/tree/{{hash}}/pages/docs">Browse</a>
             {% elif docs == "ldoc" %}
-                <a href="{{repo}}/tree/{{ver}}/pages">Browse</a>
+                <a href="{{repo}}/tree/{{ver}}/pages/docs">Browse</a>
             {% endif %}
         </td>
     </tr>

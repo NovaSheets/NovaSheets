@@ -3,11 +3,13 @@
     <head>
         {% include "components/head.html" %}
         {% if nss %}<link rel="novasheet" href="/assets/css/{{nss}}.nss">{% endif %}
-        <script src="https://nixinova.github.io/NovaSheets/src/vers/novasheets-{% include "templates/version.txt" %}.js"></script>
+        {% if js %}<script src="/assets/js/{{js}}.js"></script>{% endif -%}
+        {% if js2 %}<script src="/assets/js/{{js2}}.js"></script>{% endif -%}
+        <script src="/src/vers/novasheets-{% include "templates/version.txt" %}.js"></script>
     </head>
 
     <body>
-        <header>{% include "components/header.html" %}</header>
+        <header>{% include "components/header.njk" %}</header>
         <main>{{ content | safe }}</main>
         <footer>{% include "components/footer.html" %}</footer>
     </body>

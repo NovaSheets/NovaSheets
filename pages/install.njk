@@ -2,10 +2,13 @@
 layout: layouts/base.njk
 permalink: /install/
 title: Install
-description: "Install NovaSheets"
+description: Install NovaSheets
 keywords: "nixinova,novasheets,install novasheets"
+js: headings
+js2: colouring
 ---
-
+{% set version %}{% include "templates/version.txt" %}{% endset %}
+{% set patch %}{{version | last}}{% endset %}
 <h1>Installing NovaSheets</h1>
 <p>
     NovaSheets is installed simply by embedding a JavaScript file into your HTML.
@@ -16,26 +19,53 @@ keywords: "nixinova,novasheets,install novasheets"
     That's it!
 </p>
 
-<h2 id="downloading">Downloading</h2>
+<h2>Downloading</h2>
 <p>
     See the <a href="/versions/">Versions</a> page to choose a version to download.
     Once you have done this, you can download one of the files given and add them to your project,
     or embed NovaSheets into your project directly using the code provided.
 </p>
 
-<h2 id="importing">Importing</h2>
+<h2>Importing</h2>
 <p>
-    The latest version is <strong>{% include "templates/version.txt" %}</strong>
-    and can be imported using the code below:
-    <pre>
-        &lt;script src="https://novasheets.netlify.app/src/{% include "templates/version.txt" %}/min">&lt;/script>
+    The latest version is <strong>{{version}}</strong> and can be imported using the code below:
+    <pre style="white-space: inherit;">
+        <code>
+            &lt;script src="https://novasheets.netlify.app/src/{{version}}/min">&lt;/script>
+        </code>
     </pre>
 </p>
 
 <p>
-    While the minified version above is recommended for general use, you can also choose to use the more verbose regular version, which includes comments and the like:
-    <pre>
-        &lt;script src="https://novasheets.netlify.app/src/{% include "templates/version.txt" %}">&lt;/script>
+    While the minified version above is recommended for general use, you can also choose to use the more verbose regular version, which includes comments and indentation:
+    <pre style="white-space: inherit;">
+        <code>
+            &lt;script src="https://novasheets.netlify.app/src/{{version}}">&lt;/script>
+        </code>
+    </pre>
+</p>
+
+<h3>Wildcards</h3>
+
+<p>
+    Additionally, you can choose to use a wildcard version, where you will always receive the latest patch:
+    <pre style="white-space: inherit;">
+        <code>
+            &lt;script src="https://novasheets.netlify.app/src/{{version | replace('.' + patch, '.x')}}">&lt;/script><br>
+            &lt;script src="https://novasheets.netlify.app/src/{{version | replace('.' + patch, '.x')}}/min">&lt;/script>
+        </code>
+    </pre>
+</p>
+
+<h3>Latest</h3>
+
+<p>
+    You can choose to always import the latest stable version of NovaSheets using the code below, but be warned it may contain breaking changes in an update:
+    <pre style="white-space: inherit;">
+        <code>
+            &lt;script src="https://novasheets.netlify.app/src/stable">&lt;/script><br>
+            &lt;script src="https://novasheets.netlify.app/src/stable/min">&lt;/script>
+        </code>
     </pre>
 </p>
 
@@ -43,8 +73,10 @@ keywords: "nixinova,novasheets,install novasheets"
     Alternatively, you can choose to import the main live source code directly,
     but be warned that it is continually updated and may contain incomplete or buggy features,
     so use it at your own risk:
-    <pre>
-        &lt;script src="https://novasheets.netlify.app/src/latest">&lt;/script>
+    <pre style="white-space: inherit;">
+        <code>
+            &lt;script src="https://novasheets.netlify.app/src/latest">&lt;/script>
+        </code>
     </pre>
 </p>
 
@@ -58,6 +90,7 @@ keywords: "nixinova,novasheets,install novasheets"
         <li>
             <code>let</code> and <code>const</code> declarations</li>
         <li>Rest operator (<code>...</code>)</li>
-        <li>RegEx negative lookbehinds <code>(?&lt;!.)</code> and <code>(?&lt;=.)</code></li>
+        <li>RegEx negative lookbehinds (<code>(?&lt;!.)</code> and <code>(?&lt;=.)</code>)
+        </li>
     </ul>
 </p>

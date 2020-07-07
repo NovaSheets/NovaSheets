@@ -2,8 +2,6 @@
 layout: layouts/docs.njk
 permalink: /docs/constants/
 title: Parser Constants
-description: "Documentation for NovaSheets parser constants"
-keywords: "nixinova,novasheets,novasheets syntax"
 ---
 # NovaSheets Parser Constants
 

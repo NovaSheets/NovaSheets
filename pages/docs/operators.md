@@ -2,8 +2,6 @@
 layout: layouts/docs.njk
 permalink: /docs/operators/
 title: Operators
-description: "NovaSheets operators"
-keywords: "nixinova,novasheets,novasheets operators"
 ---
 # NovaSheets Operators
 

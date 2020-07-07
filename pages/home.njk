@@ -5,6 +5,7 @@ title: Home
 description: "The official website of NovaSheets"
 keywords: "nixinova,novasheets"
 nss: "home"
+js: "colouring"
 ---
 
 <div id="showcase">
@@ -13,6 +14,17 @@ nss: "home"
             <div class="item">
                 <h1>NovaSheets</h1>
                 <p>A lightweight CSS preprocessor that is simple but powerful.</p>
+                <p id="welcome-install" class="item-link">
+                    <a href="/install/">Install now</a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div class="section-container">
+        <div class="item-container">
+            <div class="item">
+                <h2>What is NovaSheets?</h2>
+                <p>NovaSheets is a powerful CSS preprocessor with the ability to easily create intricate CSS files with simple syntax. With many built-in variables for you to use, you can take your stylesheets to the next level.</p>
             </div>
         </div>
     </div>
@@ -21,11 +33,18 @@ nss: "home"
             <div class="item">
                 <h2>Simple</h2>
                 <p>Variables? Functions? Mixins? Templates?<br>Find them all under one name.</p>
+                <p class="item-link">
+                    <a href="/docs/">View docs</a>
+                </p>
             </div>
             <div class="item">
                 <pre>
-                    @var color = hsl( $[hue|245], 75%, 40% )<br>
-                    body {background: $(color|hue=300);}
+                    <code class="language-nss">
+                        @var color \n
+                        [nbsp] hsl( $[hue|245], 75%, 40% ) \n
+                        @endvar \n
+                        body {background: $(color|hue=300);}
+                    </code>
                 </pre>
             </div>
         </div>
@@ -35,10 +54,15 @@ nss: "home"
             <div class="item">
                 <h2>Lightweight</h2>
                 <p>With one import, gain access to the full parsing power.</p>
+                <p class="item-link">
+                    <a href="/versions/">View downloads</a>
+                </p>
             </div>
             <div class="item">
                 <pre>
-                    &lt;script src="novasheets.js"&gt;&lt;/script&gt;
+                    <code class="language-nss">
+                        [lt]script src="novasheets.js"[gt][lt]/script[gt]
+                    </code>
                 </pre>
             </div>
         </div>
@@ -48,10 +72,15 @@ nss: "home"
             <div class="item">
                 <h2>Powerful</h2>
                 <p>Utilize the wide variety of built-in functions offered to you.</p>
+                <p class="item-link">
+                    <a href="/docs/variables/default/">Learn more</a>
+                </p>
             </div>
             <div class="item">
                 <pre>
-                    $(@color | rgb | $(@round|0xff/2) | 50% | 255 )
+                    <code class="language-nss">
+                        $(@color | rgb | $(@round|0xff/2) | 50% | 255 )
+                    </code>
                 </pre>
             </div>
         </div>
@@ -61,16 +90,21 @@ nss: "home"
             <div class="item">
                 <h2>Versatile</h2>
                 <p>Peform powerful variable interpolation.</p>
+                <p class="item-link">
+                    <a href="/variables/">View how</a>
+                </p>
             </div>
             <div class="item">
                 <pre>
-                    $(@each | .item1, .item2, .item3 | , | $v > $v[$i-1] , ) .item {display: flex;}
+                    <code class="language-nss">
+                        $(@each | .item1, .item2, .item3 | , | $v [gt] $v[$i-1] , ) .item {display: flex;}
+                    </code>
                 </pre>
             </div>
         </div>
     </div>
     <div class="section-container" style="background: inherit;">
-        <div class="item-container">
+        <div class="item-container two-container">
             <div class="item">
                 <h2>Get started</h2>
                 <p>See the <a href="/install/">Installation</a> page.</p>
