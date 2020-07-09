@@ -11,6 +11,7 @@ body {font: normal 16px Roboto, sans-serif; background: $(body color); margin: 0
 main {min-height: $(main height); padding: $(header height) 10% 0 10%;}
 h1, h2, h3, h4 {margin-left: -0.5em; letter-spacing: 1px;}
 h1, h2, h3, h4, p {margin-top: 1em;}
+strong {letter-spacing: 1px;}
 
 @media (max-width: 800px) {
     main {padding: $(header height) 2em 0;}
@@ -21,7 +22,7 @@ h1, h2, h3, h4, p {margin-top: 1em;}
 header {display: flex; position: fixed; width: 100%; height: $(header height); background: $(header color); z-index: 9;}
 header div {margin: 0 auto; height: $(header height); display: flex;}
 header span {transition: 0.5s;}
-header span a[href] {display: block; padding: $(header height) / 4; $(line height) / 2; color: white;}
+header span a[href] {display: block; padding: $(header height)/4; $(line height)/2; color: white;}
 header span a.active {background: $(theme color | 10%);}
 header span:hover {background: $(theme color | 12%);}
 
@@ -52,7 +53,7 @@ table th, table td {padding: 0.2em 0.5em; border: 1px solid #aaa8; text-align: c
 // Code blocks //
 @var code color = color: hsl($[1], 90%, $[2|40%]);
 pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; white-space: pre-wrap; word-break: break-word;}
-.code .comment {$(code color | 130 | 30%)}
+.code .comment {$(code color | 130 | 33%)}
 .code .css-query {$(code color | 60)}
 .code .css-selector {$(code color | 40)}
 .code .css-property {$(code color | 180)}
@@ -62,9 +63,9 @@ pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; 
 .code .html-attr-val {$(code color | 35)}
 .code .nss-char {$(code color | 200)}
 .code .nss-var {$(code color | 160)}
-.code .nss-var-param {$(code color | 280)}
+.code .nss-var-param {$(code color | 280 | 60%)}
 .code .nss-var-arg {color: #fff;}
-.code .nss-arg {$(code color | 280)}
+.code .nss-arg {$(code color | 280 | 60%)}
 .code .nss-arg-default {$(code color | 330)}
 
 // Hiding //

@@ -17,6 +17,7 @@ aside ul {margin: 0; padding: 0;}
 :not(pre)>code {border: 1px solid #8888; padding: 2px;}
 
 // Headings //
+h1, h2, h3, h4 {font-weight: 500;}
 h2 + p, h3 + p, h4 + p {margin-top: -1.5em; margin-left: 1em; margin-bottom: 0em;}
 
 // Links //

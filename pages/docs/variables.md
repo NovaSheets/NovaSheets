@@ -23,9 +23,18 @@ Variables can have any name; the only limitations are that they cannot contain p
 
 The contents of a variable are found either on the lines beneath it, all the way up until either another variable declaration or the keyword `@endvar`, or as the content to the right of the first equals sign on the declaration line.
 
-Parameters of a variable are referenced similar to variables but by using square brackets instead of parentheses (`$[...]`). The default contents of an argument can be set by adding a pipe following by the default argument content to its name.
+Variables are always hoisted; that is, they are evaluated before all other content, making the following equivalent:
+```nss
+@var variable = content
+$(variable) // "content"
+```
+```nss
+$(variable) // "content"
+@var variable = content
+```
 
 ## Substitution
+### Variables
 - Explicit arguments:
   ```nss
   $( <name> | <parameter1> = <argument1> | <parameter2> = <argument2> | ... )
@@ -38,6 +47,21 @@ Parameters of a variable are referenced similar to variables but by using square
 Variables are referenced using a dollar sign (`$`) followed by the variable name in parentheses (`(...)`).
 Arguments are passed by listing parameter names followed by the argument contents, with each prefixed with a pipe.
 
+### Parameters
+- Named parameter:
+  ```nss
+  $[ <parameter> ]
+  ```
+- Anonymous parameter:
+  ```nss
+  $[ <index> ]
+  ```
+- With default content:
+  ```nss
+  $[ <parameter> | <default content> ]
+  ```
+Parameters of a variable are referenced similar to variables but by using square brackets instead of parentheses (`$[...]`). The default contents of an argument can be set by adding a pipe following by the default argument content to its name. Numerical parameter names can refer to the index of a variable calling the anonymous parameter with that index. For instance, `$(var|1=text)` (with explicit parameter "1") is equivalent to `$(var|text)` (with one anonymous parameter).
+
 ## Examples
 
 ```nss
@@ -48,15 +72,15 @@ Arguments are passed by listing parameter names followed by the argument content
 // declare variable 'color2' containing parameter 'hue':
 @var color2 = hsl($[hue], 50%, 75%)
 
-// declare variable 'color3' containing parameter 'red' which defaults to '0':
-@var color3 = rgb($[red|0], 128, 0)
+// declare variable 'color3' containing parameter 'red' which defaults to '24':
+@var color3 = rgb($[red|24], 128, 0)
 
 // declare variable 'color4' containing an anonymous parameter:
 @var color4 = #000$[1]
 
-// declare variable 'color5' with contents 'background: blue;':
+// declare variable 'color5' contaning an anonymous parameter which defaults to 'blue':
 @var color5
-    background: blue;
+    background: $[1|blue];
 @endvar 
 
 /* Substitute variables */
@@ -67,12 +91,12 @@ $(color1) // '#123'
 // substitute variable 'color2' with argument 'hue' set to '100':
 $(color2 | hue = 100 ) // 'hsl(100, 50%, 75%)'
 
-// substitute variable 'color3' with argument 'red' defaulting to '0':
-$(color3 ) // 'rgb(0, 128, 0)'
+// substitute variable 'color3' with argument 'red' defaulting to '24':
+$(color3) // 'rgb(24, 128, 0)'
 
 // substitute variable 'color4' with argument '1' defaulting to the first anonymous argument, which is set to 'f':
-$(color3 | f ) // '#000f'
+$(color4 | f ) // '#000f'
 
-// substitute variable 'color5':
-$(color5 ) // 'background: blue;'
+// substitute variable 'color5' with an anonymous argument which defaults to 'blue':
+$(color5) // 'background: blue;'
 ```

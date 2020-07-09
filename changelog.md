@@ -1,3 +1,7 @@
+---
+layout: layouts/base.njk
+js: headings
+---
 # Changelog for NovaSheets
 - [0.5.0](#050) • [0.5.1](#051)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
@@ -7,10 +11,22 @@
 
 ## 0.5.1
 - Added console warnings for when the parser detects a recursive variable.
+- Added type checking for math functions to prevent invalid math operations.
+- Changed built-in function `repeat` to allow using pipes and using `$i` to refer to the current index in its content.
+- Changed CSS output to keep the same indentation and newline formatting as the input.
 - Fixed missing `@endvar` declarations causing infinite recursion.
-- Fixed argument substitutions requiring the pipe (`|`) to be prefixed with a space.
+- Fixed built-in function `each` not allowing nested variables containing instanced of `$i` etc.
+- Fixed built-in function `clamp` not clamping properly to its maximum value.
+- Fixed built-in function `replace` not parsing regular expressions properly.
+- Fixed math operations inside built-in functions not being parsed before the function is applied.
+- Fixed argument substitutions requiring the pipe to be prefixed with a space.
 - Fixed arguments being skipped if they are placed after an empty anonymous argument.
-- Fixed unary negative operator being treated as subtraction.
+- Fixed unary negative operators being treated as subtraction.
+- Fixed multiple instances of floating-point rounding errors not being removed.
+- Fixed slashes inside of CSS color functions being treated as a division sign.
+- Fixed URLs being treated as comments.
+- Fixed inaccessible stylesheets having their 404 pages returned as stylesheet contents.
+- Refactored internal code to check for math operations only when necessary, improving performance by up to 95%.
 
 ## 0.5.0
 - Added different categories of block comments, each with a different purpose:

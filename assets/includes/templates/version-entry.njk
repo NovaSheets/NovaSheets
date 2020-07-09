@@ -16,7 +16,7 @@
     <tr  {% if ver.slice(-1) == 0 %} style="background: #1114;" {% endif %}>
         <td>{{ver}}</td>
         <td>{{date}}</td>
-        <td><a href="/versions/changelog/#{{ver | replace('.', '')}}">View</a></td>
+        <td><a href="/changelog/#{{ver | replace('.', '')}}">View</a></td>
         <td class="desktoponly"><a href="/src/{{ver}}">Full</a></td>
         <td class="desktoponly"><a href="/src/{{ver}}/min">Min</a></td>
         <td>

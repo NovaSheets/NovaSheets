@@ -1,5 +1,5 @@
-String.prototype.Wrap = function (className) {
-    return `<span class="${className}">${this}</span>`;
+function wrap(val, name) {
+    return `<span class="${name}">${val}</span>`;
 }
 
 function colouriseCode() {
@@ -7,24 +7,27 @@ function colouriseCode() {
     for (let element of [...elements]) {
         element.classList.add('code')
         let content = element.innerHTML.replace(/&(lt|gt|nbsp|amp);/g, '[$1]')
-            .replace(/(?<!https?:)\/\/.*$/gm, '$&'.Wrap('comment'))
-            .replace(/(\/\*[^\/])(.*?)([^\/]?\*\/)/gm, '$&'.Wrap('comment'))
-            .replace(/(\/\*\/)(.*?)(\/\*\/)/gm, '$1'.Wrap('comment') + '$2' + '$3'.Wrap('comment'))
-            .replace(/@media[^{}\n]+?(?=\{)/gm, '$&'.Wrap('css-query'))
-            .replace(/https?:\/\/[^"]*/gm, '$&'.Wrap('css-value'))
-            .replace(/(?<!(?:\/\/|\/\*).*)[^\/{}:;\n]+?(?=\{)/gm, '$&'.Wrap('css-selector'))
-            .replace(/(?<!(?:\/\/|\/\*).*)[^\/{}():;\n]+?(?=:)/gm, '$&'.Wrap('css-property'))
-            .replace(/(?<!(?:\/\/|\/\*).*)[^\/{}:;\n]+?(?=;)/gm, '$&'.Wrap('css-value'))
-            .replace(/@endvar|@const/g, '$&'.Wrap('nss-char'))
-            .replace(/^\s*(@var)\s*(.+?)(?==.*$|$)/gm, '$1'.Wrap('nss-char') + ' $2'.Wrap('nss-var'))
-            .replace(/(?<!(?:\/\/|\/\*).*)\$\[([^<]*?)(?:(\|)(.*?))?\]/gm, '$[' + '$1'.Wrap('nss-arg') + '$2' + '$3'.Wrap('nss-arg-default') + ']'.Wrap('nss-char'))
-            .replace(/(?<!(?:\/\/|\/\*).*)\$\(([^<]*?)(\|.*)\)/gm, '$(' + '$1'.Wrap('nss-var') + '$2' + ')')
-            .replace(/\|([^<]*?)=([^|]*?)/gm, '|' + '$1'.Wrap('nss-var-param') + '='.Wrap('nss-char') + '$2'.Wrap('nss-var-arg'))
-            .replace(/\$v|\$i/g, '$&'.Wrap('nss-var'))
-            .replace(/\[lt\]\/?script.*?\[gt\]/gm, '$&'.Wrap('html-tag')) .replace(/\[([a-z]+)\]/g, '&$1;'.toLowerCase())
+            .replace(/(?<!https?:)\/\/.*$/gm, wrap('$&', 'comment'))
+            .replace(/(\/\*[^\/])(.*?)([^\/]?\*\/)/gm, wrap('$&', 'comment'))
+            .replace(/(\/\*\/)(.*?)(\/\*\/)/gm, wrap('$1', 'comment') + '$2' + wrap('$3', 'comment'))
+            .replace(/@media[^{}\n]+?(?=\{)/gm, wrap('$&', 'css-query'))
+            .replace(/https?:\/\/[^"]*/gm, wrap('$&', 'css-value'))
+            .replace(/(?<!(?:\/\/|\/\*).*)[^\/{}:;\n]+?(?=\{)/gm, wrap('$&', 'css-selector'))
+            .replace(/(?<!(?:\/\/|\/\*).*)[^\/{}():;\n]+?(?=:)/gm, wrap('$&', 'css-property'))
+            .replace(/(?<!(?:\/\/|\/\*).*)[^\/{}:;\n]+?(?=;)/gm, wrap('$&', 'css-value'))
+            .replace(/@endvar/g, wrap('$&', 'nss-char'))
+            .replace(/(@const)\s+([^ ]*)\s+([^ ]*)?/gi, wrap('$1', 'nss-char') + wrap(' $2', 'nss-var') + wrap(' $3', 'nss-arg'))
+            .replace(/\[(lt|gt|nbsp|amp)\]/g, '&$1;'.toLowerCase())
+            .replace(/^\s*(@var)\s*(.+?)(?==.*$|$)/gm, wrap('$1', 'nss-char') + wrap(' $2', 'nss-var'))
+            .replace(/(?<!(?:\/\/|\/\*).*)\$\[([^<]*?)(?:(\|)(.*?))?\]/gm, '$[' + wrap('$1', 'nss-arg') + '$2' + wrap('$3', 'nss-arg-default') + wrap(']', 'nss-char'))
+            .replace(/(?<!(?:\/\/|\/\*).*)\$\(([^<]*?)(\|.*)?\)/gm, '$(' + wrap('$1', 'nss-var') + '$2' + ')')
+            .replace(/\|([^<]*?)=([^|]*?)/gm, '|' + wrap('$1', 'nss-var-param') + wrap('=', 'nss-char') + wrap('$2', 'nss-var-arg'))
+            .replace(/\$v|\$i/g, wrap('$&', 'nss-var'))
+            .replace(/\[lt\]\/?script.*?\[gt\]/gm, wrap('$&', 'html-tag'))
             .replace(/src=(".*?")/gm, '<span class="html-attr-name">src</span>=<span class="html-attr-val">$1</span>')
-            .replace(/(?<!(?:\/\/|\/\*).*)(\||\$|\(|\)|\[|\])/g, '$&'.Wrap('nss-char'))
-        element.innerHTML = content.replace(/\s*\\n/g, '<br>');
+            .replace(/(?<!(?:\/\/|\/\*).*)(\||\$|\(|\)|\[|\])/g, wrap('$&', 'nss-char'))
+            .replace(/\s*\\n/g, '<br>')
+        element.innerHTML = content;
     }
 }
 

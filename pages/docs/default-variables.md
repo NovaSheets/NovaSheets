@@ -82,7 +82,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ### @degrees
 **Syntax:** `$( @degrees | <num>[rad|grad] )`  
 **Result:** Converts `num` from either radians (default) or gradians to degrees.  
-**Example:** `$( @degrees | 100grad )` &rarr; 90  
+**Example:** `$( @degrees | 100grad )` &rarr; `90`  
 
 ### @e
 **Syntax:** `$( @e )`  
@@ -96,7 +96,8 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 
 ### @clamp
 **Syntax:** `$( @clamp | <val> | <min> | <max>)`  
-**Result:** Outputs `val` only if it is between `min` and `max`, otherwise outputs either `min` or `max`, whichever is closer to `val`.`$( @clamp | 1.4 | 2 | 5 )` &rarr; `2`  
+**Result:** Outputs `val` only if it is between `min` and `max`, otherwise outputs either `min` or `max`, whichever is closer to `val`.  
+**Example:** `$( @clamp | 1.4 | 2 | 5 )` &rarr; `2`  
 
 ### @cos
 **Syntax:** `$( @cos | <num> )`  
@@ -111,7 +112,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ### @gradians
 **Syntax:** `$( @gradians | <num>[deg|rad] )`  
 **Result:** Converts `num` from either degrees (default) or radians to gradians.  
-**Example:** `$( @gradians | 90deg )` &rarr; 100  
+**Example:** `$( @gradians | 90deg )` &rarr; `100`  
 
 ### @log
 **Syntax:** `$( @log | <base> | <val> )`  
@@ -146,7 +147,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ### @radians
 **Syntax:** `$( @radians | <num>[deg|grad] )`  
 **Result:** Converts `num` from either degrees (default) or gradians to radians.  
-**Example:** `$( @radians | 90 / $(@pi) )` &rarr; 0.5  
+**Example:** `$( @radians | 90 / $(@pi) )` &rarr; `0.5 ` 
 
 ### @root
 **Syntax:** `$( @root | <n> | <val> )`  
@@ -173,31 +174,32 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ### @bitwise
 **Syntax:** `$( @bitwise | <contents> )`  
 **Result:** Performs bitwise operations on `contents`.  
-**Example:** `$(@bitwise | ~2 & 3)` &rarr; 1  
+**Example:** `$(@bitwise | ~2 & 3)` &rarr; `1`  
 
 ### @boolean
 **Syntax:** `$( @boolean | <contents> )`  
 **Result:** Performs bitwise operations on `contents`.  
-**Example:** `$(@boolean | true && false )` &rarr; false  
+**Example:** `$(@boolean | true && false )` &rarr; `false`  
 
 ### @if
 **Syntax:** `$( @if | <test> | <iftrue> | <iffalse>)`  
 **Result:** Outputs the either content of `iftrue` if `test` resolves to boolean "true" or `iffalse` if it resolves to false. Allowed values for `test` are `false`, `null`, `undefined`, `NaN`, or an empty string for "false"; everything else resolves to "true". Allowed operators for `test` include `# =`, `!`, `<`, `>`, `!`, `or`, `nor`, `and`, `nand`, `xor`, `xnor`.  
+**Example:** `$(@if | 1 == 2 | nonsense | truth )` &rarr; `truth`
 
 ## Text
 
 ### @each
-**Syntax:** `$( @each | <list> | <delimiter> | <replacement> )`  
-**Result:** Peforms iterative replacement on items in `list` (where each item is separated using `delimiter`). Instances of `$i` in `replacement` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item.  
+**Syntax:** `$( @each | <list> | <list delimiter> | <output delimiter> | <replacement> )`  
+**Result:** Peforms iterative replacement on items in `<list>` (where each item is separated using `<list delimiter>`). Instances of `$i` in `<replacement>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item. The output will be delimited with `<output delimiter>`.  
 **Example:** `$(@each | 10,20,30 | , | $v+$i )` &rarr; `11 22 33`  
 
 ### @encode
 **Syntax:** `$( @encode | <string> )`  
-**Result:** Encodes `string` as a URL segment  
+**Result:** Encodes `string` as a URL segment.  
 **Example:** `$( @encode | <text>=true )` &rarr; `%3Ctext%3E%3Dtrue`  
 
 ### @extract
-**Syntax:** `$( @each | <list> | <delimiter> | <index> )`  
+**Syntax:** `$( @extract | <list> | <delimiter> | <index> )`  
 **Result:** Extracts an item from the specified `index` (one-based) from `list` in which each list item is separated by `delimiter`.  
 **Example:** `$(@extract | A,B,C | , | 1 )` &rarr; `A`  
 
@@ -208,8 +210,8 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 
 ### @replace
 **Syntax:** `$( @replace | <string> | <find> | <replace> )`  
-**Result:** Replaces all instances of `find` in `string` with `replace`  
-**Example:** `$( @replace | <t>3xt | 3 | <e> )` &rarr; `text`  
+**Result:** Replaces all instances of `find` in `string` with `replace`. Supports regular expressions.  
+**Example:** `$( @replace | t3xt | 3 | e )` &rarr; `text`  
 
 ## Color
 
@@ -235,14 +237,17 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 #### hsl
 **Syntax:** `$( @color | hsl | <h> | <s> | <l> )`  
 **Result:** Outputs CSS color function `hsl(<h>, <s>, <l>)`  
+**Example:** `$( @color | hsl | 200 | 53 | 158/2 )` &rarr; `hsl(200, 20%, 30%)`  
 
 #### hsla
 **Syntax:** `$( @color | <hsla> | <h> | <s> | <l> | <a> )`  
-**Result:** Outputs CSS color function `hsla(<h>,<s>,<l>,<a>)`  
+**Result:** Outputs CSS color function `hsla(<h>, <s>, <l>, <a>)`  
+**Example:** `$( @color | hsla | 10% | 128 | 0xfa | 95% )` &rarr; `hsla(26, 50%, 98%, 243)`  
 
 #### *custom*
 **Syntax:** `$( @color | <type> | <x> | <y> | <z> | [<a>] )`  
 **Result:** Outputs CSS level-4 color function `<type>(<x> <y> <z>)` or `<type>(<x> <y> <z> / <a>)`  
+**Result:** `$(@color | lch | 20% | 60% | 350 )` &rarr; `lch(20% 60% 350)`  
 
 ### @colorpart
 **Syntax:** `$( @colorpart | <part> | <color> )` (alternatively, `$( @colourpart | ... )`)  

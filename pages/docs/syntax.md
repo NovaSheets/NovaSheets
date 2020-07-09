@@ -9,12 +9,10 @@ description: "Documentation for NovaSheets syntax"
 ## Variables
 *More info: [Variables](/docs/variables)*
 
-NovaSheets variables are created by starting a line with `@var`. Anything after that space will be the name of the variable. Variables can have any name; the only limitations are that they cannot contain pipes and brackets may not work correctly due to how NovaSheets is parsed.
-
-The contents of a variable are found either on the lines beneath it, all the way up until either another variable declaration or the keyword `@endvar`, or as the content to the right of the first equals sign on the declaration line.
-Parameters of a variable are referenced similar to variables but using square brackets instead of parentheses (`$[...]`). The default contents of an argument can be set by adding a pipe following by the default argument content to its name.
+NovaSheets variables are created by starting a line with `@var`. Anything after that space will be the name of the variable. The contents of a variable are found either on the lines beneath it, all the way up until either another variable declaration or the keyword `@endvar`, or as the content to the right of the first equals sign on the declaration line.
 
 Variables are referenced using a dollar sign (`$`) followed by the variable name in parentheses (`(...)`). Arguments are passed by listing parameter names followed by the argument contents, with each one prefixed with a pipe.
+Parameters of a variable are referenced similar to variables but using square brackets instead of parentheses (`$[...]`). The default contents of an argument can be set by adding a pipe following by the default argument content to its name.
 
 ## Operators
 *More info: [Operators](/docs/operators)*

@@ -14,9 +14,10 @@
         .property {color: #095d98;}
         .value {color: #b74401;}
     </style>
+    <link rel="icon" href="/assets/favicon.ico">
     <script src="../src/novasheets.js"></script>
     <script src="/assets/js/colouring.js"></script>
-    <link id="import" rel="novasheet" href="style.nss">
+    <link id="import" rel="novasheet" href="example.nss">
     <script>
         window.useDefault = true;
         document.title += ' (' + location.protocol + ')';
@@ -68,10 +69,10 @@
     <div id="input-wrapper">
         <h2>Input</h2>
         <div contenteditable type="novasheet" id="input" class="code" onblur="cleanInput()">
-            @var shading = linear-gradient(90deg, #55f, #5ff);
-            @var solid border | color = 1px solid $[color]
+            @var shading = linear-gradient($[1]deg, #55f, #5ff);
+            @var solid border = 1px solid $[color]
             // body {color: blue;}
-            .shaded {background: $(shading); color: white;} // basic shading
+            .shaded {background: $(shading|90); color: white;} // basic shading
             .title {margin-left: 2em; color: #e55; border-bottom: $(solid border|color=#ff7711);}
         </div>
         <br>
