@@ -50,9 +50,12 @@ table th, table td {padding: 0.2em 0.5em; border: 1px solid #aaa8; text-align: c
 .plainlist li {display: inline-block;}
 .flatlist:not(.plainlist) li:not(:empty):not(:first-child)::before {content: ' • ';}
 
+// Changelog //
+h2[id] + p em {display: block; margin-top: -3.4em; margin-left: 4em;}
+
 // Code blocks //
 @var code color = color: hsl($[1], 90%, $[2|40%]);
-pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; white-space: pre-wrap; word-break: break-word;}
+pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; text-align: left; white-space: pre-wrap; word-break: break-word;}
 .code .comment {$(code color | 130 | 33%)}
 .code .css-query {$(code color | 60)}
 .code .css-selector {$(code color | 40)}

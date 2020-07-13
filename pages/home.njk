@@ -41,9 +41,9 @@ js: "colouring"
                 <pre>
                     <code class="language-nss">
                         @var color \n
-                        [nbsp] hsl( $[hue|245], 75%, 40% ) \n
+                        [nbsp] hsl( $[hue|300], 75%, 80% ) \n
                         @endvar \n
-                        body {background: $(color|hue=300);}
+                        body {background: $(color|hue=200);}
                     </code>
                 </pre>
             </div>
@@ -61,7 +61,7 @@ js: "colouring"
             <div class="item">
                 <pre>
                     <code class="language-nss">
-                        [lt]script src="novasheets.js"[gt][lt]/script[gt]
+                        &lt;script src="novasheets.js"&gt;&lt;/script&gt;
                     </code>
                 </pre>
             </div>
@@ -91,13 +91,15 @@ js: "colouring"
                 <h2>Versatile</h2>
                 <p>Peform powerful variable interpolation.</p>
                 <p class="item-link">
-                    <a href="/variables/">View how</a>
+                    <a href="/docs/variables/">See how</a>
                 </p>
             </div>
             <div class="item">
                 <pre>
                     <code class="language-nss">
-                        $(@each | .item1, .item2, .item3 | , | $v [gt] $v[$i-1] , ) .item {display: flex;}
+                        $(@each | .item1, .item2, .item3 | , | , | $v [gt] $v[$i-1] ) {\n
+                        &nbsp; display: flex;\n
+                        }
                     </code>
                 </pre>
             </div>

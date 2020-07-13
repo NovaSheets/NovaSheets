@@ -17,10 +17,10 @@
     <link rel="icon" href="/assets/favicon.ico">
     <script src="../src/novasheets.js"></script>
     <script src="/assets/js/colouring.js"></script>
-    <link id="import" rel="novasheet" href="example.nss">
+    <link id="import" rel="!novasheet" href="example.nss">
     <script>
-        window.useDefault = true;
-        document.title += ' (' + location.protocol + ')';
+        window.useDefault = false;
+
         function clearStyles() {
             for (let style of document.querySelectorAll('style')) {
                 if (!style.dataset.keep) style.parentNode.removeChild(style);
@@ -35,7 +35,7 @@
             }
         }
         function cleanInput(a) {
-            input.innerHTML = input.innerHTML.replace(/<div>/g, '$&\n');
+            input.innerHTML = input.innerHTML.replace(/<br[^>]*>/g, '\n').replace(/<div>/g, '$&\n');
             input.innerHTML = input.textContent.replace(/\u00a0/g,' ');
             if (a === undefined) parse()
         }
@@ -54,7 +54,7 @@
         }
         document.addEventListener("DOMContentLoaded", function () {
             window.input = document.getElementById('input');
-            input.innerHTML =  input.innerHTML.replace(/^\s*/gm,'').replace(/^\s*\n/, '');
+            input.innerHTML = input.innerHTML.replace(/^\s*/gm,'').replace(/^\s*\n/, '');
             parse();
         });
     </script>
@@ -80,7 +80,7 @@
 
     <div id="options-wrapper">
         <div style="text-align: center;">
-            <button onclick="toggleDefault()">Use external stylesheet? (<span id="use-default">true</span>)</button><br>
+            <button onclick="toggleDefault()">Use external stylesheet? (<span id="use-default">false</span>)</button><br>
             <button onclick="parse();">Parse</button>
         </div>
     </div>

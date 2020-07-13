@@ -1,34 +1,45 @@
 ---
+title: Changelog
 layout: layouts/base.njk
-js: headings
 ---
 # Changelog for NovaSheets
-- [0.5.0](#050) • [0.5.1](#051)
+- [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## 0.5.2
+*2020-07-14*
+- Fixed order of operations not being applied properly.
+- Fixed double negatives sometimes not being treated as addition.
+- Fixed spaced math operations inside brackets not being parsed properly.
+- Fixed floating-point artifacts not being fully removed.
+- Refactored internal code to simplify math parsing and improve performance of math operations.
+
 ## 0.5.1
+*2020-07-09*
 - Added console warnings for when the parser detects a recursive variable.
-- Added type checking for math functions to prevent invalid math operations.
+- Changed built-in function `each` to add an output delimiter parameter. New syntax: `$(@each | <list> | <list delimiter> | <output delimiter> | <content> )`.
 - Changed built-in function `repeat` to allow using pipes and using `$i` to refer to the current index in its content.
+- Changed in-built math functions to type check its input to prevent invalid math operations.
 - Changed CSS output to keep the same indentation and newline formatting as the input.
 - Fixed missing `@endvar` declarations causing infinite recursion.
-- Fixed built-in function `each` not allowing nested variables containing instanced of `$i` etc.
+- Fixed built-in function `each` not allowing nested variables containing instances of `$i`, `$v`, etc.
 - Fixed built-in function `clamp` not clamping properly to its maximum value.
 - Fixed built-in function `replace` not parsing regular expressions properly.
 - Fixed math operations inside built-in functions not being parsed before the function is applied.
-- Fixed argument substitutions requiring the pipe to be prefixed with a space.
+- Fixed default argument substitutions requiring the pipe to be prefixed with a space.
 - Fixed arguments being skipped if they are placed after an empty anonymous argument.
 - Fixed unary negative operators being treated as subtraction.
-- Fixed multiple instances of floating-point rounding errors not being removed.
-- Fixed slashes inside of CSS color functions being treated as a division sign.
+- Fixed floating-point artifacts not being removed.
+- Fixed slashes inside of CSS color functions being treated as division signs.
 - Fixed URLs being treated as comments.
 - Fixed inaccessible stylesheets having their 404 pages returned as stylesheet contents.
 - Refactored internal code to check for math operations only when necessary, improving performance by up to 95%.
 
 ## 0.5.0
+*2020-07-04*
 - Added different categories of block comments, each with a different purpose:
   - Regular comments (`/*content*/`): output the raw content inside of them as a CSS comment; i.e, itself.
   - Static comments (`/*/content/*/`): output the raw content inside of them as raw CSS or NovaSheets syntax; i.e., itself but without the "`/*/`"s.
@@ -45,10 +56,11 @@ js: headings
 - Fixed built-in functions `degrees` and `gradians` having incorrect conversions between each other.
 - Fixed built-in functions `e` and `pi` not being parsed when they have leading or trailing whitespace.
 - Fixed small decimal values being truncated incorrectly (e.g., `0.000000001234` turning into `0234` instead of just `0`).
-- Fixed equals signs in the contents of a single-line variable causing the content that follows to not show up in the output CSS.
+- Fixed equals signs in the contents of a single-line variable declaration (e.g., `@var x = y = z`) causing the content that follows to not show up in the output CSS.
 - Refactored internal parsing of variables to bracket-match completely, allowing for nested parentheses.
 
 ## 0.4.7
+*2020-06-27*
 - Added parser constant `MAX_MATH_RECURSION` for controlling how many times to perform each part of the order of operations before continuing on to the next operator.
 - Added parser constant `KEEP_NAN` for deciding whether or not to parse malformed numbers to `NaN`.
 - Changed built-in function `color` to output a generic CSS level-4 color function when given a `type` other than `rgb`, `rgba`, `hsl`, `hsla`, or `hash`, and to allow inputting any value as a percentage (which can be either implicit, i.e. below 1, or explicit using `%`).
@@ -62,6 +74,7 @@ js: headings
 - Fixed hexidecimal values containing letters not being treated as numbers.
 
 ## 0.4.6
+*2020-06-25*
 - Changed parsing of numbers to always convert from base 2, 8, and 16 to base 10.
 - Changed parsing of units to disallow having a space before the unit.
 - Fixed built-in function `replace` not replacing all instances of the specified string.
@@ -70,6 +83,7 @@ js: headings
 - Fixed pseudo-classes being malformed in the output CSS.
 
 ## 0.4.5
+*2020-06-23*
 - Changed built-in function `color` to default missing hex values to `0` and allow more flexibility in its arguments.
 - Changed built-in function `colorpart` allowing `hex`/`hexadecimal` as aliases for `hash`.
 - Fixed built-in function `bitwise` outputting its name as well as its parsed content.
@@ -79,6 +93,7 @@ js: headings
 - Fixed floating-point math outputting strings of zeroes or nines.
 
 ## 0.4.4
+*2020-06-21*
 - Changed variable declarations using the existing `=` notation to be strictly single-line declarations.
 - Changed unit parsing to be more intuitive, allowing more units in any permutation (`1/2em`, `1em/2`, `1em/2em`, etc).
 - Changed syntax of build-in function `log` to allow a base as its first argument.
@@ -95,12 +110,14 @@ js: headings
 - Fixed built-in function `colorpart` breaking when being passed a raw CSS color function.
 
 ## 0.4.3
+*2020-06-18*
 - Added support for scientific notation using `E`/`e` for values below `1e21`.
 - Fixed declarators in the middle of a line not being parsed.
 - Fixed anonymous arguments not adapting to the maximum argument parser constant.
 - Fixed parsing of multiple order of operations.
 
 ## 0.4.2
+*2020-06-16*
 - Added support for anonymous variable arguments.
 - Changed math parsing to allow a space between the last number and its unit to improve readability.
 - Fixed inline comments breaking variable declarations.
@@ -108,6 +125,7 @@ js: headings
 - Fixed order of operations not being properly applied.
 
 ## 0.4.1
+*2020-06-14*
 - Added build-in function `degrees` for converting a value to degrees.
 - Changed syntax of built-in functions `degrees`, `radians`, and `gradians` to mandate the keywords `deg`, `rad`, or `grad` in its first argument.
 - Fixed ampersands not working when using an HTML element as input.
@@ -116,6 +134,7 @@ js: headings
 - Fixed math inside the contents CSS `calc` function being incorrectly parsed.
 
 ## 0.4.0
+*2020-06-13*
 - Added support for declaring variables anywhere in the document.
 - Added support for placing variable content on the same line as the variable declaration by seperating the two with "`=`".
 - Added the `@endvar` keyword for declaring the end of the contents of a variable.
@@ -126,10 +145,12 @@ js: headings
 - Fixed unparsed or invalid variables and arguments appearing in the output CSS.
 
 ## 0.3.5
+*2020-06-11*
 - Changed output to put each CSS declaration on its own line.
 - Fixed empty variables being truncated completely to an empty string instead of one space.
 
 ## 0.3.4
+*2020-06-09*
 - Added `deg` and `grad` keywords which change the preceeding number to radians and gradians, respectively.
 - Added support for length conversions between `cm`, `mm`, `ft`, and `in` to metres using math operators.
 - Added in-built function `percent` for converting a value to a percentage.
@@ -139,22 +160,26 @@ js: headings
 - Fixed `@const` declarations that appear after `@var` declarations being part of that variables content.
 
 ## 0.3.3
+*2020-06-09*
 - Added support for using math operators on the right side of values with units.
 - Fixed multiple calls of the same variable with different arguments outputting the same result each time.
 - Fixed nested variables with arguments still sometimes not being parsed correctly.
 - Fixed the parentheses in math operations not being removed when it contains leading or trailing whitespace.
 
 ## 0.3.2
+*2020-06-08*
 - Changed output style element to use the file path of the external stylesheet as the `source` data attribute.
 - Fixed nested variables with arguments sometimes not being parsed correctly.
 
 ## 0.3.1
+*2020-06-07*
 - Changed output element to include the source of the stylesheet in the element's dataset.
-- Fixed NovaSheets declaration not working in older browsers.
+- Fixed external stylesheet imports not working in older browsers.
 - Fixed bracketed numbers having their brackets removed.
 - Fixed parsing of numbers with many prefixed plus or minus signs.
 
 ## 0.3.0
+*2020-06-06*
 - Added a plethora of built-in variables, all prefixed with `@`.
   - Math functions and variables: `mod`, `min`, `max`, `clamp`, `sin`, `asin`, `cos`, `acos`, `tan`, `atan`, `abs`, `floor`, `ceil`, `round`, `log`, `root`, and `pi`.
   - Logical functions: `if`.
@@ -167,22 +192,27 @@ js: headings
 - Changed NovaSheets `type` declarations to apply to any element instead of applying only to `template` elements.
 
 ## 0.2.1
+*2020-05-31*
 - Changed output to prevent multiple duplicate stylesheets being outputted when running the parsing command multiple times.
 - Fixed parameters sometimes not being fully parsed.
 
 ## 0.2.0
+*2020-05-31*
 - Added support for variable parameters.
 
 ## 0.1.2
-- Fixed treating tabs not being treated as spaces when parsing input.
+*2020-05-31*
+- Fixed tabs not being treated as spaces when parsing input.
 - Fixed CRLF character breaking variable substitution.
 - Fixed infinite recursion on variable substitution.
 
 ## 0.1.1
+*2020-05-29*
 - Added support for nesting variables inside other variables.
 - Fixed inaccessible stylesheets crashing the parser.
 
 ## 0.1.0
+*2020-05-28*
 - Supports variable declaration in the front matter and substitution in the CSS content.
 - Supports both internal and external stylesheets.
 - Supports single-line comments.
