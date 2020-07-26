@@ -1,7 +1,7 @@
 // Elements //
 main {padding-left: 5%; padding-right: 5%; margin-bottom: 2em; display: grid;}
 aside>:first-child {margin-left: -1em;}
-aside ul {margin: 0; padding: 0;}
+  %< ul {margin: 0; padding: 0;}
 
 @media (max-width: 800px) {
     main #content {margin: 0 1em;}
@@ -9,7 +9,7 @@ aside ul {margin: 0; padding: 0;}
 }
 @media (min-width: 801px) {
     main {grid-template-areas: "sidebar content"; grid-gap: 3em; grid-template-columns: 2fr 8fr;}
-    main #content {grid-area: content; margin-top: 2em;}
+      % #content {grid-area: content; margin-top: 2em;}
     aside {grid-area: sidebar; margin: 15vh 1em;}
 }
 
@@ -22,7 +22,7 @@ h2 + p, h3 + p, h4 + p {margin-top: -1.5em; margin-left: 1em; margin-bottom: 0em
 
 // Links //
 a {scroll-margin-top: 70px;}
-a:not([href]) {font-weight: bold; text-decoration: none;}
+  %:not([href]) {font-weight: bold; text-decoration: none;}
 
 // TOC //
 #toc + ul {display: inline-block; padding: 1em 1em 1em 2em; border: 1px solid #ddd; margin-top: -1em;}

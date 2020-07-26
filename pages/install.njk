@@ -10,6 +10,13 @@ js2: colouring
 {% set version %}{% include "templates/version.txt" %}{% endset %}
 {% set patch %}{{version | last}}{% endset %}
 <h1>Installing NovaSheets</h1>
+
+<h2>npm</h2>
+<p>
+    Install <a href="https://npmjs.org/package/novasheets">NovaSheets on npm</a> via the command line using <code>npm install -g novasheets</code>, and then get started using <code>novasheets --help</code>. You must have Node.js installed to do this.
+</p>
+
+<h2>Browser</h2>
 <p>
     NovaSheets is installed simply by embedding a JavaScript file into your HTML.
     This file can be downloaded and hosted locally by you
@@ -19,14 +26,14 @@ js2: colouring
     That's it!
 </p>
 
-<h2>Downloading</h2>
+<h3>Downloading</h3>
 <p>
     See the <a href="/versions/">Versions</a> page to choose a version to download.
     Once you have done this, you can download one of the files given and add them to your project,
     or embed NovaSheets into your project directly using the code provided.
 </p>
 
-<h2>Importing</h2>
+<h3>Importing</h3>
 <p>
     The latest version is <strong>{{version}}</strong> and can be imported using the code below:
     <pre style="white-space: inherit;">
@@ -45,7 +52,7 @@ js2: colouring
     </pre>
 </p>
 
-<h3>Wildcards</h3>
+<h4>Wildcards</h4>
 
 <p>
     Additionally, you can choose to use a wildcard version, where you will always receive the latest patch:
@@ -57,7 +64,7 @@ js2: colouring
     </pre>
 </p>
 
-<h3>Latest</h3>
+<h4>Latest</h4>
 
 <p>
     You can choose to always import the latest stable version of NovaSheets using the code below, but be warned it may contain breaking changes in an update:
@@ -80,17 +87,18 @@ js2: colouring
     </pre>
 </p>
 
-<h2 id="browser-support">Browser support</h1>
+<h3 id="browser-support">Browser support</h1>
 <p>
     NovaSheets is supported in all major browsers, including Chrome, Edge (Chromium), Firefox, Opera, and Safari.
-    NovaSheets does not work in Internet Explorer, as it is written using the following features from <a href="https://www.w3schools.com/js/js_es6.asp">ECMAScript 6 (2015)</a>:
+    NovaSheets does not work in older browsers such as Internet Explorer, as it is written using the following features from ECMAScript versions up to ES2018:
 
     <ul>
         <li>Arrow functions (<code>=></code>)</li>
-        <li>
-            <code>let</code> and <code>const</code> declarations</li>
+        <li><code>let</code> and <code>const</code> declarations</li>
         <li>Rest operator (<code>...</code>)</li>
-        <li>RegEx negative lookbehinds (<code>(?&lt;!.)</code> and <code>(?&lt;=.)</code>)
+        <li>Nullish coalescing operator (<code>??</code>)</li>
+        <li>Optional chaining (<code>?.</code>)</li>
+        <li>RegEx lookbehinds (<code>(?&lt;!.)</code> and <code>(?&lt;=.)</code>)
         </li>
     </ul>
 </p>

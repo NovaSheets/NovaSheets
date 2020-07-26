@@ -1,17 +1,32 @@
 {
-    "description": "Website for NovaSheets information and documentation",
+    "name": "novasheets",
+    "version": "0.6.0",
+    "description": "A powerful lightweight CSS preprocessor",
+    "keywords": [
+        "novasheets",
+        "nss",
+        "css",
+        "css preprocessor",
+        "preprocessor",
+        "parser"
+    ],
+    "files": [
+        "src/novasheets.js"
+    ],
+    "main": "src/novasheets.js",
+    "bin": {
+        "novasheets": "src/novasheets.js"
+    },
     "repository": {
         "type": "git",
         "url": "git+https://github.com/Nixinova/NovaSheets.git"
     },
-    "author": {
-        "name": "Nixinova",
-        "url": "https://nixinova.com"
-    },
+    "author": "Nixinova (https://nixinova.com)",
     "bugs": {
         "url": "https://github.com/Nixinova/NovaSheets/issues"
     },
     "homepage": "https://novasheets.netlify.app",
+    "license": "MIT",
     "devDependencies": {
         "@11ty/eleventy": "^0.10.0"
     }

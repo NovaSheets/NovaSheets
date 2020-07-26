@@ -1,33 +1,61 @@
 ---
-title: Changelog
-layout: layouts/base.njk
+{title: Changelog, layout: layouts/base.njk, js: colouring}
 ---
 # Changelog for NovaSheets
+- [0.6.0](#060)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## 0.6.0
+*2020-07-26*
+- **New features**
+  - Added command-line support using `node novasheets <args>` (or, after installing using `npm install -g novasheets`: `novasheets <args>`).
+    - Arguments: `[--compile] <input file> <output file>` to compile a NovaSheets file into CSS; `--parse` to parse raw NovaSheets   content and log the output CSS to the console; `--help` to display help; and `--version` to display the current version.
+  - Added previous element selectors, used to copy the contents of the previous CSS selector.
+    - Ampersands (`&`) take the previous *raw* selector (i.e., the last selector that does not contain an ampersand), while percent signs (`%`) take the previous selector.
+    - Add less-than signs (`<`) to slice the last item off the selector (for example, if `&<` becomes `div+pre<`, the output is `div`); characters treated as delimiters are `:`, `>`, `+`, `~`, and whitespace.
+  - Added a warning for when HSL values are passed into the luma function as it only works for RGB values.
+- **New functions**
+  - Added built-in function `@breakpoint` to make media queries easier. Syntax: `$(@breakpoint | <pixels>[px] | <selector> | <smaller> | <larger> )`.
+  - Added built-in function `@prefix` to add all vendor prefixes to a CSS property. Syntax: `$(@prefix | <property> | <value> )`.
+  - Added built-in function `@spin` which cycles the hue of a color. Syntax: `$(@spin | <color> | <amount> )`.
+  - Added built-in function `@blend` which blends two colors together. Syntax: `$(@blend | <color1> | <color2> | [<amount>] )`.
+  - Added built-in function `@shade` which blends a color with black. Syntax: `$(@shade | <color> | [<amount>] )`.
+  - Added built-in function `@tint` which blends a color with white. Syntax: `$(@tint | <color> | [<amount>] )`.
+  - Added built-in function `@tone` which blends a color with gray. Syntax: `$(@tone | <color> | [<amount>] )`.
+  - Added built-in function `@contrast` which controls a value dependent on the contrast of a color. Syntax: `$(@contrast | <color> |   <light> | <dark> )`.
+- **Changes**
+  - Changed built-in function `@color` to coerce single- and double-character hash values and allow uppercase type values.
+  - Changed length math to always output the cleanest unit.
+  - Changed console warnings.
+- **Fixes**
+  - Fixed built-in function `@if` outputting `undefined` when missing its second argument.
+  - Fixed built-in color functions not outputting alpha values as percents.
+  - Fixed length units not being converted properly.
+  - Fixed more floating-point artifacts not being fully removed.
+
 ## 0.5.2
 *2020-07-14*
 - Fixed order of operations not being applied properly.
 - Fixed double negatives sometimes not being treated as addition.
 - Fixed spaced math operations inside brackets not being parsed properly.
-- Fixed floating-point artifacts not being fully removed.
+- Fixed some floating-point artifacts not being fully removed.
 - Refactored internal code to simplify math parsing and improve performance of math operations.
 
 ## 0.5.1
 *2020-07-09*
 - Added console warnings for when the parser detects a recursive variable.
-- Changed built-in function `each` to add an output delimiter parameter. New syntax: `$(@each | <list> | <list delimiter> | <output delimiter> | <content> )`.
-- Changed built-in function `repeat` to allow using pipes and using `$i` to refer to the current index in its content.
+- Changed built-in function `@each` to add an output delimiter parameter. New syntax: `$(@each | <list> | <list delimiter> | <output delimiter> | <content> )`.
+- Changed built-in function `@repeat` to allow using pipes and using `$i` to refer to the current index in its content.
 - Changed in-built math functions to type check its input to prevent invalid math operations.
 - Changed CSS output to keep the same indentation and newline formatting as the input.
 - Fixed missing `@endvar` declarations causing infinite recursion.
-- Fixed built-in function `each` not allowing nested variables containing instances of `$i`, `$v`, etc.
-- Fixed built-in function `clamp` not clamping properly to its maximum value.
-- Fixed built-in function `replace` not parsing regular expressions properly.
+- Fixed built-in function `@each` not allowing nested variables containing instances of `$i`, `$v`, etc.
+- Fixed built-in function `@clamp` not clamping properly to its maximum value.
+- Fixed built-in function `@replace` not parsing regular expressions properly.
 - Fixed math operations inside built-in functions not being parsed before the function is applied.
 - Fixed default argument substitutions requiring the pipe to be prefixed with a space.
 - Fixed arguments being skipped if they are placed after an empty anonymous argument.
@@ -45,16 +73,16 @@ layout: layouts/base.njk
   - Static comments (`/*/content/*/`): output the raw content inside of them as raw CSS or NovaSheets syntax; i.e., itself but without the "`/*/`"s.
   - Parsed comments (`/*[content]*/`): output the parsed content inside of them as a CSS comment.
 - Added support for default argument content, declared by adding a pipe (`|`) followed by the default content into the argument substitutor (e.g., `$[text|default]`).
-- Added built-in function `extract` for extracting the nth item from a delimited string. Syntax: `$(@extract | <list> | <delimiter> | <index> )`.
-- Added built-in function `each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v`, `$v[1]`, `$v[$i+1]`, etc. Syntax: `$(@each | <list> | <delimiter> | <replacement> )`.
-- Added built-in function `luma` for calculating the relative luminance (between 0 and 1) of a color. Syntax: `$(@luma | <color> )`.
-- Added `colour` and `colourpart` as aliases of built-in functions `color` and `colorpart` respectively.
+- Added built-in function `@extract` for extracting the nth item from a delimited string. Syntax: `$(@extract | <list> | <delimiter> | <index> )`.
+- Added built-in function `@each` for applying an operation to each item in a delimited string, referring to the index with `$i` and value with `$v`, `$v[1]`, `$v[$i+1]`, etc. Syntax: `$(@each | <list> | <delimiter> | <replacement> )`.
+- Added built-in function `@luma` for calculating the relative luminance (between 0 and 1) of a color. Syntax: `$(@luma | <color> )`.
+- Added `colour` and `colourpart` as aliases of built-in functions `@color` and `colorpart` respectively.
 - Added console warnings for when variables are not parsed.
 - Removed the need to explicitly initialize variables in variable declarations.
-- Fixed built-in function `color` not working when passed a CSS color function with a hash color output.
-- Fixed built-in function `replace` not allowing full regular expression syntax such as grouping and boolean 'or'.
-- Fixed built-in functions `degrees` and `gradians` having incorrect conversions between each other.
-- Fixed built-in functions `e` and `pi` not being parsed when they have leading or trailing whitespace.
+- Fixed built-in function `@color` not working when passed a CSS color function with a hash color output.
+- Fixed built-in function `@replace` not allowing full regular expression syntax such as grouping and boolean 'or'.
+- Fixed built-in functions `@degrees` and `gradians` having incorrect conversions between each other.
+- Fixed built-in functions `@e` and `pi` not being parsed when they have leading or trailing whitespace.
 - Fixed small decimal values being truncated incorrectly (e.g., `0.000000001234` turning into `0234` instead of just `0`).
 - Fixed equals signs in the contents of a single-line variable declaration (e.g., `@var x = y = z`) causing the content that follows to not show up in the output CSS.
 - Refactored internal parsing of variables to bracket-match completely, allowing for nested parentheses.
@@ -63,9 +91,9 @@ layout: layouts/base.njk
 *2020-06-27*
 - Added parser constant `MAX_MATH_RECURSION` for controlling how many times to perform each part of the order of operations before continuing on to the next operator.
 - Added parser constant `KEEP_NAN` for deciding whether or not to parse malformed numbers to `NaN`.
-- Changed built-in function `color` to output a generic CSS level-4 color function when given a `type` other than `rgb`, `rgba`, `hsl`, `hsla`, or `hash`, and to allow inputting any value as a percentage (which can be either implicit, i.e. below 1, or explicit using `%`).
+- Changed built-in function `@color` to output a generic CSS level-4 color function when given a `type` other than `rgb`, `rgba`, `hsl`, `hsla`, or `hash`, and to allow inputting any value as a percentage (which can be either implicit, i.e. below 1, or explicit using `%`).
 - Changed parsing of units to once again allow having a space before the unit.
-- Fixed the parser crashing when it comes across invalid unit math, regular expressions in built-in function `replace`, empty arguments in built-in function `color`, or certain values in built-in functions `min` and `max`.
+- Fixed the parser crashing when it comes across invalid unit math, regular expressions in built-in function `@replace`, empty arguments in built-in function `@color`, or certain values in built-in functions `@min` and `max`.
 - Fixed built-in functions incorrectly parsing negative numeric arguments.
 - Fixed inline variable declarations including the content after the `@endvar` keyword.
 - Fixed single zero-padded numbers being truncated.
@@ -77,37 +105,37 @@ layout: layouts/base.njk
 *2020-06-25*
 - Changed parsing of numbers to always convert from base 2, 8, and 16 to base 10.
 - Changed parsing of units to disallow having a space before the unit.
-- Fixed built-in function `replace` not replacing all instances of the specified string.
+- Fixed built-in function `@replace` not replacing all instances of the specified string.
 - Fixed `e` characters in hexidecimal values being parsed as order-of-magnitude exponentation.
 - Fixed newlines and spaced units being truncated completely in the output CSS.
 - Fixed pseudo-classes being malformed in the output CSS.
 
 ## 0.4.5
 *2020-06-23*
-- Changed built-in function `color` to default missing hex values to `0` and allow more flexibility in its arguments.
-- Changed built-in function `colorpart` allowing `hex`/`hexadecimal` as aliases for `hash`.
-- Fixed built-in function `bitwise` outputting its name as well as its parsed content.
-- Fixed built-in function `color` not allowing percentages and not parsing its arguments properly.
-- Fixed built-in function `colorpart` not parsing parts properly, not allowing `rgb`/`rgba` CSS functions when using type `hash`/`#`, and not outputting the raw hash value if passed with type `hash`/`#`.
-- Fixed built-in function `round` outputting `NaN` when the "decimal places" argument is missing.
+- Changed built-in function `@color` to default missing hex values to `0` and allow more flexibility in its arguments.
+- Changed built-in function `@colorpart` allowing `hex`/`hexadecimal` as aliases for `hash`.
+- Fixed built-in function `@bitwise` outputting its name as well as its parsed content.
+- Fixed built-in function `@color` not allowing percentages and not parsing its arguments properly.
+- Fixed built-in function `@colorpart` not parsing parts properly, not allowing `rgb`/`rgba` CSS functions when using type `hash`/`#`, and not outputting the raw hash value if passed with type `hash`/`#`.
+- Fixed built-in function `@round` outputting `NaN` when the "decimal places" argument is missing.
 - Fixed floating-point math outputting strings of zeroes or nines.
 
 ## 0.4.4
 *2020-06-21*
 - Changed variable declarations using the existing `=` notation to be strictly single-line declarations.
 - Changed unit parsing to be more intuitive, allowing more units in any permutation (`1/2em`, `1em/2`, `1em/2em`, etc).
-- Changed syntax of build-in function `log` to allow a base as its first argument.
-- Changed built-in function `replace` to allow regular expressions.
-- Changed built-in functions `degrees`, `radians`, and `gradians` to default to radians, degrees and degrees respectively.
-- Changed built-in function `color` to allow colors being created from hash values.
-- Changed built-in function `colorpart` to allow more aliases for its first parameter, such as `GREEN`/`grn`/etc for "green", etc.
+- Changed syntax of built-in function `@log` to allow a base as its first argument.
+- Changed built-in function `@replace` to allow regular expressions.
+- Changed built-in functions `@degrees`, `@radians`, and `@gradians` to default to radians, degrees and degrees respectively.
+- Changed built-in function `@color` to allow colors being created from hash values.
+- Changed built-in function `@colorpart` to allow more aliases for its first parameter, such as `GREEN`/`grn`/etc for "green", etc.
 - Fixed bracketed numbers not having math operations applied to them.
 - Fixed boolean values outputting incorrect results when containing leading and/or trailing whitespace.
-- Fixed built-in function `if` outputting `undefined` when falsey and the "if false" argument is missing.
-- Fixed conversions to radians in built-in functions `degrees` and `gradians`.
-- Fixed built-in function `ceil` not working.
+- Fixed built-in function `@if` outputting `undefined` when falsey and the "if false" argument is missing.
+- Fixed conversions to radians in built-in functions `@degrees` and `@gradians`.
+- Fixed built-in function `@ceil` not working.
 - Fixed leading and/or trailing whitespace affecting the output of built-in functions.
-- Fixed built-in function `colorpart` breaking when being passed a raw CSS color function.
+- Fixed built-in function `@colorpart` breaking when being passed a raw CSS color function.
 
 ## 0.4.3
 *2020-06-18*
@@ -126,8 +154,8 @@ layout: layouts/base.njk
 
 ## 0.4.1
 *2020-06-14*
-- Added build-in function `degrees` for converting a value to degrees.
-- Changed syntax of built-in functions `degrees`, `radians`, and `gradians` to mandate the keywords `deg`, `rad`, or `grad` in its first argument.
+- Added built-in function `@degrees` for converting a value to degrees.
+- Changed syntax of built-in functions `@degrees`, `@radians`, and `@gradians` to mandate the keywords `deg`, `rad`, or `grad` in its first argument.
 - Fixed ampersands not working when using an HTML element as input.
 - Fixed chained logical statements not being parsed correctly.
 - Fixed bitwise `or` not working properly.
@@ -138,7 +166,7 @@ layout: layouts/base.njk
 - Added support for declaring variables anywhere in the document.
 - Added support for placing variable content on the same line as the variable declaration by seperating the two with "`=`".
 - Added the `@endvar` keyword for declaring the end of the contents of a variable.
-- Added built-in functions `radians`/`gradians` and `bitwise`/`boolean` for converting from degrees and performing bitwise/logical operations, respectively.
+- Added built-in functions `@radians`/`@gradians` and `@bitwise`/`@boolean` for converting from degrees and performing bitwise/logical operations, respectively.
 - Added support for operators `not`/`!`/`~`, `and`/`&&`/`&`, `or`/`||`/`|`, `nand`, `nor`, `xor`, and `xnor` in the first argument of built-in funcion `if`.
 - Removed the `---` separator keyword as it is superceded by `@endvar`.
 - Removed the `deg` and `grad` keywords as they interfere with raw CSS.

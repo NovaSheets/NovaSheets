@@ -14,8 +14,9 @@ js: "colouring"
             <div class="item">
                 <h1>NovaSheets</h1>
                 <p>A lightweight CSS preprocessor that is simple but powerful.</p>
-                <p id="welcome-install" class="item-link">
+                <p id="welcome-install" class="item-link" style="padding-bottom: 0;">
                     <a href="/install/">Install now</a>
+                    <pre>npm install -g novasheets</pre>
                 </p>
             </div>
         </div>
@@ -40,9 +41,7 @@ js: "colouring"
             <div class="item">
                 <pre>
                     <code class="language-nss">
-                        @var color \n
-                        [nbsp] hsl( $[hue|300], 75%, 80% ) \n
-                        @endvar \n
+                        @var color = hsl($[hue|300], 75%, 80%)\n
                         body {background: $(color|hue=200);}
                     </code>
                 </pre>
@@ -79,7 +78,8 @@ js: "colouring"
             <div class="item">
                 <pre>
                     <code class="language-nss">
-                        $(@color | rgb | $(@round|0xff/2) | 50% | 255 )
+                        $(@spin | hsl(100, 20%, 30%) | -30 )\n
+                        $(@breakpoint | 800px | .container | width: 100%; | width: 30vw; )
                     </code>
                 </pre>
             </div>
