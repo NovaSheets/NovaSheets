@@ -151,7 +151,8 @@
             });
             QUnit.test('CSS functions', nss => {
                 const tests = [
-                    ['$(@breakpoint | 500px | selector | less | more )', ' @media (max-width: 500px) { selector { less } } @media (min-width: 501px) { selector { more} }'],
+                    ['$(@breakpoint | 500px | selector | less | more )', ' @media (max-width: 500px) { selector { less } } @media (min-width: 501px) { selector { more } }'],
+                    ['$(@breakpoint | 500px | less {} | more {} )', ' @media (max-width: 500px) { less {} } @media (min-width: 501px) { more {} }'],
                     ['$(@prefix | transition | all 1s )', '-webkit-transition: all 1s; -moz-transition: all 1s; -ms-transition: all 1s; -o-transition: all 1s; transition: all 1s;']
                 ];
                 test(nss, tests);

@@ -2,12 +2,22 @@
 {title: Changelog, layout: layouts/base.njk, js: colouring}
 ---
 # Changelog for NovaSheets
-- [0.6.0](#060)
+- [0.6.0](#060) • [0.6.1](#061)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+## 0.6.1
+*2020-07-29*
+- **Changes**
+  - Changed the syntax of built-in function `@breakpoint` to allow declaration blocks in its second and third arguments and to suppress the output of the "min-width" segment if its respective argument is not set.
+- **Fixes**
+  - Fixed erroneous console errors occurring in Node.
+  - Fixed empty arguments nullifying the following ones.
+  - Fixed built-in function `@grayscale` outputting an HSLA color when passed an HSL color.
+  - Fixed built-in function `@contrast` outputting "undefined" when missing its arguments.
 
 ## 0.6.0
 *2020-07-26*
@@ -16,7 +26,7 @@
     - Arguments: `[--compile] <input file> <output file>` to compile a NovaSheets file into CSS; `--parse` to parse raw NovaSheets   content and log the output CSS to the console; `--help` to display help; and `--version` to display the current version.
   - Added previous element selectors, used to copy the contents of the previous CSS selector.
     - Ampersands (`&`) take the previous *raw* selector (i.e., the last selector that does not contain an ampersand), while percent signs (`%`) take the previous selector.
-    - Add less-than signs (`<`) to slice the last item off the selector (for example, if `&<` becomes `div+pre<`, the output is `div`); characters treated as delimiters are `:`, `>`, `+`, `~`, and whitespace.
+    - Add less-than signs (`<`) to slice the last item off the selector (for example, if `&<` becomes `div+pre<`, the output is `div`); characters treated as delimiters are `>`, `+`, `~`, and whitespace.
   - Added a warning for when HSL values are passed into the luma function as it only works for RGB values.
 - **New functions**
   - Added built-in function `@breakpoint` to make media queries easier. Syntax: `$(@breakpoint | <pixels>[px] | <selector> | <smaller> | <larger> )`.
@@ -26,7 +36,8 @@
   - Added built-in function `@shade` which blends a color with black. Syntax: `$(@shade | <color> | [<amount>] )`.
   - Added built-in function `@tint` which blends a color with white. Syntax: `$(@tint | <color> | [<amount>] )`.
   - Added built-in function `@tone` which blends a color with gray. Syntax: `$(@tone | <color> | [<amount>] )`.
-  - Added built-in function `@contrast` which controls a value dependent on the contrast of a color. Syntax: `$(@contrast | <color> |   <light> | <dark> )`.
+  - Added built-in function `@contrast` which controls a value dependent on the contrast of a color. Syntax: `$(@contrast | <color> | <light> | <dark> )`.
+  - Added built-in function `@grayscale` (alias `@greyscale`) which removes the hue of a color. Syntax: `$(@grayscale| <color> )`.
 - **Changes**
   - Changed built-in function `@color` to coerce single- and double-character hash values and allow uppercase type values.
   - Changed length math to always output the cleanest unit.

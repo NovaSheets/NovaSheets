@@ -12,10 +12,7 @@ main {min-height: $(main height); padding: $(header height) 10% 0 10%;}
 strong {letter-spacing: 1px; letter-spacing: 1.5px;}
 h1, h2, h3, h4, h5 {margin-left: -0.5em; letter-spacing: 1.5px; font-weight: normal;}
     &, p {margin-top: 1em;}
-
-@media (max-width: 800px) {
-    main {padding: $(header height) 2em 0;}
-}
+$(@breakpoint | 800px | main | padding: $(header height) 2em 0; )
 
 // Header //
 @var line height = line-height: $(header height)
@@ -25,10 +22,7 @@ header {display: flex; position: fixed; width: 100%; height: $(header height); b
         % a[href] {display: block; padding: $(header height)/4; $(line height)/2; color: white;}
         %< a.active {background: $(theme color | 10%);}
         %<:hover {background: $(theme color | 12%);}
-
-@media (max-width: 800px) {
-    header ul {padding: 0;}
-}
+$(@breakpoint | 800px | header ul | padding: 0; )
 
 // Footer //
 footer {width: 100%; height: $(header height); $(line height); background: $(header color); text-align: center;}
@@ -81,14 +75,13 @@ pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; 
 .hide {display: none !important;}
 
 // Responsive //
-@media (min-width: 801px) {
+$(@breakpoint | 800px |
+    .desktoponly {display: none;}
+|
     .mobileonly {display: none;}
     ::-webkit-scrollbar {width: 1em;}
     &-track {background: #112d;}
     &-thumb {background: #eef; box-shadow: inset 0 0 6px #0114;}
-}
-@media (max-width: 800px) {
-    .desktoponly {display: none;}
-}
+)
 
 /* Copyright © Nixinova 2020 */

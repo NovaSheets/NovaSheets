@@ -13,19 +13,18 @@ main {padding: 30px 0 0; overflow-x: hidden;}
         &:last-child {grid-area: aside;}
         & pre {display: inline-block; padding: 0.5em 1em; white-space: inherit;}
 
-@media (max-width: 800px) {
+$(@breakpoint | 800px |
     #showcase h1 {font-size: 3.5em;}
     .item-container .item {padding: 1em;}
         % pre {margin: auto; max-width: 80%;}
     .main-container .item {margin: auto; max-width: 90%;}
-}
-@media (min-width: 801px) {
+|
     #showcase h2 {margin-bottom: 0.5em;}
     .two-container {display: grid; grid-template-areas: ". desc . aside ."; grid-template-columns: 2fr 6fr 1fr 5fr 2fr;}
     .item-container .item {margin: 1em 0;}
         & p {padding-bottom: 1em;}
         &:not(.two-container) {width: 50vw;}
-}
+)
 
 @var start = 185
 @var step = 20

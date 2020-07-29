@@ -273,6 +273,11 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Result:** Blends two input colors. Has an optional `<amount>` parameter (which defaults to `0.5`/`50%`) which controls which color is more dominant; values between `0%` and `0.5`/`50%` bias the output to `<color1>` while values between `0.5`/`50%` and `1`/`100%` bias the output to `<color2>`.<br>
 **Example:** `$( @blend | #000 | rgb(255,255,255) | 0.25 )` &rarr; `rgb(63, 63, 63)`
 
+### @grayscale
+**Syntax:** `$( @grayscale | <color> )` (alternatively, `$( @greyscale | ... )`)<br>
+**Result:** Neutralizes the red, green, and blue color channels of an RGB or hex color, or changes the saturation of an HSL color to 0%.<br>
+**Example:** `$( @grayscale | hsl(100, 30%, 40%) )` &rarr; `hsl(100, 0%, 40%)`
+
 ### @luma
 **Syntax:** `$( @luma | <color> )`<br>
 **Result:** Outputs the relative luminance (between 0 and 1) of an RGB or hex `<color>`. Fails if given an HSL value or another type of color.<br>
@@ -301,8 +306,8 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ## CSS
 
 ### @breakpoint
-**Syntax:** `$(@breakpoint | <pixels>[px] | <selector> | <below> | <above> )`<br>
-**Result:** Outputs two media queries, one for widths greater than `<pixels>` and one for widths less than or equal to `<pixels>`.<br>
+**Syntax:** `$(@breakpoint | <pixels>[px] | [<selector>] | <smaller> | [<larger>] )`<br>
+**Result:** Outputs two media queries, one for widths less than or equal to than `<pixels>` (containing `<smaller>`) and one for widths greater than `<pixels>` (containing `<larger>`). When `<selector>` is set, `<smaller>` and `<larger>` should not be block declarations; otherwise, they should be. `<larger>` is optional in both cases.<br>
 **Example:** `$(@breakpoint | 800px | .container | width: 100%; | width: 20vw; )` &rarr; `@media (min-width: 801px) { .container { width: 100%; } } @media (max-width: 800px) { .container { width: 20vw;} }`
 
 ### @prefix

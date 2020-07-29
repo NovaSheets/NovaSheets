@@ -3,15 +3,14 @@ main {padding-left: 5%; padding-right: 5%; margin-bottom: 2em; display: grid;}
 aside>:first-child {margin-left: -1em;}
   %< ul {margin: 0; padding: 0;}
 
-@media (max-width: 800px) {
+$(@breakpoint | 800px |
     main #content {margin: 0 1em;}
     aside {border: 1px solid; margin: auto;  padding: 1em 3em; margin-top: 2em;}
-}
-@media (min-width: 801px) {
+|
     main {grid-template-areas: "sidebar content"; grid-gap: 3em; grid-template-columns: 2fr 8fr;}
       % #content {grid-area: content; margin-top: 2em;}
     aside {grid-area: sidebar; margin: 15vh 1em;}
-}
+)
 
 // Code blocks //
 :not(pre)>code {border: 1px solid #8888; padding: 2px;}
