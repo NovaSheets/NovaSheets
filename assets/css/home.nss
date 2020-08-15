@@ -32,7 +32,7 @@ $(@breakpoint | 800px |
 content: ""; display: block; position: absolute; height: 100px; width: 100%; clip-path: polygon(0 0, 100% 0, 100% 40%, 0% 100%);
 @endvar
 #showcase > :not(:first-child) > .item-container {padding-top: 100px;}
-$(@each | 1,2,3,4,5,6,7,8,9 | , | | 
+$(@repeat | 9 | 
     #showcase > :nth-child(($i-1)) {background: hsl($(start)+$i*$(step), 60%, 30%);}
     #showcase > :nth-child(($i+1))::before {$(before); background: hsl($(start)+$(step)+($i*$(step)), 60%, 30%);}
 )

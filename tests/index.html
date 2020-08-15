@@ -22,7 +22,7 @@
                 assert.equal(parseNovaSheets(item[0]), item[1], item[0] + ' -> ' + item[1]);
             }
         }
-        QUnit.module('Variables', () => {
+        QUnit.module('NSS content', () => {
             QUnit.test('Variables', nss => {
                 const vars = `
                     @var var1 // void
@@ -35,6 +35,13 @@
                     [vars + '$(var1)', ' '],
                     [vars + '$(var2|inline)', 'inline content'],
                     [vars + '$(var3|type = block)', 'block content'],
+                ];
+                test(nss, tests);
+            });
+            QUnit.test('Parser constants', nss => {
+                const tests = [
+                    ['@const DECIMAL_PLACES 2\n2/3', '0.67'],
+                    ['@const DECIMAL_PLACES 0\n2/3', '1'],
                 ];
                 test(nss, tests);
             });
@@ -122,6 +129,11 @@
             });
             QUnit.test('Text functions', nss => {
                 const tests = [
+                    ['$(@lowercase | Lowercase Text )', 'lowercase text'],
+                    ['$(@uppercase | UpperCase Text )', 'UPPERCASE TEXT'],
+                    ['$(@titlecase | title case TEXT )', 'Title Case TEXT'],
+                    ['$(@camelcase | title case TEXT )', 'title Case TEXT'],
+                    ['$(@capitalize | capitaliZed )', 'CapitaliZed'],
                     ['$(@length | 123456 )', '6'],
                     ['$(@encode | [text]="true")', '%5Btext%5D%3D%22true%22'],
                     ['$(@replace | text | /te(.)t/ | !$1! )', '!x!'],

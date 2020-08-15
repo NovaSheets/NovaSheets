@@ -25,7 +25,7 @@ compile('stylesheet.nss', 'output.css');
 
 ## Syntax
 
-NovaSheets lets you declare [variables](https://novasheets.netlify.app/docs/variables/) (with optional parameters) and reuse these elsewhere in the document. NovaSheets comes with a large variety of built-in functions for you to make use of, making your CSS development a lot easier. For full documentation, see [the NovaSheets website](https://novasheets.netlify.app/docs/). For testing NovaSheets syntax, see [this demo page](https://novasheets.netlify.app/demo/).
+NovaSheets lets you declare [variables](https://novasheets.netlify.app/docs/variables/) (with optional parameters) and reuse these elsewhere in the document. NovaSheets comes with a large variety of [built-in variables](https://novasheets.netlify.app/docs/default-variables/) for you to make use of, making your CSS development a lot easier. For full documentation, see [the NovaSheets website](https://novasheets.netlify.app/docs/). For testing NovaSheets syntax, see [the demo page](https://novasheets.netlify.app/demo/).
 
 ### Example
 

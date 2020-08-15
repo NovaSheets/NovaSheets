@@ -18,5 +18,7 @@ The parser contains a few constants which affect how NovaSheets code is parsed. 
   - Controls how many times math operations will be iterated over; defaults to `5`.
 - `@const MAX_ARGUMENTS <integer>`
   - Controls the maximum number of arguments a variable can have; defaults to `10`.
+- `@const DECIMAL_PLACES {<integer>|false}`
+  - Controls how many decimal places numbers are outputted with. Has no effect when set to `false` (default).
 - `@const KEEP_NAN <boolean>`
   - Controls whether or not `NaN` should be outputted when parsing invalid numbers; defaults to `false`.

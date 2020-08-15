@@ -1,9 +1,8 @@
 ---
 layout: layouts/docs.njk
-permalink: /docs/variables/default/
+permalink: /docs/default-variables/
 title: Default Variables
 js: "headings"
-js2: "colouring"
 ---
 
 # NovaSheets Default Variables <!-- omit in toc -->
@@ -57,6 +56,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
   - [@colorpart](#colorpart)
   - [@contrast](#contrast)
   - [@blend](#blend)
+  - [@grayscale](#grayscale)
   - [@luma](#luma)
   - [@shade](#shade)
   - [@spin](#spin)
@@ -191,15 +191,25 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Example:** `$(@boolean | true && false )` &rarr; `false`
 
 ### @if
-**Syntax:** `$( @if | <test> | <iftrue> | <iffalse>)`<br>
-**Result:** Outputs the either content of `<iftrue>` if `<test>` resolves to boolean "true" or `<iffalse>` if it resolves to false. Allowed operators for `test` include `==`, `!=`, `!`, `<`, `>`, `!`, `or`, `nor`, `and`, `nand`, `xor`, `xnor`. If `<test>` resolves to `false`, `null`, `undefined`, `NaN`, or an empty string, `<iffalse>` will be called, otherwise `<iftrue>` will be..<br>
+**Syntax:** `$( @if | <test> | <if true> | <if false>)`<br>
+**Result:** Outputs the either content of `<if true>` if `<test>` resolves to boolean "true" or `<if false>` if it resolves to false. Allowed operators for `test` include `==`, `!=`, `!`, `<`, `>`, `!`, `or`, `nor`, `and`, `nand`, `xor`, `xnor`. If `<test>` resolves to `false`, `null`, `undefined`, `NaN`, or an empty string, `<if false>` will be called, otherwise `<if true>` will be..<br>
 **Example:** `$(@if | 1 == 2 | nonsense | truth )` &rarr; `truth`
 
 ## Text
 
+### @camelcase
+**Syntax:** `$( @camelcase | <string> )`<br>
+**Result:** Capitalizes the first letter of each word in `string` except for the first one.<br>
+**Example:** `$( @camelcase | camel CASE sentence )` &rarr; `camel CASE Sentence`
+
+### @capitalize
+**Syntax:** `$( @capitalize | <string> )`<br> (alias: `$( @capitalise | ... )`)
+**Result:** Changes `string` to be capitalized.<br>
+**Example:** `$( @capitalize | caps )` &rarr; `Caps`
+
 ### @each
-**Syntax:** `$( @each | <list> | <list delimiter> | <output delimiter> | <replacement> )`<br>
-**Result:** Peforms iterative replacement on items in `<list>` (where each item is separated using `<list delimiter>`). Instances of `$i` in `<replacement>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item. The output will be delimited with `<output delimiter>`.<br>
+**Syntax:** `$( @each | <list> [| <splitter = ","> [| <joiner = splitter>]] | <content> )`<br>
+**Result:** Peforms iterative content on items in `<list>` (where each item is separated using `<splitter>`). Instances of `$i` in `<content>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item. The output will be delimited with `<joiner>`; when `<joiner>` is not set, it defaults to the value of `<splitter>`, which in turn defaults to a comma (`,`). The value of `<joiner>` is not trimmed, so any whitespace inside will appear in the output.<br>
 **Example:** `$(@each | 10,20,30 | , | | $v+$i )` &rarr; `11 22 33`
 
 ### @encode
@@ -208,19 +218,34 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Example:** `$( @encode | <text>=true )` &rarr; `%3Ctext%3E%3Dtrue`
 
 ### @extract
-**Syntax:** `$( @extract | <list> | <delimiter> | <index> )`<br>
-**Result:** Extracts an item from the specified `<index>` (one-based) from `<list>` in which each list item is separated by `<delimiter>`.<br>
-**Example:** `$(@extract | A,B,C | , | 1 )` &rarr; `A`
+**Syntax:** `$( @extract | <list> [| <delimiter = ",">] | <index> )`<br>
+**Result:** Extracts an item from the specified `<index>` (one-based) from `<list>` in which each list item is separated by `<delimiter>`, which defaults to a comma (`,`).<br>
+**Example:** `$(@extract | A,B,C | 1 )` &rarr; `A`
 
 ### @length
 **Syntax:** `$( @length | <string> )`<br>
 **Result:** Outputs the length of `string`.<br>
 **Example:** `$( @length | 123456 )` &rarr; `6`
 
+### @lowercase
+**Syntax:** `$( @lowercase | <string> )`<br>
+**Result:** Changes `string` to be lowercase.<br>
+**Example:** `$( @lowercase | is NOW Lowercase )` &rarr; `is now lowercase`
+
 ### @replace
 **Syntax:** `$( @replace | <string> | <find> | <replace> )`<br>
 **Result:** Replaces all instances of `<find>` in `<string>` with `<replace>`. Supports regular expressions.<br>
 **Example:** `$( @replace | t3xt | 3 | e )` &rarr; `text`
+
+### @titlecase
+**Syntax:** `$( @titlecase | <string> )`<br>
+**Result:** Capitalizes the first letter of each word in  `string`.<br>
+**Example:** `$( @titlecase | title case text )` &rarr; `Title Case Text`
+
+### @uppercase
+**Syntax:** `$( @uppercase | <string> )`<br>
+**Result:** Changes `string` to be uppercase.<br>
+**Example:** `$( @uppercase | is now uppercase )` &rarr; `IS NOW UPPERCASE`
 
 ## Color
 
@@ -229,8 +254,8 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Result:** Outputs a CSS color depending on the value of `<type>` (see subsections below).
 
 #### hash
-**Syntax:** `$( @color | {hex|hexidecimal|hash|#} | <r> | <g> | <b> | [<a>] )`<br>
-**Result:** Converts its arguments into a hexidecimal color.<br>
+**Syntax:** `$( @color | {hex|hexadecimal|hash|#} | <r> | <g> | <b> | [<a>] )`<br>
+**Result:** Converts its arguments into a hexadecimal color.<br>
 **Example:** `$( @color | hash | 255 | 64 | 128)` &rarr; `#ff4080`
 
 #### rgb
@@ -269,7 +294,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Example:** `$(@contrast | #fff | white | black )` &rarr; `black`
 
 ### @blend
-**Syntax:** `$( @blend | <color1> | <color2> | [<amount>] )`<br>
+**Syntax:** `$( @blend | <color1> | <color2> | [<amount = 0.5>] )`<br>
 **Result:** Blends two input colors. Has an optional `<amount>` parameter (which defaults to `0.5`/`50%`) which controls which color is more dominant; values between `0%` and `0.5`/`50%` bias the output to `<color1>` while values between `0.5`/`50%` and `1`/`100%` bias the output to `<color2>`.<br>
 **Example:** `$( @blend | #000 | rgb(255,255,255) | 0.25 )` &rarr; `rgb(63, 63, 63)`
 
@@ -284,29 +309,29 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Example:** `$( @luma | #f05 )` &rarr; `0.21915877154744204`
 
 ### @shade
-**Syntax:** `$( @tone | <color> | [<amount>] )`<br>
+**Syntax:** `$( @tone | <color> | [<amount = 0.5>] )`<br>
 **Result:** Blends `<color>` with black by `<amount>` (which defaults to `0.5`/`50%`).<br>
 **Example:** `$( @shade | hsl(300, 50%, 20%) | 10% )` &rarr; `hsl(300, 50%, 10%)`
 
 ### @spin
-**Syntax:** `$( @spin | <color> | <amount> )`<br>
+**Syntax:** `$( @spin | <color> | <amount = 0.5> )`<br>
 **Result:** Cycles the hue of `<color>` by `<amount>`.
 **Example:** `$( @spin | hsl(100, 50%, 20%) | 100 )` &rarr; `hsl(200, 50%, 20%)`
 
 ### @tint
-**Syntax:** `$( @tint | <color> | [<amount>] )`<br>
+**Syntax:** `$( @tint | <color> | [<amount = 0.5>] )`<br>
 **Result:** Blends `<color>` with white by `<amount>` (which defaults to `0.5`/`50%`).<br>
 **Example:** `$( @tint | #000 | 50% )` &rarr; `#7f7f7f`
 
 ### @tone
-**Syntax:** `$( @tone | <color> | [<amount>] )`<br>
+**Syntax:** `$( @tone | <color> | [<amount = 0.5>] )`<br>
 **Result:** Blends `<color>` with gray by `<amount>` (which defaults to `0.5`/`50%`).<br>
 **Example:** `$( @tone | rgb(128, 10, 255) | 0.4 )` &rarr; `rgb(128, 57, 204)`
 
 ## CSS
 
 ### @breakpoint
-**Syntax:** `$(@breakpoint | <pixels>[px] | [<selector>] | <smaller> | [<larger>] )`<br>
+**Syntax:** `$(@breakpoint | <pixels>[px] [| <selector>] | <smaller> [| <larger>] )`<br>
 **Result:** Outputs two media queries, one for widths less than or equal to than `<pixels>` (containing `<smaller>`) and one for widths greater than `<pixels>` (containing `<larger>`). When `<selector>` is set, `<smaller>` and `<larger>` should not be block declarations; otherwise, they should be. `<larger>` is optional in both cases.<br>
 **Example:** `$(@breakpoint | 800px | .container | width: 100%; | width: 20vw; )` &rarr; `@media (min-width: 801px) { .container { width: 100%; } } @media (max-width: 800px) { .container { width: 20vw;} }`
 

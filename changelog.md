@@ -2,12 +2,32 @@
 {title: Changelog, layout: layouts/base.njk, js: colouring}
 ---
 # Changelog for NovaSheets
-- [0.6.0](#060) • [0.6.1](#061)
+- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+## 0.6.2
+*2020-08-15*
+- **Additions**
+  - Added parser constant `DECIMAL_PLACES` for controlling how many decimal places numbers are outputted with.
+  - Added built-in function `@lowercase` to change a string to lowercase.
+  - Added built-in function `@uppercase` to change a string to uppercase.
+  - Added built-in function `@titlecase` to capitalize the first letter of each word in a string.
+  - Added built-in function `@camelcase` to capitalize the first letter of each word in a string except for the first one.
+  - Added built-in function `@capitalize`/`@capitalise` to capitalize the first letter of a string.
+- **Changes**
+  - Changed `@var` declarations to allow the variable content to be modified later in the document.
+  - Changed `@const` declarations to make the parser constant name case insensitive.
+  - Changed parsing order to resolve previous element selectors before they are used in built-in functions.
+  - Changed built-in function `@each` to remove the need to explicitly declare the splitting and joining delimiters. The joiner now defaults to the splitter, which in turn defaults to a comma (`,`). New syntax: `$( @each | <items> [| <splitter = ","> [| <joiner = splitter>]] | <content> )`.
+  - Changed built-in function `@extract` to remove the need to explicitly declare the delimiter. New syntax: `$( @extract | <list> [| <delimiter = ",">] | <index> )`.
+- **Fixes**
+  - Fixed previous element selectors being too greedy in what they copy.
+  - Fixed built-in function `@each` treating an empty string and a space as the same character in its delimiter arguments.
+  - Fixed built-in function `@replace` ignoring whitespace in its finder and replacer arguments.
 
 ## 0.6.1
 *2020-07-29*
@@ -110,14 +130,14 @@
 - Fixed single zero-padded numbers being truncated.
 - Fixed spaced `+` and `-` math operators not being parsed.
 - Fixed units with millimetres being incorrectly converted.
-- Fixed hexidecimal values containing letters not being treated as numbers.
+- Fixed hexadecimal values containing letters not being treated as numbers.
 
 ## 0.4.6
 *2020-06-25*
 - Changed parsing of numbers to always convert from base 2, 8, and 16 to base 10.
 - Changed parsing of units to disallow having a space before the unit.
 - Fixed built-in function `@replace` not replacing all instances of the specified string.
-- Fixed `e` characters in hexidecimal values being parsed as order-of-magnitude exponentation.
+- Fixed `e` characters in hexadecimal values being parsed as order-of-magnitude exponentation.
 - Fixed newlines and spaced units being truncated completely in the output CSS.
 - Fixed pseudo-classes being malformed in the output CSS.
 
