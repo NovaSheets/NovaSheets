@@ -56,6 +56,11 @@ NovaSheets supports manipulating numerals using raw mathematical operators. Thes
 NovaSheets adds previous element selectors, which copy the content of a previous CSS selector. Ampersands (`&`) take the previous *raw* selector (i.e., the last selector that does not contain an ampersand), while percent signs (`%`) take the previous selector.
 Less-than signs (`<`) can be used to slice the last item off the selector; characters treated as item delimiters are `:`, `>`, `+`, `~`, and whitespace. For example, `.item>div {} &< p {} %~img {}` outputs `.item>div {} .item p {} .item p~img {}`.
 
+### Objects
+*More info: [Objects](/docs/objects)*
+
+NovaSheets treats all CSS declaration blocks as objects, and the values of each CSS property can be accessed using the format `{attr: val;}[attr]`. Declaration blocks can be substituted using the format `$<selector>`, where the content inside refers to the full selector identifier attached to that declaration block. These two can be combined, forming `$<selector>[attr]`.
+
 ### Comments
 *More info: [Comments](/docs/comments)*
 

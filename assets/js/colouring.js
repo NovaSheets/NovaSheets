@@ -20,6 +20,8 @@ function colouriseCode() {
             .replace(/@endvar/g, wrap('$&', 'nss-char'))
             .replace(/(@const)\s+([^ ]*)\s+([^ ]*)?/gi, wrap('$1', 'nss-char') + wrap(' $2', 'nss-var') + wrap(' $3', 'nss-arg'))
             .replace(/\[amp\](\[lt\])*|%(\[lt\])*/g, wrap('$&', 'nss-selector'))
+            .replace(/(\[lt\])([\w.:+~>()]+)(\[gt\])/g, wrap('<', 'nss-char') + wrap('$2', 'css-selector') + wrap('>', 'nss-char')) // decl subst
+            .replace(/(\[)(\w+?)(\])/g, wrap('$1', 'nss-char') + wrap('$2', 'css-property') + wrap('$3', 'nss-char')) // obj getter
             .replace(/\[(amp|lt|gt|nbsp)\]/g, '&$1;'.toLowerCase())
             .replace(/^\s*(@var)\s*(.+?)(?==.*$|$)/gm, wrap('$1', 'nss-char') + wrap(' $2', 'nss-var'))
             .replace(/(?<!(?:\/\/|\/\*).*)\$\[([^<]*?)(?:(\|)(.*?))?\]/gm, '$[' + wrap('$1', 'nss-arg') + '$2' + wrap('$3', 'nss-arg-default') + wrap(']', 'nss-char'))

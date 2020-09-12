@@ -2,12 +2,20 @@
 {title: Changelog, layout: layouts/base.njk, js: colouring}
 ---
 # Changelog for NovaSheets
-- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062)
+- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+## 0.6.3
+*2020-09-12*
+- **Additions**
+  - Added declaration substitution, which outputs the contents of a CSS block declaration, using the format `$<selector>`.
+  - Added object notation, used by placing square brackets after a set of attribute-value pairs (which is the same as a CSS block) surrounded by curly brackets: `{attr1: val1; attr2: val2;}[attr1]`.
+- **Changes**
+  - Refactored code to avoid possible clashes with other scripts.
 
 ## 0.6.2
 *2020-08-15*

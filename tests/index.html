@@ -45,6 +45,14 @@
                 ];
                 test(nss, tests);
             });
+            QUnit.test('Object notation and declaration substitution', nss => {
+                const tests = [
+                    ['{color: blue;}[color]', 'blue'],
+                    ['@var obj\n{color: blue;}\n@endvar$(obj)[color]', 'blue'],
+                    ['div {width:100%} $<div>[width]', 'div {width:100%} 100%'],
+                ];
+                test(nss, tests);
+            });
         });
         QUnit.module('Misc', () => {
             QUnit.test('Watchlist', nss => {

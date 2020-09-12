@@ -1,4 +1,3 @@
-#!/usr/bin/env node
 const NOVASHEETS_VERSION = "0.6.3";
 try { fs = require('fs'); } catch { } // node
 
