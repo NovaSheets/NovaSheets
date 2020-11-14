@@ -50,26 +50,28 @@ h2[id] + p em {display: block; margin-top: -3.4em; margin-left: 4em;}
 
 // Code blocks //
 @var code color = color: hsl($[1], 90%, $[2|40%]);
+@var code = .code $[1], .code-styles $[1]
 pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; text-align: left; white-space: pre-wrap; word-break: break-word;}
-.code .comment {$(code color | 130 | 33%)}
-.code .css-query {$(code color | 60)}
-.code .css-selector {$(code color | 40)}
-.code .css-property {$(code color | 180)}
-.code .css-value {$(code color | 20)}
-.code .html-tag {$(code color | 200)}
-.code .html-attr-name {$(code color | 180)}
-.code .html-attr-val {$(code color | 35)}
-.code .nss-char {$(code color | 200)}
-.code .nss-selector {$(code color | 70)}
-.code .nss-var {$(code color | 160)}
-.code .nss-var-param {$(code color | 280 | 60%)}
-.code .nss-var-arg {color: #fff;}
-.code .nss-arg {$(code color | 280 | 60%)}
-.code .nss-arg-default {$(code color | 330)}
-.code .js-keyword {$(code color | 200)}
-.code .js-class {$(code color | 50)}
-.code .js-function {$(code color | 50 | 70%)}
-.code .js-string {$(code color | 20 | 60%)}
+$(code|.comment) {$(code color | 130 | 33%)}
+$(code|.css-query) {$(code color | 60)}
+$(code|.css-selector) {$(code color | 40)}
+$(code|.css-property) {$(code color | 180)}
+$(code|.css-value) {$(code color | 20)}
+$(code|.css-char) {$(code color | 200 | 30%)}
+$(code|.html-tag) {$(code color | 200)}
+$(code|.html-attr-name) {$(code color | 180)}
+$(code|.html-attr-val) {$(code color | 35)}
+$(code|.nss-char) {$(code color | 200)}
+$(code|.nss-selector) {$(code color | 70)}
+$(code|.nss-var) {$(code color | 160)}
+$(code|.nss-var-param) {$(code color | 280 | 60%)}
+$(code|.nss-var-arg) {color: #fff;}
+$(code|.nss-arg) {$(code color | 280 | 60%)}
+$(code|.nss-arg-default) {$(code color | 330)}
+$(code|.js-keyword) {$(code color | 200)}
+$(code|.js-class) {$(code color | 50)}
+$(code|.js-function) {$(code color | 50 | 70%)}
+$(code|.js-string) {$(code color | 20 | 60%)}
 
 // Hiding //
 .hide {display: none !important;}

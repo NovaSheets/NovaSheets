@@ -13,7 +13,7 @@ js2: headings
 
 ## Node usage
 
-<pre class="code">
+<pre class="code-styles">
 <span class="js-keyword">const</span> { <span class="js-function">parse</span>, <span class="js-function">compile</span> } = <span class="js-function">require</span>(<span class="js-string">'novasheets'</span>);
 <span class="js-function">parse</span>(<span class="js-string">'@var color = #fff @endvar $(@shade | $(color) | 50% )'</span>); <span class="comment">// "#7f7f7f"</span>
 <span class="js-function">compile</span>(<span class="js-string">'stylesheet.nss'</span>, <span class="js-string">'output.css'</span>);

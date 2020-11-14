@@ -6,6 +6,7 @@
     <style data-keep="true">
         h1, h2 {text-align: center; font-family: sans-serif;}
         button {width: 30%; margin: 1px auto; border: 1px solid #222; font-size: 1.1em;}
+        #input {width: 97%; height: 20vh;}
         .code {display: block; padding: 1em; white-space: pre-wrap; font-family: monospace; border: 1px solid; color: #111;}
 
         .comment {color: #009000;}
@@ -21,41 +22,22 @@
     <script>
         window.useDefault = false;
 
-        function clearStyles() {
-            for (let style of document.querySelectorAll('style')) {
-                if (!style.dataset.keep) style.parentNode.removeChild(style);
-            }
-            document.getElementById('output').innerHTML = '';
-        }
-        function logStyles() {
-            for (let style of document.querySelectorAll('style')) {
-                if (!style.dataset.keep) {
-                    document.getElementById('output').innerHTML += style.innerHTML;
-                }
-            }
-        }
-        function cleanInput(a) {
-            input.innerHTML = input.innerHTML.replace(/<br[^>]*>/g, '\n').replace(/<div>/g, '$&\n');
-            input.innerHTML = input.textContent.replace(/\u00a0/g,' ');
-            if (a === undefined) parse()
-        }
-        function parse() {
-            clearStyles();
-            cleanInput(false);
-            document.getElementById('import').setAttribute('rel', useDefault ? 'novasheet' : 'error');
-            parseNovaSheets();
-            logStyles();
+        function parseInput() {
+            let cssContent = document.getElementById('input').value;
+            let parsedContent = parseNovaSheets(cssContent);
+            document.getElementById('output').innerHTML = parsedContent.replace(/}(?!\s*$)/g, '}\n');
         }
         function toggleDefault() {
-            clearStyles();
             useDefault = !useDefault;
             document.getElementById('use-default').innerHTML = useDefault;
-            parse();
+            let importLink = document.getElementById('import');
+            importLink.rel = importLink.rel === 'novasheet' ? '!novasheet' : 'novasheet';
+            parseInput();
         }
         document.addEventListener("DOMContentLoaded", function () {
             window.input = document.getElementById('input');
             input.innerHTML = input.innerHTML.replace(/^\s*/gm,'').replace(/^\s*\n/, '');
-            parse();
+            parseInput();
         });
     </script>
 </head>
@@ -68,20 +50,20 @@
 
     <div id="input-wrapper">
         <h2>Input</h2>
-        <div contenteditable type="novasheet" id="input" class="code" onblur="cleanInput()">
+        <textarea id="input" onblur="parseInput()">
             @var shading = linear-gradient($[1]deg, #55f, #5ff);
             @var solid border = 1px solid $[color]
             // body {color: blue;}
             .shaded {background: $(shading|90); color: white;} // basic shading
             .title {margin-left: 2em; color: #e55; border-bottom: $(solid border|color=#ff7711);}
-        </div>
+        </textarea>
         <br>
     </div>
 
     <div id="options-wrapper">
         <div style="text-align: center;">
             <button onclick="toggleDefault()">Use external stylesheet? (<span id="use-default">false</span>)</button><br>
-            <button onclick="parse();">Parse</button>
+            <button onclick="parseInput();">Parse</button>
         </div>
     </div>
 

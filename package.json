@@ -1,7 +1,7 @@
 {
     "name": "novasheets",
-    "version": "0.6.3",
-    "description": "A powerful and versatile CSS preprocessor",
+    "version": "0.6.4",
+    "description": "A powerful, versatile CSS preprocessor",
     "keywords": [
         "novasheets",
         "nss",
@@ -28,6 +28,6 @@
     "homepage": "https://novasheets.netlify.app",
     "license": "MIT",
     "devDependencies": {
-        "@11ty/eleventy": "^0.10.0"
+        "@11ty/eleventy": "^0.11.1"
     }
 }

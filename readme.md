@@ -32,25 +32,23 @@ NovaSheets lets you declare [variables](https://novasheets.netlify.app/docs/vari
 **Input**:
 
 ```
-@var normal
-    text-align: center;
-    color: #eee;
 @var margin = 1em
 @var shaded
-    text-align: left;
     background: $[bgcolor];
     color: $(@color | hex | 50% | 20% | 30%);
 @endvar
-div.default {$(normal); margin: $(margin);}
-div.shaded {$(shaded | bgcolor=blue)}
+.default {text-align: center; color: #eee;}
+div.main {$<.default>!; margin: $(margin);}
+div.shaded {margin: $<div.main>[margin] + 1em; $(shaded | bgcolor=blue)}
 ```
 
 **Output**:
 
 ```css
-div.default {text-align: center; color: #eee; margin: 1em;}
-div.shaded {text-align: left; background: blue; color: #80334d;}
+.default {text-align: center; color: #eee;}
+div.main {text-align: center; color: #eee; margin: 1em;}
+div.shaded {margin: 2em; background: blue; color: #80334d;}
 ```
 
 ## VSCode extension
-A VSCode extension for NovaSheets syntax highlighting is available in the [VSCode Marketplace](https://marketplace.visualstudio.com/items/Nixinova.novasheets) via repository [NovaSheets-vscode](https://github.com/Nixinova/NovaSheets-vscode). This extension works for files with extensions `.nss` and `.nss.txt`.
+A VSCode extension for NovaSheets syntax highlighting is available in the [VSCode Marketplace](https://marketplace.visualstudio.com/items/Nixinova.novasheets) via repository [NovaSheets-vscode](https://github.com/Nixinova/NovaSheets-vscode). This extension works for files with extensions `.nss`, `.nss.txt`, `.novasheet` and `.novasheets`.

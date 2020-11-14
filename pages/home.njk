@@ -97,7 +97,7 @@ js: "colouring"
             <div class="item">
                 <pre>
                     <code class="language-nss">
-                        $(@each | .item1, .item2, .item3 | , | , | $v [gt] $v[$i-1] ) {\n
+                        $(@each | .item1, .item2, .item3 | $v &gt; $v[$i-1] ) {\n
                         &nbsp; display: flex;\n
                         }
                     </code>

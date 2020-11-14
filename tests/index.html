@@ -47,18 +47,10 @@
             });
             QUnit.test('Object notation and declaration substitution', nss => {
                 const tests = [
-                    ['{color: blue;}[color]', 'blue'],
-                    ['@var obj\n{color: blue;}\n@endvar$(obj)[color]', 'blue'],
-                    ['div {width:100%} $<div>[width]', 'div {width:100%} 100%'],
-                ];
-                test(nss, tests);
-            });
-        });
-        QUnit.module('Misc', () => {
-            QUnit.test('Watchlist', nss => {
-                const tests = [
-                    ['https://example.com', ditto],
-                    ['::root {color: red;}', ditto],
+                    ['{color: blue;}<color>', 'blue'],
+                    ['{color: blue;}!', 'color: blue;'],
+                    ['@var obj\n{color: blue;}@endvar$(obj)<color>', 'blue'],
+                    ['div {width:100%} $<div><width>', 'div {width:100%} 100%'],
                 ];
                 test(nss, tests);
             });
@@ -157,7 +149,7 @@
                     ['$(@shade | #fff | 50% )', '#7f7f7f'],
                     ['$(@tint | rgb(10, 75%, 20) | 10% )', 'rgb(34, 198, 43)'],
                     ['$(@tone | hsl(100, 75%, 20%) | 50% )', 'hsl(100, 25%, 20%)'],
-                    ['$(@contrast | #1e5 | white | black )', 'white'],
+                    ['$(@contrast | #1a5 | white | black )', 'white'],
                 ];
                 test(nss, tests);
             });
@@ -192,6 +184,16 @@
                 const tests = [
                     ['.list {} & .item {}', '.list {} .list .item {}'],
                     ['.list p {} &< .item {}', '.list p {} .list .item {}'],
+                ];
+                test(nss, tests);
+            });
+        });
+        QUnit.module('Misc', () => {
+            QUnit.test('Watchlist', nss => {
+                const tests = [
+                    ['https://example.com', ditto],
+                    ['::root {color: red;}', ditto],
+                    ['#1e4', ditto],
                 ];
                 test(nss, tests);
             });
