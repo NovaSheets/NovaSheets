@@ -54,6 +54,16 @@
                 ];
                 test(nss, tests);
             });
+            QUnit.test('Simple breakpoints', nss => {
+                const tests = [
+                    ['.element @ ..10px {display: none;}', '@media only screen and (max-width: 10px) { .element { display: none; } }'],
+                    ['.element @ 10px {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
+                    ['.element @ 10px... {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
+                    ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 20px) { .element { display: none; } }'],
+                    ['.element @ 10px,20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 20px) { .element { display: none; } }'],
+                ];
+                test(nss, tests);
+            });
         });
         QUnit.module('Math', () => {
             QUnit.test('Basic math', nss => {
@@ -132,8 +142,8 @@
                     ['$(@lowercase | Lowercase Text )', 'lowercase text'],
                     ['$(@uppercase | UpperCase Text )', 'UPPERCASE TEXT'],
                     ['$(@titlecase | title case TEXT )', 'Title Case TEXT'],
-                    ['$(@camelcase | title case TEXT )', 'title Case TEXT'],
                     ['$(@capitalize | capitaliZed )', 'CapitaliZed'],
+                    ['$(@uncapitalize | CAPS )', 'cAPS'],
                     ['$(@length | 123456 )', '6'],
                     ['$(@encode | [text]="true")', '%5Btext%5D%3D%22true%22'],
                     ['$(@replace | text | /te(.)t/ | !$1! )', '!x!'],
@@ -156,7 +166,7 @@
             QUnit.test('Loop functions', nss => {
                 const tests = [
                     ['$(@each | a,b,c | , |; | $v: $(@cos|$(@pi)*$i) )', 'a: -1; b: 1; c: -1'],
-                    ['$(@repeat | 3 | ;(10x$i)exp2=$(@root | 0.5 | 10*$i ) );', ';(10x1)exp2=100;(10x2)exp2=400;(10x3)exp2=900;'],
+                    ['$(@repeat | 3 | ; | (10x$i)exp2=$(@root | 0.5 | 10*$i ) );', '(10x1)exp2=100;(10x2)exp2=400;(10x3)exp2=900;'],
                     ['$(@each | 1,2,3,4,5,6,7,8,9 | , | | $v($i) )', '1(1) 2(2) 3(3) 4(4) 5(5) 6(6) 7(7) 8(8) 9(9)'],
                 ];
                 test(nss, tests);
@@ -184,6 +194,8 @@
                 const tests = [
                     ['.list {} & .item {}', '.list {} .list .item {}'],
                     ['.list p {} &< .item {}', '.list p {} .list .item {}'],
+                    ['.a .b .c << {}', '.a {}'],
+                    ['.a {} % .b {} % .c {}', '.a {} .a .b {} .a .b .c {}'],
                 ];
                 test(nss, tests);
             });
@@ -194,6 +206,7 @@
                     ['https://example.com', ditto],
                     ['::root {color: red;}', ditto],
                     ['#1e4', ditto],
+                    ['{} [attr] {}', ditto],
                 ];
                 test(nss, tests);
             });

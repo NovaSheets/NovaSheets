@@ -2,12 +2,23 @@
 {title: Changelog, layout: layouts/base.njk, js: colouring}
 ---
 # Changelog for NovaSheets
-- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064)
+- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+## 0.6.5
+*2021-01-02*
+- **Additions**
+  - Added built-in function `@uncapitalize` to set the initial letter of a string to lowercase.
+  - Added simple breakpoints, done by placing `@[<min>][..][<max>]` directly after a CSS selector but before the block content.
+  - Added aliases `@darken`, `@lighten`, and `@desaturate` for built-in functions `@shade`, `@tint`, and `@tone` respectively.
+- **Removals**
+  - Removed built-in function `@camelcase` due to its unintuitive behavior and its use case being superceded by `@titlecase` combined with `@uncapitalize`.
+- **Changes**
+  - Changed built-in function `@repeat` to allow a `delimiter` parameter. New syntax: `$( @repeat | <amount> | [<delimiter>] | <content> )`.
 
 ## 0.6.4
 *2020-11-14*

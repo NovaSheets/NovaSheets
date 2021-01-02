@@ -15,11 +15,6 @@ function colouriseCode() {
             // HTML fixing
             .replace(/&(amp|lt|gt|nbsp);/g, '↑$1↓')
 
-            // Comments
-            .replace(/(?<!https?:)\/\/.*$/gm, wrapRaw('$&', 'comment')) // inline
-            .replace(/(\/\*[^\/])(.*?)([^\/]?\*\/)/gm, wrapRaw('$&', 'comment')) // block
-            .replace(/(\/\*\/)(.*?)(\/\*\/)/gm, wrapRaw('$1', 'comment') + '$2' + wrap('$3', 'comment')) // static
-
             // CSS content
             .replace(/@media[^{}\n]+?(?=\{)/gm, wrap('$&', 'css-query')) // media
             //.replace(/https?:\/\/[^"]*/gm, wrap('$&', 'css-value')) // URLs
@@ -46,8 +41,8 @@ function colouriseCode() {
             .replace(/[|]/g, wrap('$&', 'nss-char'))
 
             // HTML
-            .replace(/(↑gt↓)?(↑lt↓)\/?script(↑gt↓)?/gm, wrap('$&', 'html-tag'))
-            .replace(/src=(".*?")/gm, wrap('src', 'html-attr-name') + '=' + wrap('$1', 'html-attr-val'))
+            .replace(/(↑lt↓\/?)(\w+)(↑gt↓)?/gm, wrap('$&', 'html-tag'))
+            .replace(/([\w-]+)=(".*?")(↑gt↓)?/gm, wrap('$1', 'html-attr-name') + '=' + wrap('$2', 'html-attr-val') + wrap('$3', 'html-tag'))
             //.replace(/(?<!(?:\/\/|\/\*).*)(\||\$|\(|\)|\[|\])/g, wrap('$&', 'nss-char'))
             .replace(/[{}]/g, wrap('$&', 'css-char')) // brackets
 
@@ -55,9 +50,11 @@ function colouriseCode() {
             .replace(/↑(amp|lt|gt|nbsp)↓/g, '&$1;')
             .replace(/\\n/g, '\n<br>')
 
-            // Comment fixing
-            .replace(/(?<=(?<!https?:)\/\/.+)[§¶].+?[§¶]/g, '')
-            
+            // Comments
+            .replace(/(?<!https?:)\/\/.*$/gm, wrapRaw('$&', 'comment')) // inline
+            .replace(/(\/\*[^\/])(.*?)([^\/]?\*\/)/gm, wrapRaw('$&', 'comment')) // block
+            .replace(/(\/\*\/)(.*?)(\/\*\/)/gm, wrapRaw('$1', 'comment') + '$2' + wrapRaw('$3', 'comment')) // static
+
         content = content.replace(/§([\w-]+)¶([^¶§]+?)¶\1§/g, '<span class="$1">$2</span>').replace(/[§¶].+?[§¶]/g, '');
         element.innerHTML = content;
     }

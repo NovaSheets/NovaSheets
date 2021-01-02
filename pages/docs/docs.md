@@ -9,6 +9,7 @@ js2: headings
 # NovaSheets Documentation
 - [Node usage](#node-usage)
 - [Command-line usage](#command-line-usage)
+- [Browser usage](#browser-usage)
 - [Syntax](#syntax)
 
 ## Node usage
@@ -35,6 +36,35 @@ novasheets --help                         Display the help message
 novasheets --version                      Display the current version of NovaSheets
 ```
 
+## Browser usage
+
+After the NovaSheets source code is added to the web page, stylesheets can be either be imported from external files or embedded locally.
+
+### Importing
+
+Simply link to external NovaSheets files in the header of the page using `<link>` tags with the `rel` attribute set to `"novasheet"` (or `"novasheets"`).
+
+```
+<link rel="novasheet" href="example.nss">
+```
+
+### Embedding
+
+Inline stylesheets can be created by simply setting the `type` attribute of an element to `"novasheet"` (or `"novasheets"`) and putting NovaSheets content inside. Note that HTML may interfere with NovaSheet styles if they are placed inside regular block elements, so `<style>` or `<script>` tags are recommended. When using `<script>` tags, surround the entire stylesheet content in backticks (\`) to avoid JavaScript errors in the console.
+
+```
+<style type="novasheets">
+    .element {display: inline-block;}
+    % .child {font-size: 2/3em;}
+</style>
+```
+```
+<script type="novasheets">`
+    div {background-color: brown;}
+    & p, & img {border: 2px solid;}
+`</script>
+```
+
 ## Syntax
 
 ### Variables
@@ -59,7 +89,7 @@ Less-than signs (`<`) can be used to slice the last item off the selector; chara
 ### Objects
 *More info: [Objects](/docs/objects)*
 
-NovaSheets treats all CSS declaration blocks as objects, and the values of each CSS property can be accessed using the format `{attr: val;}[attr]`. Declaration blocks can be substituted using the format `$<selector>`, where the content inside refers to the full selector identifier attached to that declaration block. These two can be combined, forming `$<selector>[attr]`.
+NovaSheets treats all CSS declaration blocks as objects, and the values of each CSS property can be accessed using the format `{attr: val;}<attr>`. Declaration blocks can be substituted using the format `$<selector>`, where the content inside refers to the full selector identifier attached to that declaration block. These two can be combined, forming `$<selector><attr>`.
 
 ### Comments
 *More info: [Comments](/docs/comments)*

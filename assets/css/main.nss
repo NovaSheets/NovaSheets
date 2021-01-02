@@ -50,7 +50,7 @@ h2[id] + p em {display: block; margin-top: -3.4em; margin-left: 4em;}
 
 // Code blocks //
 @var code color = color: hsl($[1], 90%, $[2|40%]);
-@var code = .code $[1], .code-styles $[1]
+@var code = .code>$[1], .code-styles>$[1]
 pre {margin: 1em 0; border: 1px solid #fff; padding: 10px; background: #181818; text-align: left; white-space: pre-wrap; word-break: break-word;}
 $(code|.comment) {$(code color | 130 | 33%)}
 $(code|.css-query) {$(code color | 60)}

@@ -8,6 +8,11 @@
         button {width: 30%; margin: 1px auto; border: 1px solid #222; font-size: 1.1em;}
         #input {width: 97%; height: 20vh;}
         .code {display: block; padding: 1em; white-space: pre-wrap; font-family: monospace; border: 1px solid; color: #111;}
+        
+        #preview-wrapper *::after {margin-left: 1em; font-family: monospace; font-style: italic;}
+        #preview-wrapper [id]::after {content: "#" attr(id);}
+        #preview-wrapper [class]::after {content: "." attr(class);}
+        #preview-wrapper [id][class]::after {content: "#" attr(id) "." attr(class);}
 
         .comment {color: #009000;}
         .query {color: #8c0b76;}
@@ -15,28 +20,28 @@
         .property {color: #095d98;}
         .value {color: #b74401;}
     </style>
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
     <link rel="icon" href="/assets/favicon.ico">
     <script src="../src/novasheets.js"></script>
     <script src="/assets/js/colouring.js"></script>
     <link id="import" rel="!novasheet" href="example.nss">
     <script>
         window.useDefault = false;
-
         function parseInput() {
-            let cssContent = document.getElementById('input').value;
+            $('style:not([data-keep])').remove();
+            let cssContent = $('#input').val();
             let parsedContent = parseNovaSheets(cssContent);
-            document.getElementById('output').innerHTML = parsedContent.replace(/}(?!\s*$)/g, '}\n');
+            $('#output').html(parsedContent.replace(/}(?!\s*$)/g, '}\n'));
+            parseNovaSheets();
         }
         function toggleDefault() {
             useDefault = !useDefault;
             document.getElementById('use-default').innerHTML = useDefault;
-            let importLink = document.getElementById('import');
-            importLink.rel = importLink.rel === 'novasheet' ? '!novasheet' : 'novasheet';
+            $('#import').attr('rel', $('#import').attr('rel') === 'novasheet' ? '!novasheet' : 'novasheet');
             parseInput();
         }
         document.addEventListener("DOMContentLoaded", function () {
-            window.input = document.getElementById('input');
-            input.innerHTML = input.innerHTML.replace(/^\s*/gm,'').replace(/^\s*\n/, '');
+            $('#input').html($('#input').html().replace(/^\s*/gm,'').replace(/^\s*\n/, ''));
             parseInput();
         });
     </script>
@@ -50,7 +55,7 @@
 
     <div id="input-wrapper">
         <h2>Input</h2>
-        <textarea id="input" onblur="parseInput()">
+        <textarea id="input" onblur="parseInput()" type="novasheets">
             @var shading = linear-gradient($[1]deg, #55f, #5ff);
             @var solid border = 1px solid $[color]
             // body {color: blue;}
@@ -73,17 +78,11 @@
         <br>
     </div>
 
-    <div class="preview-wrapper">
-        <h2 class="title">Example content</h2>
-        <div class="content">
-            <p class="p-styled">Example paragraph 1.</p>
-        </div>
-        <div class="content">
-            <p>Example paragraph 2.</p>
-        </div>
-        <div class="shaded">
-            <p>Example paragraph 3.</p>
-        </div>
+    <div id="preview-wrapper">
+        <h2 class="title" id="title">Example content</h2>
+        <p id="para1">Example paragraph 1.</p>
+        <p id="para2">Example paragraph 2.</p>
+        <p class="shaded" id="para3">Example paragraph 3.</p>
     </div>
 
 </body>

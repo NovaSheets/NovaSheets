@@ -39,7 +39,7 @@ NovaSheets lets you declare [variables](https://novasheets.netlify.app/docs/vari
 @endvar
 .default {text-align: center; color: #eee;}
 div.main {$<.default>!; margin: $(margin);}
-div.shaded {margin: $<div.main>[margin] + 1em; $(shaded | bgcolor=blue)}
+div.shaded {margin: $<div.main><margin> + 1em; $(shaded | bgcolor=blue)}
 ```
 
 **Output**:

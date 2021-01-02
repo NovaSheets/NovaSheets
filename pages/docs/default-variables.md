@@ -2,7 +2,8 @@
 layout: layouts/docs.njk
 permalink: /docs/default-variables/
 title: Default Variables
-js: "headings"
+js: headings
+js2: colouring
 ---
 
 # NovaSheets Default Variables <!-- omit in toc -->
@@ -40,28 +41,33 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
   - [@boolean](#boolean)
   - [@if](#if)
 - [Text](#text)
+  - [@capitalize](#capitalize)
   - [@each](#each)
   - [@encode](#encode)
   - [@extract](#extract)
   - [@length](#length)
+  - [@lowercase](#lowercase)
   - [@replace](#replace)
+  - [@titlecase](#titlecase)
+  - [@uncapitalize](#uncapitalize)
+  - [@uppercase](#uppercase)
 - [Color](#color)
+  - [@blend](#blend)
   - [@color](#color-1)
-    - [hash](#hash)
-    - [rgb](#rgb)
-    - [rgba](#rgba)
-    - [hsl](#hsl)
-    - [hsla](#hsla)
-    - [*custom*](#custom)
+    - [Hex](#hex)
+    - [RGB](#rgb)
+    - [RGBA](#rgba)
+    - [HSL](#hsl)
+    - [HSLA](#hsla)
+    - [General](#general)
   - [@colorpart](#colorpart)
   - [@contrast](#contrast)
-  - [@blend](#blend)
+  - [@darken](#darken)
+  - [@desaturate](#desaturate)
   - [@grayscale](#grayscale)
+  - [@lighten](#lighten)
   - [@luma](#luma)
-  - [@shade](#shade)
   - [@spin](#spin)
-  - [@tint](#tint)
-  - [@tone](#tone)
 - [CSS](#css)
   - [@breakpoint](#breakpoint)
   - [@prefix](#prefix)
@@ -197,20 +203,11 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 
 ## Text
 
-### @camelcase
-**Syntax:** `$( @camelcase | <string> )`<br>
-**Result:** Capitalizes the first letter of each word in `string` except for the first one.<br>
-**Example:** `$( @camelcase | camel CASE sentence )` &rarr; `camel CASE Sentence`
-
 ### @capitalize
-**Syntax:** `$( @capitalize | <string> )`<br> (alias: `$( @capitalise | ... )`)
-**Result:** Changes `string` to be capitalized.<br>
+**Alias:** `@capitalise`<br>
+**Syntax:** `$( @capitalize | <string> )`<br>
+**Result:** Capitalizes the first letter of `string`.<br>
 **Example:** `$( @capitalize | caps )` &rarr; `Caps`
-
-### @each
-**Syntax:** `$( @each | <list> [| <splitter = ","> [| <joiner = splitter>]] | <content> )`<br>
-**Result:** Peforms iterative content on items in `<list>` (where each item is separated using `<splitter>`). Instances of `$i` in `<content>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item. The output will be delimited with `<joiner>`; when `<joiner>` is not set, it defaults to the value of `<splitter>`, which in turn defaults to a comma (`,`). The value of `<joiner>` is not trimmed, so any whitespace inside will appear in the output.<br>
-**Example:** `$(@each | 10,20,30 | , | | $v+$i )` &rarr; `11 22 33`
 
 ### @encode
 **Syntax:** `$( @encode | <string> )`<br>
@@ -235,56 +232,82 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ### @replace
 **Syntax:** `$( @replace | <string> | <find> | <replace> )`<br>
 **Result:** Replaces all instances of `<find>` in `<string>` with `<replace>`. Supports regular expressions.<br>
-**Example:** `$( @replace | t3xt | 3 | e )` &rarr; `text`
+**Example:** `$( @replace | t3xt | /[0-9]/ | e )` &rarr; `text`
 
 ### @titlecase
 **Syntax:** `$( @titlecase | <string> )`<br>
 **Result:** Capitalizes the first letter of each word in  `string`.<br>
 **Example:** `$( @titlecase | title case text )` &rarr; `Title Case Text`
 
+### @uncapitalize
+**Alias:** `@uncapitalise`<br>
+**Syntax:** `$( @uncapitalize | <string> )`<br>
+**Result:** Uncapitalizes the first letter of `string`.<br>
+**Example:** `$( @capitalize | ALL CAPS )` &rarr; `aLL CAPS`
+
 ### @uppercase
 **Syntax:** `$( @uppercase | <string> )`<br>
 **Result:** Changes `string` to be uppercase.<br>
 **Example:** `$( @uppercase | is now uppercase )` &rarr; `IS NOW UPPERCASE`
 
+## Loops
+
+### @each
+**Syntax:** `$( @each | <list> [| <splitter = ","> [| <joiner = splitter>]] | <content> )`<br>
+**Result:** Peforms iterative content on items in `<list>` (where each item is separated using `<splitter>`). Instances of `$i` in `<content>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item. The output will be delimited with `<joiner>`; when `<joiner>` is not set, it defaults to the value of `<splitter>`, which in turn defaults to a comma (`,`). The value of `<joiner>` is not trimmed, so any whitespace inside will appear in the output.<br>
+**Example:** `$(@each | 10,20,30 | , | | $v+$i )` &rarr; `11 22 33`
+
+### @repeat
+**Syntax:** `$( @repeat | <amount> | [<delimiter>] | <content> )`<br>
+**Result:** 
+
 ## Color
 
+### @blend
+**Syntax:** `$( @blend | <color1> | <color2> | [<amount = 0.5>] )`<br>
+**Result:** Blends two input colors. Has an optional `<amount>` parameter (which defaults to `0.5`/`50%`) which controls which color is more dominant; values between `0%` and `0.5`/`50%` bias the output to `<color1>` while values between `0.5`/`50%` and `1`/`100%` bias the output to `<color2>`.<br>
+**Example:** `$( @blend | #000 | rgb(255,255,255) | 0.25 )` &rarr; `rgb(63, 63, 63)`
+
+<a id="color-1"></a>
+
 ### @color
-**Syntax:** `$( @color | <type> | <args> )` (alternatively, `$( @colour | ... )`)<br>
+**Alias:** `@colour`<br>
+**Syntax:** `$( @color | <type> | <args> )`
 **Result:** Outputs a CSS color depending on the value of `<type>` (see subsections below).
 
-#### hash
+#### Hex
 **Syntax:** `$( @color | {hex|hexadecimal|hash|#} | <r> | <g> | <b> | [<a>] )`<br>
 **Result:** Converts its arguments into a hexadecimal color.<br>
 **Example:** `$( @color | hash | 255 | 64 | 128)` &rarr; `#ff4080`
 
-#### rgb
+#### RGB
 **Syntax:** `$( @color | rgb | <r> | <g> | <b> )` or `$( @color | rgb | <hash> )`<br>
 **Result:** Outputs CSS color function `rgb(<r>, <g>, <b>)`.<br>
 **Example:** `$( @color | rgb | #f71a8e )` &rarr; `rgb(247, 26, 142)`
 
-#### rgba
+#### RGBA
 **Syntax:** `$( @color | rgba | <r> | <g> | <b> | <a> )` or `$( @color | rgba | <hash> )`<br>
 **Result:** Outputs CSS color function `rgba(<r>, <g>, <b>, <a>)`.<br>
 **Example:** `$( @color | rgba | 0xff | 0 | 128 | 80 )` &rarr; `rgba(255, 0, 128, 80)`
 
-#### hsl
+#### HSL
 **Syntax:** `$( @color | hsl | <h> | <s> | <l> )`<br>
 **Result:** Outputs CSS color function `hsl(<h>, <s>, <l>)`.<br>
 **Example:** `$( @color | hsl | 200 | 53 | 158/2 )` &rarr; `hsl(200, 20%, 30%)`
 
-#### hsla
+#### HSLA
 **Syntax:** `$( @color | <hsla> | <h> | <s> | <l> | <a> )`<br>
 **Result:** Outputs CSS color function `hsla(<h>, <s>, <l>, <a>)`.<br>
 **Example:** `$( @color | hsla | 10% | 128 | 0xfa | 95% )` &rarr; `hsla(26, 50%, 98%, 243)`
 
-#### *custom*
+#### General
 **Syntax:** `$( @color | <type> | <x> | <y> | <z> | [<a>] )`<br>
 **Result:** Outputs CSS level-4 color function `<type>(<x> <y> <z>)` or `<type>(<x> <y> <z> / <a>)`.<br>
 **Example:** `$( @color | lch | 20 | 60 | 250 )` &rarr; `lch(20 60 250)`
 
 ### @colorpart
-**Syntax:** `$( @colorpart | <part> | <color> )` (alternatively, `$( @colourpart | ... )`)<br>
+**Alias:** `@colourpart`<br>
+**Syntax:** `$( @colorpart | <part> | <color> )`<br>
 **Result:** Outputs CSS color segment `part` from outputted color function `color`. Accepted values for `part` are `red`, `green`, `blue`, or `alpha` for hex or RGB(A) colors; `hue`, `saturation`, `lightness`, or `alpha` from HSL(A) colors; all are case insensitive and allow truncated forms (e.g., `r` or `rd` for "red").<br>
 **Example:** `$( @colorpart | red | #fff )` &rarr; `255`
 
@@ -293,40 +316,38 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 **Result:** If the luminance of `<color>` is dark (below `0.5`), `<light value>` is outputted; otherwise `<dark value>` is.<br>
 **Example:** `$(@contrast | #fff | white | black )` &rarr; `black`
 
-### @blend
-**Syntax:** `$( @blend | <color1> | <color2> | [<amount = 0.5>] )`<br>
-**Result:** Blends two input colors. Has an optional `<amount>` parameter (which defaults to `0.5`/`50%`) which controls which color is more dominant; values between `0%` and `0.5`/`50%` bias the output to `<color1>` while values between `0.5`/`50%` and `1`/`100%` bias the output to `<color2>`.<br>
-**Example:** `$( @blend | #000 | rgb(255,255,255) | 0.25 )` &rarr; `rgb(63, 63, 63)`
+### @darken
+**Alias:** `@shade`<br>
+**Syntax:** `$( @darken | <color> | [<amount = 0.5>] )`<br>
+**Result:** Blends `<color>` with black by `<amount>` (which defaults to `0.5`/`50%`).<br>
+**Example:** `$( @darken | hsl(300, 50%, 20%) | 10% )` &rarr; `hsl(300, 50%, 10%)`
+
+### @desaturate
+**Alias:** `@tone`<br>
+**Syntax:** `$( @desaturate | <color> | [<amount = 0.5>] )`<br>
+**Result:** Blends `<color>` with gray by `<amount>` (which defaults to `0.5`/`50%`).<br>
+**Example:** `$( @desaturate | rgb(128, 10, 255) | 0.4 )` &rarr; `rgb(128, 57, 204)`
 
 ### @grayscale
 **Syntax:** `$( @grayscale | <color> )` (alternatively, `$( @greyscale | ... )`)<br>
 **Result:** Neutralizes the red, green, and blue color channels of an RGB or hex color, or changes the saturation of an HSL color to 0%.<br>
 **Example:** `$( @grayscale | hsl(100, 30%, 40%) )` &rarr; `hsl(100, 0%, 40%)`
 
+### @lighten
+**Alias:** `@tint`<br>
+**Syntax:** `$( @lighten | <color> | [<amount = 0.5>] )`<br>
+**Result:** Blends `<color>` with white by `<amount>` (which defaults to `0.5`/`50%`).<br>
+**Example:** `$( @lighten | #000 | 50% )` &rarr; `#7f7f7f`
+
 ### @luma
 **Syntax:** `$( @luma | <color> )`<br>
 **Result:** Outputs the relative luminance (between 0 and 1) of an RGB or hex `<color>`. Fails if given an HSL value or another type of color.<br>
 **Example:** `$( @luma | #f05 )` &rarr; `0.21915877154744204`
 
-### @shade
-**Syntax:** `$( @tone | <color> | [<amount = 0.5>] )`<br>
-**Result:** Blends `<color>` with black by `<amount>` (which defaults to `0.5`/`50%`).<br>
-**Example:** `$( @shade | hsl(300, 50%, 20%) | 10% )` &rarr; `hsl(300, 50%, 10%)`
-
 ### @spin
 **Syntax:** `$( @spin | <color> | <amount = 0.5> )`<br>
 **Result:** Cycles the hue of `<color>` by `<amount>`.
 **Example:** `$( @spin | hsl(100, 50%, 20%) | 100 )` &rarr; `hsl(200, 50%, 20%)`
-
-### @tint
-**Syntax:** `$( @tint | <color> | [<amount = 0.5>] )`<br>
-**Result:** Blends `<color>` with white by `<amount>` (which defaults to `0.5`/`50%`).<br>
-**Example:** `$( @tint | #000 | 50% )` &rarr; `#7f7f7f`
-
-### @tone
-**Syntax:** `$( @tone | <color> | [<amount = 0.5>] )`<br>
-**Result:** Blends `<color>` with gray by `<amount>` (which defaults to `0.5`/`50%`).<br>
-**Example:** `$( @tone | rgb(128, 10, 255) | 0.4 )` &rarr; `rgb(128, 57, 204)`
 
 ## CSS
 
