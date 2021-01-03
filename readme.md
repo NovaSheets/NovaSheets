@@ -6,7 +6,7 @@
 
 A lightweight CSS preprocessor that is simple but powerful.
 
-**[View documentation](https://novasheets.netlify.app/docs/)**
+**[View documentation](https://novasheets.nixinova.com/docs/)**
 
 NovaSheets is a powerful CSS preprocessor with the ability to easily create intricate CSS files with simple syntax. NovaSheets has very simple, versatile syntax that is easy to pick up and use as it builds largely off of CSS itself, with the addition of custom variables which act as functions, templates, and mixins all in one. With many built-in variables for you to use, you can take your stylesheets to the next level. NovaSheets parses in plain text which means you do not have to worry about type conversions or escaping, giving you complete power over your stylesheets.
 
@@ -25,7 +25,10 @@ compile('stylesheet.nss', 'output.css');
 
 ## Syntax
 
-NovaSheets lets you declare [variables](https://novasheets.netlify.app/docs/variables/) (with optional parameters) and reuse these elsewhere in the document. NovaSheets comes with a large variety of [built-in variables](https://novasheets.netlify.app/docs/default-variables/) for you to make use of, making your CSS development a lot easier. For full documentation, see [the NovaSheets website](https://novasheets.netlify.app/docs/). For testing NovaSheets syntax, see [the demo page](https://novasheets.netlify.app/demo/).
+NovaSheets lets you declare [variables](https://novasheets.nixinova.com/docs/variables/) (with optional parameters) and reuse these elsewhere in the document.
+NovaSheets comes with a large variety of [built-in variables](https://novasheets.nixinova.com/docs/default-variables/) for you to make use of, making your CSS development a lot easier.
+For full documentation, see [the NovaSheets website](https://novasheets.nixinova.com/docs/).
+For testing NovaSheets syntax, see [the demo page](https://novasheets.nixinova.com/demo/).
 
 ### Example
 

@@ -42,7 +42,6 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
   - [@if](#if)
 - [Text](#text)
   - [@capitalize](#capitalize)
-  - [@each](#each)
   - [@encode](#encode)
   - [@extract](#extract)
   - [@length](#length)
@@ -51,6 +50,9 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
   - [@titlecase](#titlecase)
   - [@uncapitalize](#uncapitalize)
   - [@uppercase](#uppercase)
+- [Loops](#loops)
+  - [@each](#each)
+  - [@repeat](#repeat)
 - [Color](#color)
   - [@blend](#blend)
   - [@color](#color-1)
@@ -255,11 +257,12 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 ### @each
 **Syntax:** `$( @each | <list> [| <splitter = ","> [| <joiner = splitter>]] | <content> )`<br>
 **Result:** Peforms iterative content on items in `<list>` (where each item is separated using `<splitter>`). Instances of `$i` in `<content>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item. The output will be delimited with `<joiner>`; when `<joiner>` is not set, it defaults to the value of `<splitter>`, which in turn defaults to a comma (`,`). The value of `<joiner>` is not trimmed, so any whitespace inside will appear in the output.<br>
-**Example:** `$(@each | 10,20,30 | , | | $v+$i )` &rarr; `11 22 33`
+**Example:** `$( @each | 10,20,30 | , | | $v+$i )` &rarr; `11 22 33`
 
 ### @repeat
-**Syntax:** `$( @repeat | <amount> | [<delimiter>] | <content> )`<br>
-**Result:** 
+**Syntax:** `$( @repeat | <amount> [| <delimiter>] | <content> )`<br>
+**Result:** Repeats `<content>` the number of times specified by `<amount>`, separated by `<delimiter>` if set. Instances of `$i` in `<content>` will be replaced with the index (one-based), instances of `$v` will be replaced with the value of the current item, and variants of `$v[0]`, `$v[$i+1]`, etc, will be replaced with the value of that specified item.<br>
+**Example:** `$( @repeat | 4 | , | [$i] )` &rarr; `[1],[2],[3],[4]`
 
 ## Color
 
@@ -272,7 +275,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 
 ### @color
 **Alias:** `@colour`<br>
-**Syntax:** `$( @color | <type> | <args> )`
+**Syntax:** `$( @color | <type> | <args> )`<br>
 **Result:** Outputs a CSS color depending on the value of `<type>` (see subsections below).
 
 #### Hex
@@ -346,7 +349,7 @@ NovaSheets includes many built-in [variables](/docs/variables/) which take the f
 
 ### @spin
 **Syntax:** `$( @spin | <color> | <amount = 0.5> )`<br>
-**Result:** Cycles the hue of `<color>` by `<amount>`.
+**Result:** Cycles the hue of `<color>` by `<amount>`.<br>
 **Example:** `$( @spin | hsl(100, 50%, 20%) | 100 )` &rarr; `hsl(200, 50%, 20%)`
 
 ## CSS

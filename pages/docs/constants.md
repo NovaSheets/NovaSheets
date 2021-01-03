@@ -22,3 +22,5 @@ The parser contains a few constants which affect how NovaSheets code is parsed. 
   - Controls how many decimal places numbers are outputted with. Has no effect when set to `false` (default).
 - `@const KEEP_NAN <boolean>`
   - Controls whether or not `NaN` should be outputted when parsing invalid numbers; defaults to `false`.
+- `@const KEEP_UNPARSED <boolean>`
+  - Controls whether or not undeclared variables should be kept in the output CSS; defaults to `false`.

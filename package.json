@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "0.6.5",
+    "version": "0.6.6",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -25,7 +25,7 @@
     "bugs": {
         "url": "https://github.com/Nixinova/NovaSheets/issues"
     },
-    "homepage": "https://novasheets.netlify.app",
+    "homepage": "https://novasheets.nixinova.com",
     "license": "MIT",
     "devDependencies": {
         "@11ty/eleventy": "^0.11.1"

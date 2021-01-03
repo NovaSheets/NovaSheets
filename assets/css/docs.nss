@@ -25,3 +25,4 @@ a {scroll-margin-top: 70px;}
 
 // TOC //
 #toc + ul {display: inline-block; padding: 1em 1em 1em 2em; border: 1px solid #ddd; margin-top: -1em;}
+& @ 930px {display: grid; grid-auto-flow: column;}

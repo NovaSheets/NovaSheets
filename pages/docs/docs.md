@@ -89,7 +89,7 @@ Less-than signs (`<`) can be used to slice the last item off the selector; chara
 ### Objects
 *More info: [Objects](/docs/objects)*
 
-NovaSheets treats all CSS declaration blocks as objects, and the values of each CSS property can be accessed using the format `{attr: val;}<attr>`. Declaration blocks can be substituted using the format `$<selector>`, where the content inside refers to the full selector identifier attached to that declaration block. These two can be combined, forming `$<selector><attr>`.
+NovaSheets treats all CSS declaration blocks as objects, and the values of each CSS property can be accessed using the format `{attr: val;}<attr>`. Declaration blocks can be substituted using the format `$<selector>`, where the content inside refers to the full selector identifier attached to that declaration block. These two can be combined, forming `$<selector><attr>`. All of the block's content can be dumped using `$<selector>!`.
 
 ### Comments
 *More info: [Comments](/docs/comments)*

@@ -60,7 +60,7 @@
                     ['.element @ 10px {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
                     ['.element @ 10px... {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
                     ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 20px) { .element { display: none; } }'],
-                    ['.element @ 10px,20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 20px) { .element { display: none; } }'],
+                    ['a @ 10px {b} & c @ 20px {d}', '@media only screen and (min-width: 10px) { a { b } }@media only screen and (min-width: 20px) { a c { d } }'],
                 ];
                 test(nss, tests);
             });
