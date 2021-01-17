@@ -1,13 +1,25 @@
 # Changelog for NovaSheets
-- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066)
+- [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## 0.6.7
+*2021-01-17*
+- **Additions**
+  - Added console messages for successfully compiled files.
+- **Changes**
+  - Changed simple breakpoint maximums to be exclusive, allowing the same number to be used in two separate selectors without clashes.
+  - Changed built-in function `@breakpoint` to offset the maximum size by &minus;1 instead of the minimum size by +1.
+- **Fixes**
+  - Fixed `--compile` usage throwing an error when given an extensionless input filename, an implicit output filename, or a nonexistent directory in its output file path.
+  - Fixed command-line usage throwing an error because of browser-only code.
+  - Fixed parser constant `KEEP_UNPARSED` not working.
+
 ## 0.6.6
-*2020-01-03*
+*2021-01-03*
 - **Additions**
   - Added parser constant `KEEP_UNPARSED` which controls whether or not to keep unparsed variables in the output (defaults to `false`).
 - **Changes**

@@ -1,0 +1,6 @@
+.showcase-container {border-top: 2px solid; text-align: center;}
+    & hr {width: 50%;}
+    & h2 {font-size: 8vh;}
+    & img {max-width: 50%;}
+    & ul {padding-left: 0; list-style-type: none; font-size: 2.5em;}
+    & li a {color: #eee;}

@@ -1,45 +1,40 @@
 #!/usr/bin/env node
-const NOVASHEETS_VERSION = "0.6.6";
-try { fs = require('fs'); } catch { } // node
+const NOVASHEETS_VERSION = "0.6.7";
+
+var fs, glob;
+try { // node imports
+    fs = require('fs');
+    glob = require('glob');
+} catch { }
 
 function parseNovaSheets(rawInput) {
-
-    try { window } catch { window = {}; } // for cli and node
 
     String.prototype.strim = function () {
         return this.replace(/^\s*(.+?)\s*$/, '$1').replace(/\s+/g, ' ');
     };
+
     const r = String.raw;
     const hashCode = (str, length = 8) => {
         let hash = 0;
         for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i);
         return Math.abs(hash).toString(16).substring(0, length).padStart(length, '0');
     };
-    const nssLog = (str, args) => {
-        if (str == 'func') return nssLog(`Unknown value "${args[1]}" in built-in function ${args[0]}. Info: ${args[2]}.`);
-        return console.warn("<NovaSheets>", str);
-    };
+    const escapeRegex = str => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
+    const debug = (...args) => console.log('<NovaSheets|debug> ', ...args); // should be unused in prod
 
     // Generate list of NovaSheet files and get the contents of each stylesheet
-    window.externalSheets = window.inlineSheets = undefined;
-    stylesheetContents = [], sources = [], externalSheets, inlineSheets;
+    let stylesheetContents = [], sources = [], externalSheets, inlineSheets;
     if (rawInput && rawInput.input) {
         compileNovaSheets(rawInput.input, rawInput.output);
     }
-    else if (rawInput || Object.is(window, {})) {
+    else if (rawInput) {
         stylesheetContents = [rawInput.toString()];
         sources = 'raw';
     }
     else {
-        try { // Test for browsers that do not support attribute flags
-            externalSheets = document.querySelectorAll('link[rel="novasheet" i], link[rel="novasheets" i]');
-            inlineSheets = document.querySelectorAll('[type="novasheet" i], [type="novasheets" i]');
-        } catch {
-            try {
-                externalSheets = document.querySelectorAll('link[rel="novasheet"], link[rel="novasheets"]');
-                inlineSheets = document.querySelectorAll('[type="novasheet"], [type="novasheets"]');
-            } catch { }
-        }
+        externalSheets = document.querySelectorAll('link[rel="novasheet" i], link[rel="novasheets" i]');
+        inlineSheets = document.querySelectorAll('[type="novasheet" i], [type="novasheets" i]');
+
         let fileNames = { full: [], rel: [] };
         for (let sheet of externalSheets) {
             fileNames.full.push(sheet.href);
@@ -54,7 +49,9 @@ function parseNovaSheets(rawInput) {
                 let response = req.responseText;
                 stylesheetContents.push(response.toString());
                 sources.push(fileNames.rel[i]);
-            } catch { nssLog(`File "${fileNames.rel[i]}" cannot be accessed.`); }
+            } catch {
+                console.warn(`<NovaSheets> File '${fileNames.rel[i]}' cannot be accessed.`);
+            }
         }
         for (let contents of inlineSheets) {
             let content = contents.value || contents.innerHTML || contents.innerText;
@@ -64,10 +61,7 @@ function parseNovaSheets(rawInput) {
     }
 
     // Loop through each sheet, parsing the NovaSheet styles
-    window.randomHash = window.randomHash || hashCode(Math.random().toString(), 6);
     for (let s in stylesheetContents) {
-
-        const escapeRegex = str => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
 
         // Prepare stylesheet for parsing
         stylesheetContents[s] = stylesheetContents[s]
@@ -123,7 +117,7 @@ function parseNovaSheets(rawInput) {
                     case 'MAX_ARGUMENTS': MAX_ARGUMENTS = parseInt(val); break;
                     case 'DECIMAL_PLACES': DECIMAL_PLACES = val === "false" ? false : val; break;
                     case 'KEEP_NAN': KEEP_NAN = val !== "0" && val !== "false"; break;
-                    case 'KEEP_UNPARSED': KEEP_NAN = val !== "0" && val !== "false"; break;
+                    case 'KEEP_UNPARSED': KEEP_UNPARSED = val !== "0" && val !== "false"; break;
                 }
             }
         }
@@ -138,12 +132,12 @@ function parseNovaSheets(rawInput) {
         const number = r`(?:[0-9]*\.?[0-9]+)`;
         const basedNumber = r`(?:0x[0-9a-f]*\.?[0-9a-f]+|0b[01]*\.?[01]+|0o[0-7]*\.?[0-7]+|${number})`;
         const bracketedNumber = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})`;
-        const quickMathCheck = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})\s*[a-z]*[-+*^/e\s]+(?:\(\s*${basedNumber}\s*\)|${basedNumber})\s*[a-z]*`;
+        const quickMathCheck = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})\s*[a-z]*[-+*^/Ee\s]+(?:\(\s*${basedNumber}\s*\)|${basedNumber})\s*[a-z]*`;
         const numberUnit = r`\s*(?:em|rem|en|ex|px|pt|pc|cm|mm|m(?![ms])|ft|in|s|ms)`;
         const operators = b => r`(?:[-^*/+\s${b ? '()' : ''}]+(?=\d|\.))`;
         const mathChecker = obj => {
             const o = r`\(\s*`, c = r`\s*\)`; // open and close brackets
-            const numberValue = `${basedNumber}${numberUnit}?`;
+            const numberValue = `${basedNumber}(?:${numberUnit})?`;
             const optBracketedNumber = `(?:${o}${numberValue}${c}|${numberValue})`;
             const op = obj.op || operators(obj.b);
             let unbracketed = r`(?:(?:${optBracketedNumber}\s*${op}\s*)+(?:${numberValue}))`;
@@ -172,7 +166,7 @@ function parseNovaSheets(rawInput) {
                             }
                         })
                         .replace(RegExp(numberUnit, 'g'), '')
-                        .replace(/\d\s*e\s*\d/g, '$&'.replace(/\s/g, '')) // prepare exponentation
+                        .replace(/\d\s*[Ee]\s*\d/g, '$&'.replace(/\s/g, '')) // prepare exponentation
                         .replace(/--/g, '- -') // double negatives don't work in js
                         .replace(/\^/g, '**') // '^' is xor operator in js
                     try { return eval(content) + unit; } catch { return content + unit; }
@@ -187,11 +181,9 @@ function parseNovaSheets(rawInput) {
         }
         const nssFunction = (name, func, { nonest, notrim, allargs } = {}) => {
             parseMath();
-            let matchRegex = RegExp(r`\$\(\s*(?:${name})\b`);
-            let match = cssOutput.match(matchRegex);
+            const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`));
             if (!match) return;
-            let index = match ? cssOutput.indexOf(match[0]) : -1;
-            let searchString = cssOutput.substr(index);
+            const searchString = cssOutput.substr(cssOutput.indexOf(match[0]));
             let segment = '', brackets = 0, hasBrackets;
             for (let i = 0; i < searchString.length; i++) { // search until the initial bracket is matched
                 segment += searchString[i];
@@ -202,14 +194,15 @@ function parseNovaSheets(rawInput) {
                 if (i == searchString.length - 1 && brackets > 0) return; // prevent overflow
             }
             if (!segment.trim() || (nonest && segment.match(/.+\$\(/))) return;
-            let replacer = r`^\$\(${notrim ? '|' : r`\s*|\s*`}\)$`;
-            let splitter = notrim ? '|' : /\s*\|\s*/;
+            const replacer = r`^\$\(${notrim ? '|' : r`\s*|\s*`}\)$`;
+            const splitter = notrim ? '|' : /\s*\|\s*/;
             let parts = segment.replace(RegExp(replacer, 'g'), '').split(splitter); // [name, arg1, arg2, ...]
             for (let i = 0; i < MAX_ARGUMENTS; i++) if (parts[i] == undefined) parts[i] = '';
             if (!allargs) for (let i = MAX_ARGUMENTS; i > 0; i--) if (parts[i]) { parts = parts.slice(0, i + 1); break; }
             parts[0] = segment;
             cssOutput = cssOutput.replace(segment, func(...parts));
         };
+        const nvshFuncErr = ([val, func, info]) => console.warn(`Unknown value "${val}" in built-in function ${func}. ${info}.`);
 
         // Convert NovaSheets styles to CSS
         let loop = 0, lastCssOutput;
@@ -279,7 +272,7 @@ function parseNovaSheets(rawInput) {
 
                     let query = 'only screen';
                     if (min) query += ` and (min-width: ${min})`;
-                    if (max) query += ` and (max-width: ${max})`;
+                    if (max) query += ` and (max-width: ${max}-1px)`;
                     return `@media ${query} { ${selector} { ${block} } }`;
                 });
 
@@ -314,7 +307,7 @@ function parseNovaSheets(rawInput) {
             /// Math functions
             nssFunction('@e', _ => Math.E);
             nssFunction('@pi', _ => Math.PI);
-            nssFunction('@mod', (_, a, ...b) => testNaN(a % b, _));
+            nssFunction('@mod', (_, a, b) => testNaN(a % b, _));
             nssFunction('@sin', (_, a) => testNaN(Math.sin(a), _));
             nssFunction('@asin', (_, a) => testNaN(Math.asin(a), _));
             nssFunction('@cos', (_, a) => testNaN(Math.cos(a), _));
@@ -332,10 +325,10 @@ function parseNovaSheets(rawInput) {
                 let dp = Math.pow(10, b || 0);
                 return testNaN(Math.round(num * dp) / dp, _);
             });
-            nssFunction('@(?:max|min)', (_, ...a) => {
+            nssFunction('@min|@max', (_, ...a) => {
                 let nums = [];
                 for (let item of a) if (item) nums.push(item);
-                let output = _.includes('@min') ? Math.min(...nums) : Math.max(...nums);
+                let output = Math[_.includes('@min') ? 'min' : 'max'](...nums);
                 return testNaN(output, _);
             });
             nssFunction('@clamp', (_, a, b, c) => {
@@ -429,7 +422,7 @@ function parseNovaSheets(rawInput) {
                 return '#' + toHex(r) + toHex(g) + toHex(b) + (a > 0 ? toHex(a) : '');
             }
             const blendColors = (color1, color2, amt) => {
-                if (!color2) return nssLog('func', ['@colorblend', color2, 'color can not be empty']), color1 || '';
+                if (!color2) return nvshFuncErr(['@colorblend', color2, 'color can not be empty']), color1 || '';
                 let type = color1.match(/^[a-z]{3}a?|^#/).toString();
                 let amount = Math.abs(amt.toString().includes('%') ? amt.replace('%', '') / 100 : amt);
                 amount = amount > 1 ? 1 : amount;
@@ -474,7 +467,7 @@ function parseNovaSheets(rawInput) {
                 let [part, color] = [a.toLowerCase(), b.toLowerCase()];
                 let parts = getColorParts(color);
                 const obj = { r: parts[0], h: parts[0], g: parts[1], s: parts[1], b: parts[2], l: parts[2], a: parts[3] };
-                return obj[part[0]] || (nssLog('func', ['@colorpart', part, 'on color' + color]), color);
+                return obj[part[0]] || (nvshFuncErr(['@colorpart', part, 'on color' + color]), color);
             });
             nssFunction('@spin', (_, color, amount) => {
                 let oldHue = color.replace(/^hsla?\s*\((\d+),\s*.+\s*\)\s*$/g, '$1');
@@ -482,12 +475,12 @@ function parseNovaSheets(rawInput) {
                 return color.replace(oldHue, newHue);
             });
             nssFunction('@blend', (_, color1, color2, amount = 0.5) => blendColors(color1, color2, amount));
-            nssFunction('@tint|@lighten', (_, color, amount) => blendGrayscaleHsl('tint', color, '#fff', amount || 0.5));
-            nssFunction('@shade|@darken', (_, color, amount) => blendGrayscaleHsl('shade', color, '#000', amount || 0.5));
-            nssFunction('@tone|@desaturate', (_, color, amount) => blendGrayscaleHsl('tone', color, '#808080', amount || 0.5));
+            nssFunction('@tint|@lighten', (_, color, amount = 0.5) => blendGrayscaleHsl('tint', color, '#fff', amount));
+            nssFunction('@shade|@darken', (_, color, amount = 0.5) => blendGrayscaleHsl('shade', color, '#000', amount));
+            nssFunction('@tone|@desaturate', (_, color, amount = 0.5) => blendGrayscaleHsl('tone', color, '#808080', amount));
 
             const parseLuma = (arg, rgb) => {
-                if (!(arg.startsWith('rgb') || arg.startsWith('#'))) return nssLog('func', ['@luma or @contrast', 'hsl', 'only RGB values are allowed']), arg;
+                if (!(arg.startsWith('rgb') || arg.startsWith('#'))) return nvshFuncErr(['@luma or @contrast', 'hsl', 'only RGB values are allowed']), arg;
                 let [r, g, b] = rgb ? [...rgb] : getColorParts(arg);
                 const adjustGamma = a => ((a + 0.055) / 1.055) ** 2.4;
                 const getLuma = a => a <= 0.03928 ? a / 12.92 : adjustGamma(a);
@@ -540,7 +533,9 @@ function parseNovaSheets(rawInput) {
             /// CSS functions
             nssFunction('@breakpoint', (_, a = 0, b = '', c = '', d = '') => {
                 if (!a) return _;
-                const makeQuery = (type, width, content) => `@media (${type}-width: ${width}+${type === 'max' ? 0 : 1}px) { ${content}}`;
+                const makeQuery = (type, width, content) => {
+                    return `@media (${type}-width: ${width.trim()}${type === 'max' ? '-1px' : ''}) { ${content}}`;
+                };
                 let isBlock = (b + c).includes('{');
                 let content = isBlock ? [b, c] : [`${b} {${c}} `, `${b} {${d}} `];
                 let ltContent = (isBlock ? b : c).trim() ? makeQuery('max', a, content[0]) : '';
@@ -561,7 +556,7 @@ function parseNovaSheets(rawInput) {
                 let nssVarName = val.replace(/\$[\[(](.*?)(\|.*)?[\])]/, '$1').strim();
                 cssOutput = cssOutput.replace(val, '');
                 let type = val.includes('$(') ? 'variable' : 'argument';
-                nssLog(`Instances of unparsed ${type} "${nssVarName}" have been removed from the output.`);
+                console.log(`<NovaSheets> Instances of unparsed ${type} "${nssVarName}" have been removed from the output.`);
             }
         }
 
@@ -607,15 +602,51 @@ function parseNovaSheets(rawInput) {
     String.prototype.strim = undefined;
 }
 
-function compileNovaSheets(input, output) {
+function compileNovaSheets(inputStr, outputStr) {
     try {
-        fs.readFile(input, 'utf8', (err, contents) => {
-            if (err) throw `FSReadError: Input file ${input} not found.`;
-            fs.writeFile(output, parseNovaSheets(contents).replace(/\}/g, '}\n'), err => {
-                if (err) throw `FSWriteError: Output file ${output} is invalid.`;
-            });
-        });
-    } catch (err) { }
+        const compile = inputFiles => {
+            for (let input of inputFiles) {
+                fs.readFile(input, 'utf8', (err, contents) => {
+                    if (err) throw `FS_ReadError: Input file '${input}' not found.`;
+
+                    let output = outputStr;
+
+                    const folder = output.includes('/') && output.replace(/\/[^\/]+$/, '');
+                    if (folder) {
+                        fs.mkdir(folder, { recursive: true }, err => {
+                            if (err) throw `FS_MkDirError: Could not create directory '${folder}'.`
+                        });
+                    }
+
+                    const filename = input.replace(/.+\/([^\/]+)$/, '$1'); // 'foo/bar.ext' -> 'bar.ext'
+                    if (!output) {
+                        if (hasGlobs) output = input.replace(/\/[^\/]+$/, '/'); // 'foo.ext' -> 'foo/'
+                        else output = input.replace(/\.\w+$/, '.css'); // 'foo.ext' -> 'foo.css'
+                    }
+                    if (output.endsWith('/')) output += filename; // 'foo.nvss bar/' -> 'bar/foo.nvss'
+                    else if (hasGlobs) output += '/' + filename; // '*.nvss bar' -> 'bar/$file.nvss'
+                    else if (!output.match(/\.\w+$/)) output += '.css'; // 'foo.nvss bar' -> 'bar.css'
+                    output = output.replace(/\.\w+$/, '.css'); // force .css extension
+
+                    fs.writeFile(output, parseNovaSheets(contents), err => {
+                        if (err) throw `FS_WriteError: Output file '${output}' is invalid.`;
+                        else console.log(`<NovaSheets> Wrote file '${input}' to '${output}'`)
+                    });
+                });
+            }
+        }
+
+        const hasGlobs = glob.hasMagic(inputStr);
+        if (hasGlobs) {
+            glob(inputStr, {}, (err, files) => {
+                if (err) throw err;
+                compile(files);
+            })
+        } else {
+            compile([inputStr]);
+        }
+
+    } catch { }
 }
 
 // Entry points
@@ -627,29 +658,25 @@ try {
     // Command line
     const arg = n => process.argv[n + 1] || '';
     let inArg = val => arg(1).startsWith('-') && arg(1).includes(val);
-    if (inArg('-h')) {
-        nssLog(`Arguments:\n
-    novasheets [{-c, --compile}] <input file> [<output file>]\tCompile a NovaSheets file \n\
-    novasheets {-p, --parse} "<input>"\t\t\t\tParse raw NovaSheets input from the command line \n\
-    novasheets {-h, --help}\t\t\t\t\tDisplay this help message \n\
-    novasheets {-v, --version}\t\t\t\t\tDisplay the current version of NovaSheets \
-        `);
+    if (!arg(1) || inArg('-h')) {
+        console.log(`<NovaSheets> Command-line arguments:\n
+    novasheets [{-c, --compile}] <input> [<output>]\tCompile a NovaSheets file from an exact or globbed input.
+    novasheets {-p, --parse} "<input>"\t\t\tParse raw NovaSheets input from the command line.
+    novasheets {-h, --help}\t\t\t\tDisplay this help message.
+    novasheets {-v, --version}\t\t\t\tDisplay the current version of NovaSheets. `
+        );
     }
-    else if (inArg('-v')) { nssLog('Current version: ' + NOVASHEETS_VERSION); }
-    else if (inArg('-p')) { console['log'](parseNovaSheets(arg(2))); }
+    else if (inArg('-v')) { console.log('<NovaSheets> Current version: ' + NOVASHEETS_VERSION); }
+    else if (inArg('-p')) { console.log(parseNovaSheets(arg(2))); }
     else if (arg(1)) {
         let explicit = inArg('-c');
         let input = explicit ? arg(2) : arg(1);
-        let output = explicit ? arg(3) : arg(2) || input.replace('.nss', '.css');
+        let output = explicit ? arg(3) : arg(2);
         compileNovaSheets(input, output);
     }
 } catch {
-    try {
-        // Browser
+    try { // Browser
         document.addEventListener("DOMContentLoaded", parseNovaSheets()); // Parse NovaSheets styles on page load
         compileNovaSheets = undefined; // not a browser function
-    } catch (err) {
-        // Other
-        console['log']("An unknown error has occurred. Stack trace: " + err);
-    }
+    } catch (err) { console.err(err); }
 }

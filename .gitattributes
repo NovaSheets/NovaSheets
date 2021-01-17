@@ -1,3 +1,5 @@
 * text=auto
 
 package-lock.json -diff
+
+*.nvss linguist-language=CSS

@@ -44,10 +44,10 @@ QUnit.module('NovaSheets content', () => {
     });
     QUnit.test('Simple breakpoints', q => {
         const tests = [
-            ['.element @ ..10px {display: none;}', '@media only screen and (max-width: 10px) { .element { display: none; } }'],
+            ['.element @ ..10px {display: none;}', '@media only screen and (max-width: 9px) { .element { display: none; } }'],
             ['.element @ 10px {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px... {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
-            ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 20px) { .element { display: none; } }'],
+            ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
             ['a @ 10px {b} & c @ 20px {d}', '@media only screen and (min-width: 10px) { a { b } }@media only screen and (min-width: 20px) { a c { d } }'],
         ];
         test(q, tests);
@@ -161,8 +161,8 @@ QUnit.module('Built-in functions', () => {
     });
     QUnit.test('CSS functions', q => {
         const tests = [
-            ['$(@breakpoint | 500px | selector | less | more )', ' @media (max-width: 500px) { selector { less } } @media (min-width: 501px) { selector { more } }'],
-            ['$(@breakpoint | 500px | less {} | more {} )', ' @media (max-width: 500px) { less {} } @media (min-width: 501px) { more {} }'],
+            ['$(@breakpoint | 500px | selector | less | more )', ' @media (max-width: 499px) { selector { less } } @media (min-width: 500px) { selector { more } }'],
+            ['$(@breakpoint | 500px | less {} | more {} )', ' @media (max-width: 499px) { less {} } @media (min-width: 500px) { more {} }'],
             ['$(@prefix | transition | all 1s )', '-webkit-transition: all 1s; -moz-transition: all 1s; -ms-transition: all 1s; -o-transition: all 1s; transition: all 1s;']
         ];
         test(q, tests);
