@@ -1,13 +1,8 @@
 #!/usr/bin/env node
-const NOVASHEETS_VERSION = "0.6.7";
 
-var fs, glob;
-try { // node imports
-    fs = require('fs');
-    glob = require('glob');
-} catch { }
+function parseNovaSheets(rawInput, NovaSheets) {
 
-function parseNovaSheets(rawInput) {
+    const isNode = typeof window === 'undefined';
 
     String.prototype.strim = function () {
         return this.replace(/^\s*(.+?)\s*$/, '$1').replace(/\s+/g, ' ');
@@ -20,7 +15,7 @@ function parseNovaSheets(rawInput) {
         return Math.abs(hash).toString(16).substring(0, length).padStart(length, '0');
     };
     const escapeRegex = str => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
-    const debug = (...args) => console.log('<NovaSheets|debug> ', ...args); // should be unused in prod
+    const debug = (...args) => console.log('<NovaSheets|debug> ', ...args); // should not be unused in prod
 
     // Generate list of NovaSheet files and get the contents of each stylesheet
     let stylesheetContents = [], sources = [], externalSheets, inlineSheets;
@@ -69,7 +64,7 @@ function parseNovaSheets(rawInput) {
             .replace(/(?<![a-z]+:)\n?\/\/.*$/gm, '') // remove single-line comments
             .replace(/(?:@var.+?=.*$|@var\s*[^=]*(?=\n\s*@var\s.))(?!\n\s*@endvar)/gm, '$& @endvar') // single-line @var declarations
             .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
-            .replace(/@const\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
+            .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         let lines = stylesheetContents[s].split('\n');
         let cssOutput = '';
         let commentedContent = [], staticContent = [];
@@ -78,7 +73,7 @@ function parseNovaSheets(rawInput) {
             cssOutput += '\n' + lines[i];
         }
         cssOutput = cssOutput
-            .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@const\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove NSS declarations
+            .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@option\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove NSS declarations
             .replace(/\/\*(.+?)\*\//gs, (_, a) => {
                 if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[(.+)\]\*\/$/, '/*$1*/');
                 if (_.startsWith('/*/') || _.endsWith('/*/')) return _;
@@ -90,7 +85,15 @@ function parseNovaSheets(rawInput) {
                 return '/*STATIC#' + staticContent.indexOf(a) + '*/';
             }) // store static content for later use
         let customVars = [], cssBlocks = [];
-        let MAX_RECURSION = 50, MAX_MATH_RECURSION = 5, MAX_ARGUMENTS = 10, DECIMAL_PLACES, KEEP_NAN = false, KEEP_UNPARSED = false; // parser constants
+        let constants = {
+            BUILTIN_FUNCTIONS: true,
+            DECIMAL_PLACES: false,
+            KEEP_NAN: false,
+            KEEP_UNPARSED: false,
+            MAX_ARGUMENTS: 10,
+            MAX_MATH_RECURSION: 5,
+            MAX_RECURSION: 50,
+        }
 
         // Generate a list of lines that start variable declarations
         for (let i in lines) {
@@ -109,15 +112,16 @@ function parseNovaSheets(rawInput) {
                 let varContent = (inlineContent + blockContent).trim().replace(varRegex, customVars[varName] || '');
                 customVars[varName] = varContent;
             }
-            else if (lines[i].match(matcher = /^\s*@const\s+/)) {
+            else if (lines[i].match(matcher = /^\s*@option\s+/)) {
                 let [name, val] = lines[i].replace(matcher, '').split(/\s+/);
                 switch (name.toUpperCase()) {
-                    case 'MAX_RECURSION': MAX_RECURSION = parseInt(val); break;
-                    case 'MAX_MATH_RECURSION': MAX_MATH_RECURSION = parseInt(val); break;
-                    case 'MAX_ARGUMENTS': MAX_ARGUMENTS = parseInt(val); break;
-                    case 'DECIMAL_PLACES': DECIMAL_PLACES = val === "false" ? false : val; break;
-                    case 'KEEP_NAN': KEEP_NAN = val !== "0" && val !== "false"; break;
-                    case 'KEEP_UNPARSED': KEEP_UNPARSED = val !== "0" && val !== "false"; break;
+                    case 'BUILTIN_FUNCTIONS': constants.BUILTIN_FUNCTIONS = val !== "0" && val !== "false"; break;
+                    case 'DECIMAL_PLACES': constants.DECIMAL_PLACES = val === "false" ? false : val; break;
+                    case 'KEEP_NAN': constants.KEEP_NAN = val !== "0" && val !== "false"; break;
+                    case 'KEEP_UNPARSED': constants.KEEP_UNPARSED = val !== "0" && val !== "false"; break;
+                    case 'MAX_ARGUMENTS': constants.MAX_ARGUMENTS = parseInt(val); break;
+                    case 'MAX_MATH_RECURSION': constants.MAX_MATH_RECURSION = parseInt(val); break;
+                    case 'MAX_RECURSION': constants.MAX_RECURSION = parseInt(val); break;
                 }
             }
         }
@@ -128,10 +132,9 @@ function parseNovaSheets(rawInput) {
             cssBlocks[escapeRegex(selector.trim().replace(/>/g, ':GT:'))] = css;
         });
 
-        // Declare local functions and variables
+        // Functions for later use
         const number = r`(?:[0-9]*\.?[0-9]+)`;
         const basedNumber = r`(?:0x[0-9a-f]*\.?[0-9a-f]+|0b[01]*\.?[01]+|0o[0-7]*\.?[0-7]+|${number})`;
-        const bracketedNumber = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})`;
         const quickMathCheck = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})\s*[a-z]*[-+*^/Ee\s]+(?:\(\s*${basedNumber}\s*\)|${basedNumber})\s*[a-z]*`;
         const numberUnit = r`\s*(?:em|rem|en|ex|px|pt|pc|cm|mm|m(?![ms])|ft|in|s|ms)`;
         const operators = b => r`(?:[-^*/+\s${b ? '()' : ''}]+(?=\d|\.))`;
@@ -143,10 +146,10 @@ function parseNovaSheets(rawInput) {
             let unbracketed = r`(?:(?:${optBracketedNumber}\s*${op}\s*)+(?:${numberValue}))`;
             return r`\(${unbracketed}\)|${unbracketed}`;
         }
-        const toNumber = val => KEEP_NAN ? Number(val) : (isNaN(Number(val)) ? '' : Number(val));
+        const toNumber = val => constants.KEEP_NAN ? Number(val) : (isNaN(Number(val)) ? '' : Number(val));
         const parseMath = () => {
             cssOutput = cssOutput.replace(/(?<!#)\b(\d+)[Ee](\d+)/g, (_, a, b) => a * 10 ** b)
-            for (let i = 0; i < MAX_MATH_RECURSION; i++) {
+            for (let i = 0; i < constants.MAX_MATH_RECURSION; i++) {
                 if (!cssOutput.match(RegExp(quickMathCheck))) break;
                 cssOutput = cssOutput.replace(RegExp(mathChecker({}), 'g'), _ => {
                     let matchesOnlyBrackets = !_.match(/[-+e^*/]/);
@@ -173,13 +176,7 @@ function parseNovaSheets(rawInput) {
                 });
             }
         };
-        const testNaN = (arg, def) => {
-            let test = !arg || arg === Infinity || Number.isNaN(arg);
-            if (test && KEEP_NAN) return 'NaN';
-            else if (test && !KEEP_NAN) return def || 0;
-            else return arg;
-        }
-        const nssFunction = (name, func, { nonest, notrim, allargs } = {}) => {
+        const parseFunction = (name, func, { nonest, notrim, allargs } = {}) => {
             parseMath();
             const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`));
             if (!match) return;
@@ -197,16 +194,20 @@ function parseNovaSheets(rawInput) {
             const replacer = r`^\$\(${notrim ? '|' : r`\s*|\s*`}\)$`;
             const splitter = notrim ? '|' : /\s*\|\s*/;
             let parts = segment.replace(RegExp(replacer, 'g'), '').split(splitter); // [name, arg1, arg2, ...]
-            for (let i = 0; i < MAX_ARGUMENTS; i++) if (parts[i] == undefined) parts[i] = '';
-            if (!allargs) for (let i = MAX_ARGUMENTS; i > 0; i--) if (parts[i]) { parts = parts.slice(0, i + 1); break; }
+            for (let i = 0; i < constants.MAX_ARGUMENTS; i++) if (parts[i] == undefined) parts[i] = '';
+            if (!allargs) for (let i = constants.MAX_ARGUMENTS; i > 0; i--) if (parts[i]) { parts = parts.slice(0, i + 1); break; }
             parts[0] = segment;
             cssOutput = cssOutput.replace(segment, func(...parts));
         };
-        const nvshFuncErr = ([val, func, info]) => console.warn(`Unknown value "${val}" in built-in function ${func}. ${info}.`);
 
         // Convert NovaSheets styles to CSS
+        const hasNovaSheetsStyles = content => (
+            content.includes('$(')
+            || content.match(RegExp(quickMathCheck))
+            || content.match(/&%</)
+        );
         let loop = 0, lastCssOutput;
-        while ((cssOutput.indexOf('$(') > -1 || loop < 1) && loop++ < MAX_RECURSION) {
+        while ((hasNovaSheetsStyles(cssOutput) || loop < 1) && loop++ < constants.MAX_RECURSION) {
             if (lastCssOutput === cssOutput) break;
             lastCssOutput = cssOutput;
 
@@ -218,7 +219,7 @@ function parseNovaSheets(rawInput) {
 
             // Parse variable contents
             for (let name in customVars) {
-                nssFunction(name, (_, ...paramArgs) => {
+                parseFunction(name, (_, ...paramArgs) => {
                     let content = customVars[name];
                     for (let i in paramArgs) {
                         if (!paramArgs[i]) continue;
@@ -233,19 +234,19 @@ function parseNovaSheets(rawInput) {
             }
 
             // Parse prev selectors
-            for (let i = 0; cssOutput.indexOf('%') > -1 && i++ < MAX_RECURSION; i++) { // % takes the prev
+            for (let i = 0; cssOutput.indexOf('%') > -1 && i++ < constants.MAX_RECURSION; i++) { // % takes the prev
                 cssOutput = cssOutput.replace(/([^{}|()]+?){[^{}]*?}[^{}]*?%[^{}]*?{/g, (_, a) => {
                     if (a.includes('%')) return _; // for next pass
                     return _.replace(/(?<!\d)%/g, a.strim());
                 });
             }
-            for (let i = 0; cssOutput.indexOf('&') > -1 && i++ < MAX_RECURSION; i++) { // & takes the prev parent
+            for (let i = 0; cssOutput.indexOf('&') > -1 && i++ < constants.MAX_RECURSION; i++) { // & takes the prev parent
                 cssOutput = cssOutput.replace(/([^{}|()]+?){[^{}]*?}([^{}]*?&[^{}]*?{[^{}]*})+/g, (_, a) => {
                     if (a.includes('&')) return _; // for next pass
                     return _.replace(/&/g, a.strim() + (a.match(/(?<!\d)%/) ? '<' : ''));
                 });
             }
-            for (let i = 0; cssOutput.indexOf('<') > -1 && i++ < MAX_RECURSION; i++) {
+            for (let i = 0; cssOutput.indexOf('<') > -1 && i++ < constants.MAX_RECURSION; i++) {
                 cssOutput = cssOutput.replace(/[>+~\s]\s*[^&%{}>+~\s<]+\s*</g, '');
             }
 
@@ -276,282 +277,25 @@ function parseNovaSheets(rawInput) {
                     return `@media ${query} { ${selector} { ${block} } }`;
                 });
 
-            // Parse built-in variables
-
-            /// Loop functions
-            nssFunction('@each', (_, a = '', b = '', c = '', ...d) => {
-                d = d.join('|');
-                let [items, splitter, joiner, content] = d ? [a, b, c, d] : (c ? [a, b, b, c] : [a, ',', ',', b]);
-                [items, splitter, joiner, content] = [items.strim(), splitter.strim(), joiner, content.strim()];
-                let arr = items.split(splitter);
-                let output = [];
-                for (let i in arr) {
-                    let parsed = content
-                        .replace(/\$i/gi, Number(i) + 1)
-                        .replace(/\$v\[([0-9]+)([-+*/][0-9]+)?\]/g, (_, a, b) => arr[eval(Number(a - 1) + (b || 0))])
-                        .replace(/.?\s*undefined/g, '')
-                        .replace(/\$v/gi, arr[i])
-                    output.push(parsed);
-                }
-                return output.join(joiner);
-            }, { notrim: true });
-            nssFunction('@repeat', (_, a, ...b) => {
-                let num = a, delim, content;
-                if (b[1]) [delim, content] = [b[0], b.slice(1).join('|')];
-                else[delim, content] = ['', b.join('|')];
-                let output = '';
-                for (let i = 0; i < Number(num); i++) output += (i > 0 ? delim : '') + content.replace(/\$i/gi, Number(i) + 1);
-                return output;
-            });
-
-            /// Math functions
-            nssFunction('@e', _ => Math.E);
-            nssFunction('@pi', _ => Math.PI);
-            nssFunction('@mod', (_, a, b) => testNaN(a % b, _));
-            nssFunction('@sin', (_, a) => testNaN(Math.sin(a), _));
-            nssFunction('@asin', (_, a) => testNaN(Math.asin(a), _));
-            nssFunction('@cos', (_, a) => testNaN(Math.cos(a), _));
-            nssFunction('@acos', (_, a) => testNaN(Math.acos(a), _));
-            nssFunction('@tan', (_, a) => testNaN(Math.tan(a), _));
-            nssFunction('@atan', (_, a) => testNaN(Math.atan(a), _));
-            nssFunction('@abs', (_, a) => testNaN(Math.abs(a), _));
-            nssFunction('@floor', (_, a) => testNaN(Math.floor(a), _));
-            nssFunction('@ceil', (_, a) => testNaN(Math.ceil(a), _));
-            nssFunction('@percent', (_, a) => testNaN(toNumber(a) * 100 + '%', _));
-            nssFunction('@log', (_, base, num) => testNaN(Math.log(num) / (base ? Math.log(base) : 1), _));
-            nssFunction('@root', (_, a, b) => testNaN(Math.pow(b ? b : a, 1 / (b ? a : 2)), _));
-            nssFunction('@round', (_, a, b) => {
-                let num = toNumber(a) + Number.EPSILON;
-                let dp = Math.pow(10, b || 0);
-                return testNaN(Math.round(num * dp) / dp, _);
-            });
-            nssFunction('@min|@max', (_, ...a) => {
-                let nums = [];
-                for (let item of a) if (item) nums.push(item);
-                let output = Math[_.includes('@min') ? 'min' : 'max'](...nums);
-                return testNaN(output, _);
-            });
-            nssFunction('@clamp', (_, a, b, c) => {
-                let val = Number(a), min = Number(b), max = Number(c);
-                if (max < min) [min, max] = [max, min];
-                let output = val <= min ? min : (val >= max ? max : val);
-                return testNaN(output, _);
-            });
-            nssFunction('@degrees', (_, a) => {
-                let [num, type] = [a.replace(/[a-z]+/, ''), a.replace(RegExp(number), '')];
-                if (type === 'grad') return num * 0.9;
-                let output = num / Math.PI * 180; // default to radians
-                return testNaN(output, _);
-            });
-            nssFunction('@radians', (_, a) => {
-                let [num, type] = [a.replace(/[a-z]+/, ''), a.replace(RegExp(number), '')];
-                if (type === 'grad') return num * Math.PI / 200;
-                let output = num * Math.PI / 180; // default to degrees
-                return testNaN(output, _);
-            });
-            nssFunction('@gradians', (_, a) => {
-                let [num, type] = [a.replace(/[a-z]+/, ''), a.replace(RegExp(number), '')];
-                if (type === 'rad') return num / Math.PI * 200;
-                let output = num / 0.9; // default to degrees
-                return testNaN(output, _);
-            });
-
-            /// Text functions
-            nssFunction('@lowercase', (_, a) => a.toLowerCase());
-            nssFunction('@uppercase', (_, a) => a.toUpperCase());
-            nssFunction('@titlecase', (_, a) => a.replace(/\b\w/g, a => a.toUpperCase()));
-            nssFunction('@capitali[sz]e', (_, a) => a[0].toUpperCase() + a.substr(1));
-            nssFunction('@uncapitali[sz]e', (_, a) => a[0].toLowerCase() + a.substr(1));
-            nssFunction('@extract', (_, a, b, c) => a.split(c ? b : ',')[toNumber(c ? c : b) - 1] || '');
-            nssFunction('@encode', (_, a) => encodeURIComponent(a));
-            nssFunction('@length', (_, a) => a.strim().length);
-            nssFunction('@replace', (_, ...args) => {
-                if (args.length < 3) args = [args[0], args[1] || '', args[2] || ''];
-                args = args.slice(0, args.indexOf('') <= 3 ? 3 : args.indexOf(''));
-                let text = args[0].strim();
-                let finder = args.slice(1, -1).join('|').strim();
-                let replacer = args.slice(-1)[0].strim();
-                let isRegex = finder.startsWith('/');
-                if (isRegex) {
-                    let parts = finder.strim().match(/\/(.+?)\/([gimusy]*)/).slice(1);
-                    finder = RegExp(parts[0], parts[1] || 's');
-                }
-                return text.replace(isRegex ? finder : RegExp(escapeRegex(finder), 'g'), replacer);
-            }, { notrim: true, allargs: true });
-
-            // Colour functions
-            const toPercent = val => Math.floor(Number(val) / 255 * 100);
-            const fromPercent = val => Math.ceil(Number(val.replace('%', '')) * 255 / 100);
-            const toHex = val => Number(val).toString(16).padStart(2, '0');
-            const rgbFromHex = (hex, alpha) => {
-                let num = parseInt(hex.replace(/#?(.{0,8})$/, '$1'), 16);
-                let r = (num >> 16) & 255;
-                let g = (num >> 8) & 255;
-                let b = num & 255;
-                let a = alpha && toPercent(parseInt(alpha, 16));
-                if (a != null) return `rgba(${r}, ${g}, ${b}, ${a})`;
-                return `rgb(${r}, ${g}, ${b})`;
+            // Parse functions
+            let allFunctions = [];
+            if (constants.BUILTIN_FUNCTIONS) {
+                const fromImport = isNode ? require('./functions') : addBuiltInFunctions;
+                const builtinFunctions = fromImport({ constants });
+                allFunctions.push(...builtinFunctions);
             }
-            const parseHex = val => {
-                let a = val.replace('#', '');
-                switch (a.length) {
-                    case 0: return rgbFromHex('000000', '00');
-                    case 1: return rgbFromHex(a.repeat(6));
-                    case 2: return rgbFromHex(a[0].repeat(6), a[1].repeat(2));
-                    case 3: return rgbFromHex(a[0] + a[0] + a[1] + a[1] + a[2] + a[2]);
-                    case 4: return rgbFromHex(a[0] + a[0] + a[1] + a[1] + a[2] + a[2], a[3] + a[3]);
-                    default: return rgbFromHex(a.substr(0, 6).padEnd(6, '0'), a.substr(6, 2) || null);
-                }
+            const customFunctions = NovaSheets && NovaSheets.getFunctions && NovaSheets.getFunctions() || [];
+            allFunctions.push(...customFunctions);
+            for (let obj of allFunctions) {
+                parseFunction(obj.name, obj.body);
             }
-            const getRawColorParts = col => col.replace(/^\s*\w{3}a?\s*\(\s*|\s*\)$/g, '').split(/,\s*/);
-            const getColorParts = color => {
-                let parts = getRawColorParts(color.startsWith('#') ? parseHex(color) : color);
-                for (let i in parts) {
-                    if (!parts[i]) parts[i] = 0;
-                    else if (parts[i].includes('%')) {
-                        let num = parts[i].replace('%', '');
-                        if (color.includes('hsl')) parts[i] = "" + Math.round(num / 100 * (i === 0 ? 360 : 100));
-                        else parts[i] = "" + fromPercent(num);
-                    }
-                    else if (i === 3) parts[i] = Math.round(color.includes('rgb') ? num / 255 : num / 100);
-                }
-                return parts;
-            }
-            const hexFromRgb = (rgb) => {
-                let [r, g, b, a] = Array.isArray(rgb) ? rgb : getColorParts(rgb);
-                return '#' + toHex(r) + toHex(g) + toHex(b) + (a > 0 ? toHex(a) : '');
-            }
-            const blendColors = (color1, color2, amt) => {
-                if (!color2) return nvshFuncErr(['@colorblend', color2, 'color can not be empty']), color1 || '';
-                let type = color1.match(/^[a-z]{3}a?|^#/).toString();
-                let amount = Math.abs(amt.toString().includes('%') ? amt.replace('%', '') / 100 : amt);
-                amount = amount > 1 ? 1 : amount;
-                const blendVal = (a, b) => Math.floor((toNumber(a) * (1 - amount) + toNumber(b) * (amount)));
-                let [[r1, g1, b1, a1], [r2, g2, b2, a2]] = [getColorParts(color1), getColorParts(color2)];
-                let [r, g, b, a] = [blendVal(r1, r2), blendVal(g1, g2), blendVal(b1, b2), blendVal(a1, a2)];
-                switch (type) {
-                    case 'rgba': return `rgba(${r}, ${g}, ${b}, ${a})`;
-                    case 'rgb': return `rgb(${r}, ${g}, ${b})`;
-                    case 'hsla': return `hsla(${r % 360}, ${g / 100}%, ${b / 100}%, ${a})`;
-                    case 'hsl': return `hsla(${r % 360}, ${g / 100}%, ${b / 100}%)`;
-                    case '#': return hexFromRgb([r, g, b, a]);
-                    default: `${type}(${r}, ${g}, ${b})`;
-                }
-            }
-            const blendGrayscaleHsl = (type, color1, color2, amt) => {
-                if (!color1.includes('hsl')) return blendColors(color1, color2, amt || 0.5);
-                let [h, s, l, a] = getColorParts(color1);
-                let amount = amt.replace('%', '');
-                let sNew = toNumber(s) - toNumber(amount);
-                let lNew = toNumber(l) + toNumber(amount) * (type === 'shade' ? -1 : 1);
-                let sl = type === 'tone' ? `${sNew}%, ${l}%` : `${s}%, ${lNew < 0 ? 0 : lNew}%`;
-                return `${color1.match(/^hsla?/)}(${h % 360}, ${sl}${a ? `, ${a}` : ''})`;
-            }
-
-            nssFunction('@colou?r', (_, type, a = '0', b = '0', c = '0', d = '') => {
-                if (/#|rgba?|hsla?/i.test(a)) {
-                    if (a.includes('#')) a = parseHex(a);
-                    if (/rgba?|hsla?/.test(a)) [a, b, c, d] = getColorParts(a);
-                } else[a, b, c, d] = getColorParts(`${type}(${a}, ${b}, ${c}, ${d})`);
-
-                switch (type = type.toLowerCase()) {
-                    case '#': case 'hash': case 'hex': case 'hexadecimal': return '#' + toHex(a) + toHex(b) + toHex(c) + (d ? toHex(fromPercent(d)) : '');
-                    case 'rgb': return `rgb(${a}, ${b}, ${c})`;
-                    case 'rgba': return `rgba(${a}, ${b}, ${c}, ${d || d === 0 ? 100 : ''}%)`;
-                    case 'hsl': return `hsl(${a % 360}, ${b}%, ${c}%)`;
-                    case 'hsla': return `hsla(${a % 360}, ${b}%, ${c}%, ${d || d === 0 ? 100 : ''}%)`;
-                    default: return `${type}(${a} ${b} ${c}${d ? ` / ${d}` : ''})`;
-                }
-            });
-            nssFunction('@colou?rpart', (_, a = '', b = '') => {
-                let [part, color] = [a.toLowerCase(), b.toLowerCase()];
-                let parts = getColorParts(color);
-                const obj = { r: parts[0], h: parts[0], g: parts[1], s: parts[1], b: parts[2], l: parts[2], a: parts[3] };
-                return obj[part[0]] || (nvshFuncErr(['@colorpart', part, 'on color' + color]), color);
-            });
-            nssFunction('@spin', (_, color, amount) => {
-                let oldHue = color.replace(/^hsla?\s*\((\d+),\s*.+\s*\)\s*$/g, '$1');
-                let newHue = (toNumber(oldHue) + toNumber(amount || 0)) % 360;
-                return color.replace(oldHue, newHue);
-            });
-            nssFunction('@blend', (_, color1, color2, amount = 0.5) => blendColors(color1, color2, amount));
-            nssFunction('@tint|@lighten', (_, color, amount = 0.5) => blendGrayscaleHsl('tint', color, '#fff', amount));
-            nssFunction('@shade|@darken', (_, color, amount = 0.5) => blendGrayscaleHsl('shade', color, '#000', amount));
-            nssFunction('@tone|@desaturate', (_, color, amount = 0.5) => blendGrayscaleHsl('tone', color, '#808080', amount));
-
-            const parseLuma = (arg, rgb) => {
-                if (!(arg.startsWith('rgb') || arg.startsWith('#'))) return nvshFuncErr(['@luma or @contrast', 'hsl', 'only RGB values are allowed']), arg;
-                let [r, g, b] = rgb ? [...rgb] : getColorParts(arg);
-                const adjustGamma = a => ((a + 0.055) / 1.055) ** 2.4;
-                const getLuma = a => a <= 0.03928 ? a / 12.92 : adjustGamma(a);
-                return 0.2126 * getLuma(r / 255) + 0.7152 * getLuma(g / 255) + 0.0722 * getLuma(b / 255); // ITU-R BT.709
-            }
-            nssFunction('@luma', (_, color) => parseLuma(color));
-            nssFunction('@contrast', (_, color, light = '', dark = '') => (parseLuma(color) < 0.5/*'is dark?':*/) ? light : dark);
-            nssFunction('@gr[ae]yscale', (_, color) => {
-                if (color.startsWith('hsl')) return color.replace(/^(hsla?)\s*\(\s*(\d+),\s*(\d+)/, '$1($2, 0')
-                let gray = Math.round(parseLuma(color) * 255);
-                let newColor = `rgb(${Array(3).fill(gray).join(', ')})`
-                if (color.startsWith('#')) return hexFromRgb(newColor);
-                else return newColor;
-            });
-
-            /// Logical functions
-            const parseLogic = arg => {
-                for (let i = 0; i < MAX_ARGUMENTS / 10; i++) {
-                    arg = arg.strim()
-                        .replace(/(?:'(.+?)'|"(.+?)")+/, '$1$2') // remove quotes
-                        .replace(/\bor\b/gi, '||').replace(/\band\b/gi, '&&').replace(/\bnot\b/gi, '!') // default logical operators
-                        .replace(/(.+?)\bnor\b(.+)?/gi, '!($1) && !($2)') // 'nor' logical operator
-                        .replace(/(.+?)\bnand\b(.+)?/gi, '!($1) || !($2)') // 'nand' logical operator
-                        .replace(/(.+?)\bxor\b(.+)?/gi, '($1 && !($2)) || (!($1) && $2)') // 'xor' logical operator
-                        .replace(/(.+?)\bxnor\b(.+)?/gi, '$1 == $2') // 'xnor' logical operator
-                        .replace(/(?!=)(!?)=(==)?(?!=)/g, '$1$2==') // normalise equality signs
-                }
-                if (arg.match(/(<|<=|>|>=|==|!=|&|\||!)/)) arg = eval(arg);
-                if (['false', 'undefined', 'null', 'NaN', ''].includes(arg)) arg = false;
-                return arg;
-            };
-            const logicRegex = arg => RegExp(r`([+-]?${bracketedNumber})\s*(?:${arg})\s*([+-]?${bracketedNumber})`);
-            nssFunction('@bitwise', (_, a) => {
-                let arg = a.replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<') // fix html
-                for (let i = 0; i < MAX_ARGUMENTS / 10; i++) {
-                    arg = arg
-                        .replace(RegExp(r`(?:~|!|not)\s*([+-]?${bracketedNumber})`), (_, a) => eval('~' + toNumber(a))) // bitwise not
-                        .replace(logicRegex('or|\\|'), (_, a, b) => eval(`(${toNumber(a)}) | (${toNumber(b)})`)) // bitwise or
-                        .replace(logicRegex('nor'), (_, a, b) => eval(`~ (${toNumber(a)}) | (${toNumber(b)})`)) // bitwise nor
-                        .replace(logicRegex('and|&'), (_, a, b) => eval(`(${toNumber(a)}) & (${toNumber(b)})`)) // bitwise and
-                        .replace(logicRegex('nand'), (_, a, b) => eval(`~ (${toNumber(a)}) & (${toNumber(b)})`)) // bitwise nand
-                        .replace(logicRegex('xor'), (_, a, b) => eval(`(${toNumber(a)}) ^ (${toNumber(b)})`)) // bitwise xor
-                        .replace(logicRegex('xnor'), (_, a, b) => eval(`~ (${toNumber(a)}) ^ (${toNumber(b)})`)) // bitwise xnor
-                }
-                return arg;
-            });
-            nssFunction('@boolean', (_, a) => parseLogic(a));
-            nssFunction('@if', (_, a, b = '', c = '') => parseLogic(a) ? b : c);
-
-            /// CSS functions
-            nssFunction('@breakpoint', (_, a = 0, b = '', c = '', d = '') => {
-                if (!a) return _;
-                const makeQuery = (type, width, content) => {
-                    return `@media (${type}-width: ${width.trim()}${type === 'max' ? '-1px' : ''}) { ${content}}`;
-                };
-                let isBlock = (b + c).includes('{');
-                let content = isBlock ? [b, c] : [`${b} {${c}} `, `${b} {${d}} `];
-                let ltContent = (isBlock ? b : c).trim() ? makeQuery('max', a, content[0]) : '';
-                let gtContent = (isBlock ? c : d).trim() ? makeQuery('min', a, content[1]) : '';
-                return ltContent + (ltContent && gtContent ? '\n' : '') + gtContent;
-            }, { notrim: true });
-            nssFunction('@prefix', (_, a, b) => {
-                return `-webkit-${a}: ${b}; -moz-${a}: ${b}; -ms-${a}: ${b}; -o-${a}: ${b}; ${a}: ${b};`;
-            }, { nonest: true });
 
         }
 
         // Remove unparsed variables
-        if (!KEEP_UNPARSED) {
+        if (!constants.KEEP_UNPARSED) {
             cssOutput = cssOutput.replace(/@endvar/g, '');
-            let unparsedContent //= cssOutput.match(/\$[\[(](.+?)[\])]/g);
+            let unparsedContent = cssOutput.match(/\$[\[(](.+?)[\])]/g);
             if (unparsedContent) for (let val of unparsedContent) {
                 let nssVarName = val.replace(/\$[\[(](.*?)(\|.*)?[\])]/, '$1').strim();
                 cssOutput = cssOutput.replace(val, '');
@@ -569,10 +313,10 @@ function parseNovaSheets(rawInput) {
             .replace(/(?<=\d)0mm/g, 'cm')
             .replace(/(?<=\d)(000mm|00cm)/g, 'm')
             // fix floating point errors
-            .replace(/\.?0{10,}\d/g, '').replace(/((\d)\2{9,})\d/g, '$1').replace(/(\d+)([5-9])\2{10,}\d?(?=\D)/g, (_, a) => Number(a) + 1)//.replace(/(\d)0+(?=\D)/g, '$1')
+            .replace(/\.?0{10,}\d/g, '').replace(/((\d)\2{9,})\d/g, '$1').replace(/(\d+)([5-9])\2{10,}\d?(?=\D)/g, (_, a) => Number(a) + 1)
             // cleanup decimal places
-            .replace(RegExp(r`((\d)\.\d{0,${DECIMAL_PLACES || ''}})(\d?)\d*`), (_, val, pre, after) => {
-                if (DECIMAL_PLACES === "0") return after.match(/[5-9]$/) ? parseInt(pre) + 1 : pre;
+            .replace(RegExp(r`((\d)\.\d{0,${constants.DECIMAL_PLACES || ''}})(\d?)\d*`), (_, val, pre, after) => {
+                if (constants.DECIMAL_PLACES === "0") return after.match(/[5-9]$/) ? parseInt(pre) + 1 : pre;
                 else return after.match(/[5-9]$/) ? val.replace(/.$/, '') + (parseInt(val.substr(-1)) + 1).toString() : val
             })
             // cleanup media query endings
@@ -599,10 +343,13 @@ function parseNovaSheets(rawInput) {
 
     }
 
-    String.prototype.strim = undefined;
+    delete String.prototype.strim;
+    return;
 }
 
-function compileNovaSheets(inputStr, outputStr) {
+function compileNovaSheets(inputStr, outputStr, NovaSheets) {
+    const fs = require('fs');
+    const glob = require('glob');
     try {
         const compile = inputFiles => {
             for (let input of inputFiles) {
@@ -628,7 +375,7 @@ function compileNovaSheets(inputStr, outputStr) {
                     else if (!output.match(/\.\w+$/)) output += '.css'; // 'foo.nvss bar' -> 'bar.css'
                     output = output.replace(/\.\w+$/, '.css'); // force .css extension
 
-                    fs.writeFile(output, parseNovaSheets(contents), err => {
+                    fs.writeFile(output, parseNovaSheets(contents, NovaSheets), err => {
                         if (err) throw `FS_WriteError: Output file '${output}' is invalid.`;
                         else console.log(`<NovaSheets> Wrote file '${input}' to '${output}'`)
                     });
@@ -649,34 +396,29 @@ function compileNovaSheets(inputStr, outputStr) {
     } catch { }
 }
 
-// Entry points
-try {
-    // Node
-    module.exports.parse = parseNovaSheets;
-    module.exports.compile = compileNovaSheets;
+//{% include './functions' %}//
 
-    // Command line
-    const arg = n => process.argv[n + 1] || '';
-    let inArg = val => arg(1).startsWith('-') && arg(1).includes(val);
-    if (!arg(1) || inArg('-h')) {
-        console.log(`<NovaSheets> Command-line arguments:\n
-    novasheets [{-c, --compile}] <input> [<output>]\tCompile a NovaSheets file from an exact or globbed input.
-    novasheets {-p, --parse} "<input>"\t\t\tParse raw NovaSheets input from the command line.
-    novasheets {-h, --help}\t\t\t\tDisplay this help message.
-    novasheets {-v, --version}\t\t\t\tDisplay the current version of NovaSheets. `
-        );
+class NovaSheets {
+    constructor() {
+        this.functions = [];
     }
-    else if (inArg('-v')) { console.log('<NovaSheets> Current version: ' + NOVASHEETS_VERSION); }
-    else if (inArg('-p')) { console.log(parseNovaSheets(arg(2))); }
-    else if (arg(1)) {
-        let explicit = inArg('-c');
-        let input = explicit ? arg(2) : arg(1);
-        let output = explicit ? arg(3) : arg(2);
-        compileNovaSheets(input, output);
+    static parse(...args) {
+        return parseNovaSheets(...args);
     }
+    static compile(...args) {
+        return compileNovaSheets(...args)
+    }
+    addFunction(name, func) {
+        this.functions.push({ name, body: func });
+        return this;
+    }
+    getFunctions() {
+        return this.functions;
+    }
+}
+
+try {
+    module.exports = NovaSheets;
 } catch {
-    try { // Browser
-        document.addEventListener("DOMContentLoaded", parseNovaSheets()); // Parse NovaSheets styles on page load
-        compileNovaSheets = undefined; // not a browser function
-    } catch (err) { console.err(err); }
+    document.addEventListener("DOMContentLoaded", () => NovaSheets.parse()); // Parse NovaSheets styles on page load
 }

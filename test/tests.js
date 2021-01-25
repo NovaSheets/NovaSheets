@@ -3,10 +3,10 @@ const QUnit = require('qunit');
 
 const ditto = null;
 
-function test(assert, content) {
+function test(assert, content, functions) {
     for (let item of content) {
         if (!item[1]) item[1] = item[0];
-        assert.equal(NovaSheets.parse(item[0]), item[1], item[0] + ' -> ' + item[1]);
+        assert.equal(NovaSheets.parse(item[0], functions).replace(/\s/g, ''), item[1].replace(/\s/g, ''), item[0] + ' -> ' + item[1]);
     }
 }
 
@@ -28,8 +28,8 @@ QUnit.module('NovaSheets content', () => {
     });
     QUnit.test('Parser constants', q => {
         const tests = [
-            ['@const DECIMAL_PLACES 2\n2/3', '0.67'],
-            ['@const DECIMAL_PLACES 0\n2/3', '1'],
+            ['@option DECIMAL_PLACES 2\n2/3', '0.67'],
+            ['@option DECIMAL_PLACES 0\n2/3', '1'],
         ];
         test(q, tests);
     });
@@ -189,6 +189,18 @@ QUnit.module('CSS aspects', () => {
     });
 });
 QUnit.module('Misc', () => {
+    QUnit.test('Custom functions', q => {
+        const nova = new NovaSheets()
+            .addFunction('@give null', () => 'null')
+            .addFunction('@return1', () => 1)
+            .addFunction('@invert boolean', (match, boolean) => boolean !== 'true')
+        const tests = [
+            ['$(@give null)', 'null'],
+            ['$(@return1)', '1'],
+            ['$(@invert boolean | false)', 'true']
+        ];
+        test(q, tests, nova);
+    });
     QUnit.test('Watchlist', q => {
         const tests = [
             ['https://example.com', ditto],
@@ -198,4 +210,15 @@ QUnit.module('Misc', () => {
         ];
         test(q, tests);
     });
+});
+
+const testResults = {}
+
+const padNum = num => num.toString().padStart(2, ' ')
+QUnit.testDone(info => {
+    testResults[info.name] = `${padNum(info.runtime)}ms:  ${padNum(info.passed)} passed ${padNum(info.failed)} failed`
+});
+QUnit.done(info => {
+    for (let test in testResults) console.log(`${test.substr(0, 20).padEnd(20, ' ')} ${testResults[test]}`);
+    console.log(`Ran ${info.total} tests in ${info.runtime}ms with ${info.failed} failures\n`);
 });

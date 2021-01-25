@@ -1,4 +1,5 @@
 # Changelog for NovaSheets
+- [1.0.0-pre1](#100-pre1)
 - [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
@@ -6,9 +7,24 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## 1.0.0-pre1
+*2021-01-25*
+- **Additions**
+  - [Scripting] Added an API for adding custom NovaSheets functions using class `NovaSheets` with method `addFunction(name, function)`, where the first argument of `function` is the matched content and the remainder are variable arguments.
+  - [Scripting] Added a second parameter to `parse` for passing through a class with custom functions.
+  - [Scripting] Added a third parameter to `compile` for passing through a class with custom functions.
+  - [Syntax] Added parser constant `BUILTIN_FUNCTIONS` for controlling whether or not to implement built-in functions.
+- **Changes:**
+  - [CLI] **Breaking:** Compiling NovaSheets files must now be done explicitly using the `--compile`/`-c` flag.
+  - [Syntax] **Breaking:** Changed parser constant keyword from `@const` to `@option`.
+  - [Syntax] Changed built-in color functions to no longer output console warnings for invalid colors.
+- **Fixes**
+  - [Syntax] Fixed unparsed content not being removed from the output even when `KEEP_UNPARSED` is true.
+
 ## 0.6.7
 *2021-01-17*
 - **Additions**
+  - Added glob support to the `--compile` command.
   - Added console messages for successfully compiled files.
 - **Changes**
   - Changed simple breakpoint maximums to be exclusive, allowing the same number to be used in two separate selectors without clashes.

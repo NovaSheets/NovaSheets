@@ -6,7 +6,13 @@
     <script src="../src/novasheets.js"></script>
     <link rel="novasheet" href="example1.nvss">
     <link rel="novasheet" href="example2.nvss">
-    <script>parseNovaSheets()</script>
+    <script>
+        (function() {
+            const novasheets = new NovaSheets();
+            novasheets.addFunction('@1', () => 1);
+            console.log(parseNovaSheets('one=$(@1)', novasheets));
+        })()
+    </script>
 </head>
 
 <body>

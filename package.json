@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "0.6.7",
+    "version": "1.0.0-pre1",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -11,13 +11,14 @@
         "parser"
     ],
     "files": [
-        "src/novasheets.js"
+        "src/*"
     ],
-    "main": "src/novasheets.js",
+    "main": "src/index.js",
     "bin": {
-        "novasheets": "src/novasheets.js"
+        "novasheets": "src/index.js"
     },
     "scripts": {
+        "postinstall": "node .",
         "test": "jake test"
     },
     "repository": {
@@ -34,7 +35,6 @@
         "glob": "^7.1.6"
     },
     "devDependencies": {
-        "child_process": "^1.0.2",
         "jake": "^10.8.2",
         "qunit": "^2.14.0"
     }
