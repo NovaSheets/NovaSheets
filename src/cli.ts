@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 const NOVASHEETS_VERSION: string = require('./version');
 
 const { parse, compile } = require('./novasheets');

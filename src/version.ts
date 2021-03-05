@@ -1,1 +1,1 @@
-export = '1.0.0-pre2';
+export = '1.0.0-pre3';
