@@ -70,6 +70,8 @@ QUnit.module('Math', () => {
             ['1^2', '1'],
             ['1**2', '1'],
             ['1e2', '100'],
+            ['2e-2', '0.02'],
+            ['1 ++ 2e-2', '1.02'],
             ['(1+2)', '3'],
             ['(1+3)/2', '2'],
             ['(1 -- 2) /3', '1'],
@@ -136,7 +138,7 @@ QUnit.module('Built-in functions', () => {
             ['$(@encode | [text]="true")', '%5Btext%5D%3D%22true%22'],
             ['$(@replace | text | /te(.)t/ | !$1! )', '!x!'],
         ];
-        test(q, tests)
+        test(q, tests);
     });
     QUnit.test('Colour functions', q => {
         const tests = [
@@ -190,10 +192,10 @@ QUnit.module('CSS aspects', () => {
 });
 QUnit.module('Misc', () => {
     QUnit.test('Custom functions', q => {
-        const nova = new NovaSheets()
-            .addFunction('@give null', () => 'null')
-            .addFunction('@return1', () => 1)
-            .addFunction('@invert boolean', (match, boolean) => boolean !== 'true')
+        const nova = new NovaSheets();
+        nova.addFunction('@give null', () => 'null');
+        nova.addFunction('@return1', () => 1);
+        nova.addFunction('@invert boolean', (_, boolean) => boolean !== 'true');
         const tests = [
             ['$(@give null)', 'null'],
             ['$(@return1)', '1'],
@@ -212,11 +214,12 @@ QUnit.module('Misc', () => {
     });
 });
 
-const testResults = {}
+const testResults = {};
 
-const padNum = num => num.toString().padStart(2, ' ')
+const padNum = num => num.toString().padStart(2, ' ');
+
 QUnit.testDone(info => {
-    testResults[info.name] = `${padNum(info.runtime)}ms:  ${padNum(info.passed)} passed ${padNum(info.failed)} failed`
+    testResults[info.name] = `${padNum(info.runtime)}ms:  ${padNum(info.passed)} passed ${padNum(info.failed)} failed`;
 });
 QUnit.done(info => {
     for (let test in testResults) console.log(`${test.substr(0, 20).padEnd(20, ' ')} ${testResults[test]}`);

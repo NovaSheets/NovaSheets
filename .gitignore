@@ -1,3 +1,14 @@
+# Modules
 node_modules/
+
+# Compiled files
+src/*.js
+!src/functions.js
+
+# Build output
 bin/
+build/novasheets*
+test/*.css
+
+# Local
 *.local.*

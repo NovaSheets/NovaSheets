@@ -8,18 +8,97 @@ Take your stylesheets to the next level with NovaSheets, the simple, powerful an
 
 **[View full documentation](https://novasheets.js.org)**
 
-NovaSheets is a powerful CSS preprocessor with the ability to easily create intricate CSS files.<br>
-NovaSheets has very simple syntax that is easy to pick up and use as it builds largely off of CSS itself.<br>
-Extend your stylesheets with variables and functions to keep code duplication to a minimum.<br>
-Make use of the many built-in functions offered to you, or create your own with an easy API.
+> NovaSheets is a powerful CSS preprocessor with the ability to easily create intricate CSS files.<br>
+> NovaSheets has very simple syntax that is easy to pick up and use as it builds largely off of CSS itself.<br>
+> Extend your stylesheets with variables and functions to keep code duplication to a minimum.<br>
+> Make use of the many built-in functions offered to you, or create your own with an easy API.
 
 - **Contents**
+  - [Overview](#overview)
   - [Installation](#installation)
     - [Node usage](#node-usage)
     - [Command-line usage](#command-line-usage)
     - [Browser usage](#browser-usage)
-  - [Syntax](#syntax)
   - [VSCode extension](#vscode-extension)
+
+## Overview
+
+For full documentation, see [the NovaSheets website](https://novasheets.js.org/docs/).
+For testing NovaSheets syntax, see [the demo page](https://novasheets.js.org/demo/).
+
+Start with some normal CSS:
+
+```css
+body {background: #eee; color: #222; margin: 1em 2em;}
+div {color: #444; font-size: 16px; padding-left: 1em; border-bottom: 2px solid #123;}
+div h1 {color: #222; font-size: 2em; margin-top: 2em; border-bottom: 2px solid #123;}
+```
+
+See anything wrong with it?
+Various properties are re-used, creating a headache when you want to update them.
+
+Declare them once using [variables](https://novasheets.js.org/docs/variables/):
+
+```less
+@var text_color = #222
+@var border
+  border-bottom: 2px solid #123;
+@endvar
+
+body {background: #eee; color: $(text_color); margin: 1em 2em;}
+div {color: #444; font-size: 16px; padding-left: 1em; $(border);}
+div h1 {color: $(text_color); font-size: 2em; margin-top: 2em; $(border);}
+```
+
+Or, include properties straight from [other styling blocks](https://novasheets.js.org/docs/objects/):
+
+```less
+body {background: #eee; color: #222; margin: 1em 2em;}
+div {color: #444; font-size: 16px; padding-left: 1em; border-bottom: 2px solid #123;}
+div h1 {color: $<body><color>; font-size: 2em; margin-top: 2em; border-bottom: $<div><border-bottom>;}
+```
+
+Improve variables by providing arguments, making them into functions:
+
+```less
+@var border | color // or just `@var border`; arguments are automatically created
+  border-bottom: 2px solid $[color];
+@endvar
+div {$(border | color = #111);}
+```
+
+Avoid duplicating your selectors, using `&` to refer to the last parent selector and `%` to refer to the selector immediately prior (indentation is only for show):
+
+```less
+div {color: #444; font-size: 16px; padding-left: 1em; border-bottom: 2px solid #123;}
+  & h1 {color: $<body><color>; font-size: 2em; margin-top: 2em; border-bottom: $<div><border-bottom>;}
+    % .subtitle {font-style: italic;}
+  & h2 {margin-top: 1em;}
+```
+
+Create [simple breakpoints](https://novasheets.js.org/docs/selectors/#simple-breakpoints) just by adding `@` followed by the breakpoint value after the selector:
+
+```less
+main @ ..800px {margin: 0.5em;} // up to 800px exclusive
+main @ 800px.. {margin: 1em 4em;} // from 800px inclusive
+```
+
+Use [mathematical operations](https://novasheets.js.org/docs/operators/) without the use of `calc()`:
+
+```less
+body {font-size: 2em + 4em/2;} // 4em
+p {font-size: $<body><font-size> * 2;} // 8em
+```
+
+And if all this isn't enough, there are dozens of [built-in functions](https://novasheets.js.org/docs/builtin-functions/) available to use:
+
+```less
+body {line-height: $(@floor | 2.6 );}
+p {color: $(@color | hex | 50% | 20% | 30% );}
+h1 {margin: $(@if | true | 1em 2em | 6em );}
+```
+
+You can even create your own with JavaScript!
 
 ## Installation
 
@@ -90,44 +169,6 @@ const novasheets = new NovaSheets();
 novasheets.addFunction('@invert boolean', (match, val) => val === 'false');
 NovaSheets.parse('$(@invert boolean | true)', novasheets); // 'false'
 ```
-
-## Syntax
-
-NovaSheets lets you declare [variables](https://novasheets.js.org/docs/variables/) (with optional parameters) and reuse these elsewhere in the document.
-NovaSheets comes with a large variety of [built-in functions](https://novasheets.js.org/docs/default-variables/) for you to make use of, making your CSS development a lot easier.
-For full documentation, see [the NovaSheets website](https://novasheets.js.org/docs/).
-For testing NovaSheets syntax, see [the demo page](https://novasheets.js.org/demo/).
-
-### Example
-
-**Input**:
-
-```js
-@var margin = 1em                           // declare variable 'margin' as '1em'
-@var shaded                                 // begin block declaration of variable 'shaded'
-    background: $[bgcolor];                 // uses the value of the 'bgcolor' parameter passed in later
-    color: $(@color|hex|50%|20%|30%);       // use in-built function '@color' to generate a hexadecimal color
-@endvar                                     // end block declaration of variable 'shaded'
-.base { text-align: center; color: #eee; }  // regular CSS block
-div.main {
-    margin: $(margin);                      // substitute content of variable 'margin' (->'1em')
-    $<.base>!;                              // copy block attached to selector '.default' and substitute it ('!' removes '{' & '}')
-}
-div.shaded {
-    margin: $<div.main><margin> + 1em;      // copy block attached to selector 'div.main', return value of property 'margin' ('$(margin)'->'1em'), add '1em' (->'2em')
-    $(shaded|bgcolor=blue)                  // substitute variable 'shaded' with 'bgcolor' parameter set to 'blue'
-}
-```
-
-**Output**:
-
-```css
- .default { text-align: center; color: #eee; }
- div.main { margin: 1em; text-align: center; color: #eee; }
- div.shaded { margin: 2em; background: blue; color: #80334d; }
-```
-
-Play around with NovaSheets syntax using the [demo](https://novasheets.js.org/demo/)
 
 ## VSCode extension
 A VSCode extension for NovaSheets formatting and syntax highlighting is available in the [VSCode Marketplace](https://marketplace.visualstudio.com/items/Nixinova.novasheets) via repository [NovaSheets/vscode](https://github.com/NovaSheets/vscode).

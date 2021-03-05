@@ -1,8 +1,10 @@
-#!usr/bin/env node
-const NovaSheets = require ? require('./novasheets') : NovaSheets;
+#!/usr/bin/env node
 
+//@export
 function addBuiltInFunctions({ constants }) {
-    const novasheets = new NovaSheets();
+    const novasheets = new (typeof require !== 'undefined' ? require('./novasheets') : NovaSheets)();
+    const escapeRegex = str => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
+    const strim = str => str.toString().replace(/^\s*(.+?)\s*$/, '$1').replace(/\s+/g, ' ');
     const r = String.raw;
 
     /// Loop functions
@@ -10,15 +12,15 @@ function addBuiltInFunctions({ constants }) {
     novasheets.addFunction('@each', (_, a = '', b = '', c = '', ...d) => {
         d = d.join('|');
         let [items, splitter, joiner, content] = d ? [a, b, c, d] : (c ? [a, b, b, c] : [a, ',', ',', b]);
-        [items, splitter, joiner, content] = [items.strim(), splitter.strim(), joiner, content.strim()];
-        let arr = items.split(splitter);
+        let arr = strim(items).split(strim(splitter));
         let output = [];
         for (let i in arr) {
-            let parsed = content
+            let parsed = strim(content)
                 .replace(/\$i/gi, Number(i) + 1)
                 .replace(/\$v\[([0-9]+)([-+*/][0-9]+)?\]/g, (_, a, b) => arr[eval(Number(a - 1) + (b || 0))])
                 .replace(/.?\s*undefined/g, '')
                 .replace(/\$v/gi, arr[i])
+                ;
             output.push(parsed);
         }
         return output.join(joiner);
@@ -44,10 +46,10 @@ function addBuiltInFunctions({ constants }) {
         if (test && constants.KEEP_NAN) return 'NaN';
         else if (test && !constants.KEEP_NAN) return def || 0;
         else return arg;
-    }
+    };
 
-    novasheets.addFunction('@e', _ => Math.E);
-    novasheets.addFunction('@pi', _ => Math.PI);
+    novasheets.addFunction('@e', () => Math.E);
+    novasheets.addFunction('@pi', () => Math.PI);
     novasheets.addFunction('@mod', (_, a, b) => testNaN(a % b, _));
     novasheets.addFunction('@sin', (_, a) => testNaN(Math.sin(a), _));
     novasheets.addFunction('@asin', (_, a) => testNaN(Math.asin(a), _));
@@ -113,17 +115,17 @@ function addBuiltInFunctions({ constants }) {
     novasheets.addFunction('@uncapitali[sz]e', (_, a) => a[0].toLowerCase() + a.substr(1));
     novasheets.addFunction('@extract', (_, a, b, c) => a.split(c ? b : ',')[toNumber(c ? c : b) - 1] || '');
     novasheets.addFunction('@encode', (_, a) => encodeURIComponent(a));
-    novasheets.addFunction('@length', (_, a) => a.strim().length);
+    novasheets.addFunction('@length', (_, a) => strim(a).length);
 
     novasheets.addFunction('@replace', (_, ...args) => {
         if (args.length < 3) args = [args[0], args[1] || '', args[2] || ''];
         args = args.slice(0, args.indexOf('') <= 3 ? 3 : args.indexOf(''));
-        let text = args[0].strim();
-        let finder = args.slice(1, -1).join('|').strim();
-        let replacer = args.slice(-1)[0].strim();
+        let text = strim(args[0]);
+        let finder = strim(args.slice(1, -1).join('|'));
+        let replacer = strim(args.slice(-1)[0]);
         let isRegex = finder.startsWith('/');
         if (isRegex) {
-            let parts = finder.strim().match(/\/(.+?)\/([gimusy]*)/).slice(1);
+            let parts = strim(finder).match(/\/(.+?)\/([gimusy]*)/).slice(1);
             finder = RegExp(parts[0], parts[1] || 's');
         }
         return text.replace(isRegex ? finder : RegExp(escapeRegex(finder), 'g'), replacer);
@@ -140,10 +142,10 @@ function addBuiltInFunctions({ constants }) {
         let r = (num >> 16) & 255;
         let g = (num >> 8) & 255;
         let b = num & 255;
-        let a = alpha && toPercent(parseInt(alpha, 16));
-        if (a != null) return `rgba(${r}, ${g}, ${b}, ${a})`;
-        return `rgb(${r}, ${g}, ${b})`;
-    }
+        let a = alpha ? toPercent(parseInt(alpha, 16)) : null;
+        if (a === null) return `rgb(${r}, ${g}, ${b})`;
+        return `rgba(${r}, ${g}, ${b}, ${a})`;
+    };
     const parseHex = val => {
         let a = val.replace('#', '');
         switch (a.length) {
@@ -154,25 +156,26 @@ function addBuiltInFunctions({ constants }) {
             case 4: return rgbFromHex(a[0] + a[0] + a[1] + a[1] + a[2] + a[2], a[3] + a[3]);
             default: return rgbFromHex(a.substr(0, 6).padEnd(6, '0'), a.substr(6, 2) || null);
         }
-    }
+    };
     const getRawColorParts = col => col.replace(/^\s*\w{3}a?\s*\(\s*|\s*\)$/g, '').split(/,\s*/);
     const getColorParts = color => {
         let parts = getRawColorParts(color.startsWith('#') ? parseHex(color) : color);
         for (let i in parts) {
+            let num = parts[i];
             if (!parts[i]) parts[i] = 0;
             else if (parts[i].includes('%')) {
-                let num = parts[i].replace('%', '');
-                if (color.includes('hsl')) parts[i] = "" + Math.round(num / 100 * (i === 0 ? 360 : 100));
-                else parts[i] = "" + fromPercent(num);
+                num = num.replace('%', '');
+                if (color.includes('hsl')) parts[i] = '' + Math.round(num / 100 * (i === 0 ? 360 : 100));
+                else parts[i] = '' + fromPercent(num);
             }
             else if (i === 3) parts[i] = Math.round(color.includes('rgb') ? num / 255 : num / 100);
         }
         return parts;
-    }
+    };
     const hexFromRgb = (rgb) => {
         let [r, g, b, a] = Array.isArray(rgb) ? rgb : getColorParts(rgb);
         return '#' + toHex(r) + toHex(g) + toHex(b) + (a > 0 ? toHex(a) : '');
-    }
+    };
     const blendColors = (color1, color2, amt) => {
         if (!color2) return color1 || '';
         let type = color1.match(/^[a-z]{3}a?|^#/).toString();
@@ -187,9 +190,9 @@ function addBuiltInFunctions({ constants }) {
             case 'hsla': return `hsla(${r % 360}, ${g / 100}%, ${b / 100}%, ${a})`;
             case 'hsl': return `hsla(${r % 360}, ${g / 100}%, ${b / 100}%)`;
             case '#': return hexFromRgb([r, g, b, a]);
-            default: `${type}(${r}, ${g}, ${b})`;
+            default: return `${type}(${r}, ${g}, ${b})`;
         }
-    }
+    };
     const blendGrayscaleHsl = (type, color1, color2, amt) => {
         if (!color1.includes('hsl')) return blendColors(color1, color2, amt || 0.5);
         let [h, s, l, a] = getColorParts(color1);
@@ -198,7 +201,7 @@ function addBuiltInFunctions({ constants }) {
         let lNew = toNumber(l) + toNumber(amount) * (type === 'darken' ? -1 : 1);
         let sl = type === 'desat' ? `${sNew}%, ${l}%` : `${s}%, ${lNew < 0 ? 0 : lNew}%`;
         return `${color1.match(/^hsla?/)}(${h % 360}, ${sl}${a ? `, ${a}` : ''})`;
-    }
+    };
 
     novasheets.addFunction('@colou?r', (_, type, a = '0', b = '0', c = '0', d = '') => {
         if (/#|rgba?|hsla?/i.test(a)) {
@@ -240,16 +243,16 @@ function addBuiltInFunctions({ constants }) {
         const adjustGamma = a => ((a + 0.055) / 1.055) ** 2.4;
         const getLuma = a => a <= 0.03928 ? a / 12.92 : adjustGamma(a);
         return 0.2126 * getLuma(r / 255) + 0.7152 * getLuma(g / 255) + 0.0722 * getLuma(b / 255); // ITU-R BT.709
-    }
+    };
 
     novasheets.addFunction('@luma', (_, color) => parseLuma(color));
 
     novasheets.addFunction('@contrast', (_, color, light = '', dark = '') => (parseLuma(color) < 0.5/*'is dark?':*/) ? light : dark);
 
     novasheets.addFunction('@gr[ae]yscale', (_, color) => {
-        if (color.startsWith('hsl')) return color.replace(/^(hsla?)\s*\(\s*(\d+),\s*(\d+)/, '$1($2, 0')
+        if (color.startsWith('hsl')) return color.replace(/^(hsla?)\s*\(\s*(\d+),\s*(\d+)/, '$1($2, 0');
         let gray = Math.round(parseLuma(color) * 255);
-        let newColor = `rgb(${Array(3).fill(gray).join(', ')})`
+        let newColor = `rgb(${Array(3).fill(gray).join(', ')})`;
         if (color.startsWith('#')) return hexFromRgb(newColor);
         else return newColor;
     });
@@ -260,7 +263,7 @@ function addBuiltInFunctions({ constants }) {
     const bracketedNumber = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})`;
     const parseLogic = arg => {
         for (let i = 0; i < constants.MAX_ARGUMENTS / 10; i++) {
-            arg = arg.strim()
+            arg = strim(arg)
                 .replace(/(?:'(.+?)'|"(.+?)")+/, '$1$2') // remove quotes
                 .replace(/\bor\b/gi, '||').replace(/\band\b/gi, '&&').replace(/\bnot\b/gi, '!') // default logical operators
                 .replace(/(.+?)\bnor\b(.+)?/gi, '!($1) && !($2)') // 'nor' logical operator
@@ -268,6 +271,7 @@ function addBuiltInFunctions({ constants }) {
                 .replace(/(.+?)\bxor\b(.+)?/gi, '($1 && !($2)) || (!($1) && $2)') // 'xor' logical operator
                 .replace(/(.+?)\bxnor\b(.+)?/gi, '$1 == $2') // 'xnor' logical operator
                 .replace(/(?!=)(!?)=(==)?(?!=)/g, '$1$2==') // normalise equality signs
+                ;
         }
         if (arg.match(/(<|<=|>|>=|==|!=|&|\||!)/)) arg = eval(arg);
         if (['false', 'undefined', 'null', 'NaN', ''].includes(arg)) arg = false;
@@ -276,7 +280,7 @@ function addBuiltInFunctions({ constants }) {
     const logicRegex = arg => RegExp(r`([+-]?${bracketedNumber})\s*(?:${arg})\s*([+-]?${bracketedNumber})`);
 
     novasheets.addFunction('@bitwise', (_, a) => {
-        let arg = a.replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<') // fix html
+        let arg = a.replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<'); // fix html
         for (let i = 0; i < constants.MAX_ARGUMENTS / 10; i++) {
             arg = arg
                 .replace(RegExp(r`(?:~|!|not)\s*([+-]?${bracketedNumber})`), (_, a) => eval('~' + toNumber(a))) // bitwise not
@@ -286,6 +290,7 @@ function addBuiltInFunctions({ constants }) {
                 .replace(logicRegex('nand'), (_, a, b) => eval(`~ (${toNumber(a)}) & (${toNumber(b)})`)) // bitwise nand
                 .replace(logicRegex('xor'), (_, a, b) => eval(`(${toNumber(a)}) ^ (${toNumber(b)})`)) // bitwise xor
                 .replace(logicRegex('xnor'), (_, a, b) => eval(`~ (${toNumber(a)}) ^ (${toNumber(b)})`)) // bitwise xnor
+                ;
         }
         return arg;
     });
@@ -312,13 +317,10 @@ function addBuiltInFunctions({ constants }) {
         return `-webkit-${a}: ${b}; -moz-${a}: ${b}; -ms-${a}: ${b}; -o-${a}: ${b}; ${a}: ${b};`;
     }, { nonest: true });
 
-    /// Return
+    // Return
     return novasheets.getFunctions();
 
 }
-
-// Export
-
-try {
-    module.exports = addBuiltInFunctions;
-} catch { }
+//@end
+;
+module.exports = addBuiltInFunctions;
