@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "1.0.0-pre3",
+    "version": "1.0.0-pre4",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -11,17 +11,19 @@
         "parser"
     ],
     "files": [
-        "src/*.js"
+        "src/*.js",
+        "!src/browser.js",
+        "src/*.d.ts"
     ],
-    "main": "src/index.js",
+    "main": "src/novasheets.js",
     "bin": {
-        "novasheets": "src/index.js"
+        "novasheets": "src/cli.js"
     },
     "scripts": {
         "prepublish": "tsc",
         "postinstall": "node .",
         "build": "tsc && node build/browser",
-        "test": "qunit && jake test"
+        "test": "tsc && qunit && jake test"
     },
     "repository": {
         "type": "git",
@@ -31,15 +33,15 @@
     "bugs": {
         "url": "https://github.com/NovaSheets/NovaSheets/issues"
     },
-    "homepage": "https://novasheets.nixinova.com",
+    "homepage": "https://novasheets.js.org",
     "license": "ISC",
     "dependencies": {
         "glob": "^7.1.6"
     },
     "devDependencies": {
-        "@types/node": "^14.14.31",
+        "@types/node": "ts4.2",
         "jake": "^10.8.2",
-        "qunit": "^2.14.0",
-        "typescript": "^4.2.2"
+        "qunit": "^2.14.1",
+        "typescript": "~4.2.2"
     }
 }

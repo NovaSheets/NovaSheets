@@ -3,9 +3,9 @@ const fs = require('fs');
 const glob = require('glob');
 
 import NovaSheets from './novasheets';
-import parseNovaSheets from './parse';
+import parse from './parse';
 
-function compileNovaSheets(inputStr: string, outputStr: string, novasheets: NovaSheets) {
+function compileNovaSheets(inputStr: string, outputStr: string, novasheets: NovaSheets): void {
     outputStr = outputStr.replace(/[/\/]/g, path.sep);
     const compile = (inputFiles: string[]): void => {
         for (let input of inputFiles) {
@@ -33,7 +33,7 @@ function compileNovaSheets(inputStr: string, outputStr: string, novasheets: Nova
                 else if (!output.match(/\.\w+$/)) output += '.css'; // 'foo.nvss bar' -> 'bar.css'
                 output = output.replace(/\.\w+$/, '.css'); // force .css extension
 
-                fs.writeFile(output, parseNovaSheets(contents, novasheets), (err: Error) => {
+                fs.writeFile(output, parse(contents, novasheets), (err: Error) => {
                     if (err) throw `FS_WriteError: Cannot write to file '${output}'.\n` + err.message;
                     console['log'](`<NovaSheets> Wrote file '${input}' to '${output}'`);
                 });

@@ -1,6 +1,6 @@
 # Changelog for NovaSheets
 - 1.0.0
-  - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3)
+  - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4)
 - [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
@@ -8,12 +8,34 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
-## 1.0.0-pre3
+### 1.0.0-pre4
+*2021-04-04*
+- **Additions**
+  - [Syntax] Added CSS nesting, using `&` to refer to the parent selector explicitly.
+  - [Scripting] Added type definitions for exported functions.
+  - [CLI] Added support for reading syntax from piped stdin.
+- **Removals**
+  - [Syntax] Removed previous and parent selectors, `%` an `&`, as this usage is now accomplished by nesting.
+  - [Syntax] Removed item slicer `<`.
+  - [Scripting] Removed option `nonest`.
+- **Changes**
+  - [Scripting] Renamed option `notrim` to `trim` (inverting its usage) and `allargs` to `allArgs`.
+  - [Functions] Changed math functions to return just their argument when invalid.
 - **Fixes**
-  - Fixed command-line usage not working.
-  - Fixed conflicting files being published to npm.
+  - [Syntax] Fixed small numbers receiving incorrect decimal places.
+  - [Functions] Fixed various errors relating to incorrect type assumptions in built-in functions.
+  - [Functions] Fixed built-in function `$(@boolean)` treating pipes as argument separators.
+  - [Functions] Fixed built-in functions not checking `NaN` properly.
+  - [Security] Fixes a code injection issue using built-in boolean functions.
 
-## 1.0.0-pre2
+### 1.0.0-pre3
+*2021-03-06*
+- **Fixes**
+  - [CLI] Fixed command-line usage not working.
+  - [General] Fixed conflicting files being published to npm.
+
+### 1.0.0-pre2
+*2021-03-06*
 - **Fixes**
   - [Syntax] Fixed negative exponents not being parsed.
   - [Syntax] Fixed hexadecimal colours not being coerced.
@@ -21,7 +43,7 @@
 - **Internal**
   - [Source] Rewrote source code in TypeScript.
 
-## 1.0.0-pre1
+### 1.0.0-pre1
 *2021-01-25*
 - **Additions**
   - [Scripting] Added an API for adding custom NovaSheets functions using class `NovaSheets` with method `addFunction(name, function)`, where the first argument of `function` is the matched content and the remainder are variable arguments.

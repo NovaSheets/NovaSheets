@@ -1,24 +1,24 @@
-import parseNovaSheets from './parse';
+import parse from './parse';
 import compileNovaSheets from './compile';
-import { NVSSFunction } from './types';
+import { CustomFunction, CustomFunctionBody, CustomFunctionOptions } from './common';
 
 //@export
 class NovaSheets {
-    functions: NVSSFunction[]
+    functions: CustomFunction[]
     constructor() {
         this.functions = [];
     }
-    static parse(rawInput = '', novasheets?: NovaSheets): string | void {
-        return parseNovaSheets(rawInput, novasheets);
+    static parse(rawInput = '', novasheets: NovaSheets = new NovaSheets()): string {
+        return parse(rawInput, novasheets);
     }
     static compile(input: string, output: string = '', novasheets: NovaSheets = new NovaSheets()): void {
         return compileNovaSheets(input, output, novasheets);
     }
-    addFunction(name: string, body: Function, options?: Record<string, boolean>): NovaSheets {
+    addFunction(name: string, body: CustomFunctionBody, options: CustomFunctionOptions = {}): NovaSheets {
         this.functions.push({ name, body, options });
         return this;
     }
-    getFunctions(): NVSSFunction[] {
+    getFunctions(): CustomFunction[] {
         return this.functions;
     }
 }

@@ -38,7 +38,7 @@ QUnit.module('NovaSheets content', () => {
             ['{color: blue;}<color>', 'blue'],
             ['{color: blue;}!', 'color: blue;'],
             ['@var obj\n{color: blue;}@endvar$(obj)<color>', 'blue'],
-            ['div {width:100%} $<div><width>', 'div {width:100%} 100%'],
+            ['div {width: 100%} a {width: $<div><width>}', 'div {width: 100%} a {width: 100%}'],
         ];
         test(q, tests);
     });
@@ -48,7 +48,17 @@ QUnit.module('NovaSheets content', () => {
             ['.element @ 10px {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px... {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
-            ['a @ 10px {b} & c @ 20px {d}', '@media only screen and (min-width: 10px) { a { b } }@media only screen and (min-width: 20px) { a c { d } }'],
+        ];
+        test(q, tests);
+    });
+    QUnit.test('Nesting' , q => {
+        const tests = [
+            ['a { &b { x:y; } }', 'ab {x:y;}'],
+            ['a { b { x:y; } }', 'a b {x:y;}'],
+            ['a { color: red; b { x:y; } }', 'a {color: red;} a b {x:y;}'],
+            ['a { b { x:y; } color: red; }', 'a b {x:y;} a {color: red;}'],
+            ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media only screen and (min-width: 10px) { a { a:b; } } @media only screen and (min-width: 20px) { ac { d:1 } }'],
+            ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a b {c:a} a d e {x:y} a {x:y}']
         ];
         test(q, tests);
     });
@@ -95,9 +105,11 @@ QUnit.module('Built-in functions', () => {
             ['$(@round | 1.2 )', '1'],
             ['$(@ceil | 0.7 )', '1'],
             ['$(@floor | 1.7 )', '1'],
+            ['$(@round | 2.1  )', '2'],
             ['$(@round | $(@e) | 5 )', '2.71828'],
             ['$(@round | $(@pi) | 5 )', '3.14159'],
             ['$(@abs | -5 )', '5'],
+            ['$(@sin | $(@pi) )', '0'],
             ['$(@sin | $(@pi)/2 )', '1'],
             ['$(@cos | $(@pi) )', '-1'],
             ['$(@round | $(@acos | 0) | 5 )', '1.5708'],
@@ -163,8 +175,8 @@ QUnit.module('Built-in functions', () => {
     });
     QUnit.test('CSS functions', q => {
         const tests = [
-            ['$(@breakpoint | 500px | selector | less | more )', ' @media (max-width: 499px) { selector { less } } @media (min-width: 500px) { selector { more } }'],
-            ['$(@breakpoint | 500px | less {} | more {} )', ' @media (max-width: 499px) { less {} } @media (min-width: 500px) { more {} }'],
+            ['$(@breakpoint | 500px | selector | less: 1 | more: 1 )', ' @media (max-width: 499px) { selector { less: 1 } } @media (min-width: 500px) { selector { more: 1 } }'],
+            ['$(@breakpoint | 500px | less {a:b} | more {a:b} )', ' @media (max-width: 499px) { less {a:b} } @media (min-width: 500px) { more {a:b} }'],
             ['$(@prefix | transition | all 1s )', '-webkit-transition: all 1s; -moz-transition: all 1s; -ms-transition: all 1s; -o-transition: all 1s; transition: all 1s;']
         ];
         test(q, tests);
@@ -177,15 +189,6 @@ QUnit.module('CSS aspects', () => {
             ['/*regular block comment, $(@e)*/', ditto],
             ['/*/static comment, $(@e)/*/', 'static comment, $(@e)'],
             ['/*[parsed comment, $(@e)]*/', '/*parsed comment, 2.718281828459045*/'],
-        ];
-        test(q, tests);
-    });
-    QUnit.test('Prev selectors', q => {
-        const tests = [
-            ['.list {} & .item {}', '.list {} .list .item {}'],
-            ['.list p {} &< .item {}', '.list p {} .list .item {}'],
-            ['.a .b .c << {}', '.a {}'],
-            ['.a {} % .b {} % .c {}', '.a {} .a .b {} .a .b .c {}'],
         ];
         test(q, tests);
     });
@@ -208,7 +211,7 @@ QUnit.module('Misc', () => {
             ['https://example.com', ditto],
             ['::root {color: red;}', ditto],
             ['#1e4', ditto],
-            ['{} [attr] {}', ditto],
+            ['a {a:b;} [attr] {a:b;}', ditto],
         ];
         test(q, tests);
     });

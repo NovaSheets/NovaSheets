@@ -4,13 +4,13 @@
 
     /* Basic Options */
     //"incremental": true,
-    "target": "esnext",
+    "target": "es2017",
     "module": "commonjs",
     //"lib": [],
     //"allowJs": true,
     //"checkJs": true,
     //"jsx": "preserve",
-    //"declaration": true,
+    "declaration": true,
     //"declarationMap": true,
     //"sourceMap": true,
     //"outFile": "./",
@@ -26,7 +26,7 @@
 
     /* Strict Type-Checking Options */
     "strict": true,
-    //"noImplicitAny": true,
+    "noImplicitAny": true,
     "strictNullChecks": true,
     //"strictFunctionTypes": true,
     //"strictBindCallApply": true,
@@ -62,6 +62,6 @@
 
     /* Advanced Options */
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    //"forceConsistentCasingInFileNames": true
   }
 }

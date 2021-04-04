@@ -1,19 +1,21 @@
 const fs = require('fs');
-const VERSION = require('../src/version');
+const VERSION = require('../src/cli.js')
 
 let content = `// NovaSheets ${VERSION} //\n`;
 
-let scripts = ['parse', 'functions', 'novasheets'];
+const scripts = ['parse', 'functions', 'novasheets', 'browser'];
 
 for (let script of scripts) {
     let data = fs.readFileSync(`${__dirname}/../src/${script}.js`).toString();
-    content += data.replace(/^.+\/\/@export(.+)\/\/@end.+$/s, '$1');
+    content += data.replace(/^.+\/\/\s*@export(.+)\/\/\s*@end.+$/s, '$1');
 }
 
 content += `
 function compileNovaSheets() { /* Not for browser */ }
 const parse_1 = {default: parse}
 const compile_1 = {default: compileNovaSheets}
+const functions_1 = {default: addBuiltInFunctions}
+const novasheets_1 = {default: NovaSheets}
 
 document.addEventListener('DOMContentLoaded', () => parseNovaSheets());
 `;

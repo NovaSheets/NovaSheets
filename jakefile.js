@@ -8,17 +8,19 @@ jake.task('build', function () {
 });
 
 jake.desc('Build from TypeScript');
-jake.task('build', function() {
+jake.task('compile', function () {
     exec('tsc');
 });
 
 jake.desc('Compiles example NovaSheets files into bin/ folder');
-jake.task('test-compile', ['build'], function () {
+jake.task('test-compile', ['compile'], function () {
     fs.rmdirSync('bin', { recursive: true });
-    exec('node . -c test/example1.nvss bin/');
-    exec('node . -c test/example2.nvss bin/no-extension');
-    exec('node . -c test/example2.nvss bin/output-w-ext.css');
-    exec('node . -c test/*.nvss bin/');
+    fs.mkdirSync('bin/');
+    fs.mkdirSync('bin/glob/');
+    exec('node src/cli -c test/example.nvss bin/');
+    exec('node src/cli -c test/example.nvss bin/no-extension');
+    exec('node src/cli -c test/example.nvss bin/output-w-ext.css');
+    exec('node src/cli -c test/*.nvss bin/glob/');
 });
 
 jake.desc('Run unit tests');
