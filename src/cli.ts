@@ -1,9 +1,8 @@
 #!/usr/bin/env node
 
-const NOVASHEETS_VERSION: string = '1.0.0-pre4';
-
 const fs = require('fs');
 const { parse, compile } = require('./novasheets');
+const NOVASHEETS_VERSION: string = require('../package.json').version;
 
 const arg = (n: number): string => process.argv[n + 1] || '';
 const indent = (n: number): string => ' '.repeat(n * 4);
@@ -33,5 +32,3 @@ else {
     console.log(' Welcome to NovaSheets, the simple but versatile CSS preprocessor.');
     console.log(' Type `novasheets --help` for a list of commands.');
 }
-
-export = NOVASHEETS_VERSION

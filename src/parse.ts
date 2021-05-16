@@ -64,16 +64,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/(?:@var.+?=.*$|@var\s*[^=]*(?=\n\s*@var\s.))(?!\n\s*@endvar)/gm, '$& @endvar') // single-line @var declarations
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
         .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
-        ;
-    let lines: string[] = styleContents.split('\n');
-    let cssOutput: string = '';
+        .replace(/}}/g, '} }'); // ensure the second brace is not skipped over
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
-    for (let i in lines) {
-        lines[i] = lines[i].replace(/[\r\n]/g, ' '); // remove whitespace
-        cssOutput += '\n' + lines[i];
-    }
-    cssOutput = cssOutput
+    let lines: string[] = styleContents.split('\n');
+    let cssOutput: string = styleContents
         .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@option\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove NSS declarations
         .replace(/\/\*(.+?)\*\//gs, (_, a) => {
             if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[(.+)\]\*\/$/, '/*$1*/'); // parsed comment
@@ -85,7 +80,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             if (staticContent.indexOf(a) < 0) staticContent.push(a);
             return '/*STATIC#' + staticContent.indexOf(a) + '*/';
         }) // store static content for replacement at end
-        ;
     let customVars: Record<string, string> = {};
     let cssBlocks: Record<string, string> = {};
     let constants: Constants = {
@@ -183,7 +177,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                     .replace(RegExp(numberUnit, 'g'), '')
                     .replace(/--|\+\+/g, '+') // double operators don't work in js
                     .replace(/\^/g, '**') // '^' is xor operator in js
-                    ;
                 try { return eval(content) + unit; } catch { return content + unit; }
             });
         }
@@ -234,6 +227,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         let content: string = '';
         let tokenTree: Token[] = [tokenized[0]];
         let selectorTree: string[] = [''];
+        let passthroughContent = '';
+        cssOutput = cssOutput.replace(/@(import|charset|namespace)(.+?);/g, (m) => { passthroughContent += m; return ''; });
         // loop through stylesheet and create a token tree
         for (let i = 0; i < cssOutput.length; i++) {
             const char: string = cssOutput[i];
@@ -243,14 +238,15 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             let currentToken: Token = tokenTree[tokenTree.length - 1];
             if (char === '{') {
                 if (!content) continue;
-                let selector: string = content.replace((stylesMatch), '').trim();
+
+                let selector: string = content.replace(stylesMatch, '').trim();
                 let styles: string = content.replace(trailingSelectorMatch, '').trim();
 
                 if (styles.trim()) {
-                    currentToken.body.push({ name: 'Style', content: styles, body: [] })
+                    currentToken.body.push({ name: 'Style', content: styles, body: [] });
                 }
 
-                const parentSelector: string = selectorTree[selectorTree.length - 2] || '';
+                const parentSelector: string = selectorTree.slice(0, selectorTree.length - 1).join(' ');
                 const explicitParent: boolean = selector.includes('&');
                 selector = explicitParent ? selector.replace(/&/g, parentSelector.trim()) : parentSelector + ' ' + selector;
                 selectorTree.push(selector);
@@ -276,21 +272,22 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             }
         }
         // clear parsed blocks
-        for (let regex: RegExp = /[^{}]+{[^{}]*}/gs; regex.test(cssOutput);) {
-            cssOutput = cssOutput.replace(regex, '');
+        const blockRegex: RegExp = /[^{}]+{[^{}]*}/gs;
+        while (blockRegex.test(cssOutput)) {
+            cssOutput = cssOutput.replace(blockRegex, '');
         }
         // move all sub-blocks to root
         let blocks: Token[] = [];
         const flatten = (obj: Token): void => {
-            for (let o of obj?.body) {
+            for (const o of obj?.body) {
                 if (o.name === 'Style') blocks.push({ name: obj.name, content: obj.content, body: [o] });
                 else flatten(o);
             }
         };
         flatten(tokenTree[0]);
         // create unnested CSS
-        let flattenedCssOutput: string = cssOutput;
-        for (let block of blocks) {
+        let flattenedCssOutput: string = passthroughContent + cssOutput;
+        for (const block of blocks) {
             flattenedCssOutput += block.content + ' {' + block.body[0].content + '}';
         }
         const mediaRegex: string = r`@media[^{}]+(?:\([^()]+?\))+`;
@@ -301,7 +298,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // Parse simple breakpoints //
 
         cssOutput = cssOutput.replace(
-            /([^{}]*?)\s*@\s*(?:(\d+px)(?:\s*\.{2,})?(\s*\d+px)?|(\d+px)?(?:\s*\.{2,})?(\s*\d+px))([^{}]*?){(.*?)}/gm,
+            /([^{}]*?)\s*@\s*(?:(\d+px)(?:\s*\.{2,})?(\s*\d+px)?|(\d+px)?(?:\s*\.{2,})?(\s*\d+px))([^{}]*?){(.*?)}/gms,
             (_, sel, min1, max1, min2, max2, selAfter, block) => {
                 let [min, max] = [min1 || min2, max1 || max2];
                 let simpleBreakpoint: string = r`@\s*(\d+px)?\s*(?:\.{2,})?\s*(\d+px)?`;
@@ -315,6 +312,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 return `@media ${query} { ${selector} { ${block} } }`;
             }
         );
+        const dupedMediaQuery: RegExp = /(@media.+?\s*){(.+?)}\s*\1\s*{/gms;
+        while (dupedMediaQuery.test(cssOutput)) {
+            cssOutput = cssOutput.replace(dupedMediaQuery, '$1{$2');  }
 
     }
 
@@ -322,8 +322,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
     if (!constants.KEEP_UNPARSED) {
         cssOutput = cssOutput.replace(/@endvar/g, '');
-        let unparsedContent: string[] = cssOutput.match(/\$[[(](.+?)[\])]/g) as string[];
-        if (unparsedContent) for (let val of unparsedContent) {
+        let unparsedContent: string[] = cssOutput.match(/\$[[(](.+?)[\])]/g) || [];
+        for (const val of unparsedContent) {
             let nssVarName: string = strim(val.replace(/\$[[(](.*?)(\|.*)?[\])]/, '$1'));
             cssOutput = cssOutput.replace(val, '');
             let type: string = val.includes('$(') ? 'variable' : 'argument';
@@ -353,12 +353,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             if (constants.DECIMAL_PLACES === 0) return roundsUp ? parseInt(pre) + 1 : pre;
             else return roundsUp ? val.replace(/.$/, '') + (parseInt(val.substr(-1)) + 1) : val;
         })
-        ;
     // re-add comments to output
-    for (let i in staticContent) {
+    for (const i in staticContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));
     }
-    for (let i in commentedContent) {
+    for (const i in commentedContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*COMMENT#${i}\*\/`, 'g'), '/*' + commentedContent[i] + '*/');
     }
 

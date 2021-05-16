@@ -6,4 +6,4 @@ package-lock.json -diff
 
 # Linguist
 *.ts linguist-language=TypeScript
-*.nvss linguist-language=CSS
+*.nvss linguist-language=Less

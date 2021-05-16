@@ -1,5 +1,5 @@
 const fs = require('fs');
-const VERSION = require('../src/cli.js')
+const VERSION = require('../package.json').version;
 
 let content = `// NovaSheets ${VERSION} //\n`;
 

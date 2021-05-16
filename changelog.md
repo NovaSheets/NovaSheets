@@ -1,12 +1,24 @@
 # Changelog for NovaSheets
-- 1.0.0
-  - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4)
+- [1.0.0](#100)
+  - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4) • [1.0.0-rc1](#100-rc1)
 - [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
 - [0.3.0](#030) • [0.3.1](#031) • [0.3.2](#032) • [0.3.3](#033) • [0.3.4](#034) • [0.3.5](#035)
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
+
+## 1.0.0
+*Upcoming*
+
+### 1.0.0-rc1
+*2021-05-16*
+- **Changes**
+  - [Syntax] Changed simple breakpoint output to remove duplicate media queries.
+- **Fixes**
+  - [Syntax] Fixed nested selectors having only a maximum of two selectors when flattened.
+  - [Syntax] Fixed regular at-rules being malformed in the output.
+  - [Syntax] Fixed simple breakpoints not working for blocks containing line breaks.
 
 ### 1.0.0-pre4
 *2021-04-04*

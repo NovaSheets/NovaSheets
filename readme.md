@@ -67,19 +67,23 @@ Improve variables by providing arguments, making them into functions:
 div {$(border | color = #111);}
 ```
 
-Avoid duplicating your selectors, using `&` to refer to the last parent selector and `%` to refer to the selector immediately prior (indentation is only for show):
+Avoid duplicating selectors using nesting:
 
 ```less
-div {color: #444; font-size: 16px; padding-left: 1em; border-bottom: 2px solid #123;}
-  & h1 {color: $<body><color>; font-size: 2em; margin-top: 2em; border-bottom: $<div><border-bottom>;}
-    % .subtitle {font-style: italic;}
-  & h2 {margin-top: 1em;}
+div {
+  color: #444; font-size: 16px; padding-left: 1em; border-bottom: 2px solid #123;
+  h1 {
+    color: $<body><color>; font-size: 2em; margin-top: 2em; border-bottom: $<div><border-bottom>;
+    .subtitle {font-style: italic;}
+  }
+  h2 {margin-top: 1em;}
+}
 ```
 
 Create [simple breakpoints](https://novasheets.js.org/docs/selectors/#simple-breakpoints) just by adding `@` followed by the breakpoint value after the selector:
 
 ```less
-main @ ..800px {margin: 0.5em;} // up to 800px exclusive
+main @ ..800px {margin: 0 0.5em;} // up to 800px exclusive
 main @ 800px.. {margin: 1em 4em;} // from 800px inclusive
 ```
 
@@ -155,7 +159,7 @@ Simply import the script into your HTML document and any embedded NovaSheets sty
 NovaSheets styles can be written inline or imported from external files:
 ```html
 <script type="novasheets">`
-    // inline usage
+  // inline usage
 `</script>
 <link rel="novasheet" href="stylesheet.nvss"> // import usage
 ```

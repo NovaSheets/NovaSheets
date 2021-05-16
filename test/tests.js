@@ -48,17 +48,18 @@ QUnit.module('NovaSheets content', () => {
             ['.element @ 10px {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px... {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
+            ['a @ 100px {x:y;} b @ 100px {x:y;}', '@media only screen and (min-width: 100px) { a { x:y; } b { x:y; } }'],
         ];
         test(q, tests);
     });
-    QUnit.test('Nesting' , q => {
+    QUnit.test('Nesting', q => {
         const tests = [
             ['a { &b { x:y; } }', 'ab {x:y;}'],
             ['a { b { x:y; } }', 'a b {x:y;}'],
             ['a { color: red; b { x:y; } }', 'a {color: red;} a b {x:y;}'],
             ['a { b { x:y; } color: red; }', 'a b {x:y;} a {color: red;}'],
             ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media only screen and (min-width: 10px) { a { a:b; } } @media only screen and (min-width: 20px) { ac { d:1 } }'],
-            ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a b {c:a} a d e {x:y} a {x:y}']
+            ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a b {c:a} a d e {x:y} a {x:y}'],
         ];
         test(q, tests);
     });
@@ -212,6 +213,7 @@ QUnit.module('Misc', () => {
             ['::root {color: red;}', ditto],
             ['#1e4', ditto],
             ['a {a:b;} [attr] {a:b;}', ditto],
+            ['@import url(foo); a {x:y;}', ditto],
         ];
         test(q, tests);
     });
