@@ -1,13 +1,14 @@
 {
     "name": "novasheets",
-    "version": "1.0.0-rc1",
+    "version": "1.0.0-rc2",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
-        "nss",
+        "nvss",
         "css",
         "css preprocessor",
         "preprocessor",
+        "stylesheets",
         "parser"
     ],
     "files": [

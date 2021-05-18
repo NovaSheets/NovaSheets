@@ -1,6 +1,7 @@
 # Changelog for NovaSheets
 - [1.0.0](#100)
-  - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4) • [1.0.0-rc1](#100-rc1)
+  - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4)
+  • [1.0.0-rc1](#100-rc1) • [1.0.0-rc2](#100-rc2)
 - [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
@@ -10,6 +11,14 @@
 
 ## 1.0.0
 *Upcoming*
+
+### 1.0.0-rc2
+*2021-05*
+- **Changes**
+  - [Syntax] Changed CSS `calc()` functions to be static with math operations unparsed.
+- **Fixes**
+  - [Syntax] Fixed nested selectors sometimes not having their parent selectors parsed.
+  - [Syntax] Fixed block substitution not working on nested selectors.
 
 ### 1.0.0-rc1
 *2021-05-16*

@@ -64,12 +64,13 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/(?:@var.+?=.*$|@var\s*[^=]*(?=\n\s*@var\s.))(?!\n\s*@endvar)/gm, '$& @endvar') // single-line @var declarations
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
         .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
-        .replace(/}}/g, '} }'); // ensure the second brace is not skipped over
+        .replace(/}}/g, '} }') // ensure the second brace is not skipped over
+        .replace(/calc\(.+?\)/g, '/*/$&/*/') // skip parsing of calc()
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
     let lines: string[] = styleContents.split('\n');
     let cssOutput: string = styleContents
-        .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@option\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove NSS declarations
+        .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@option\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove syntactic declarations
         .replace(/\/\*(.+?)\*\//gs, (_, a) => {
             if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[(.+)\]\*\/$/, '/*$1*/'); // parsed comment
             if (_.startsWith('/*/') || _.endsWith('/*/')) return _; // static comment; skip
@@ -81,7 +82,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             return '/*STATIC#' + staticContent.indexOf(a) + '*/';
         }) // store static content for replacement at end
     let customVars: Record<string, string> = {};
-    let cssBlocks: Record<string, string> = {};
     let constants: Constants = {
         BUILTIN_FUNCTIONS: true,
         DECIMAL_PLACES: false,
@@ -130,27 +130,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         }
     }
 
-    // Save CSS declarations as variables //
-
-    cssOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
-        if (selector.includes('$(') || selector.startsWith('@')) return '';
-        cssBlocks[escapeRegex(selector.trim().replace(/>/g, ':GT:'))] = css;
-        return '';
-    });
-
     // Compile NovaSheets styles //
 
     const hasNovaSheetsStyles = (): boolean => cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput);
     for (let loop = 0, lastCssOutput; loop < 1 || loop < constants.MAX_RECURSION && hasNovaSheetsStyles(); loop++) {
         if (lastCssOutput === cssOutput) break;
         lastCssOutput = cssOutput;
-
-        // Parse CSS block substitutions //
-
-        for (let name in cssBlocks) {
-            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name.replace(/:GT:/g, '>')}\s*>`), cssBlocks[name] || '{}');
-        }
-        cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
 
         // Parse math //
 
@@ -198,18 +183,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             });
         }
 
-        // Parse object notation //
-
-        cssOutput = cssOutput.replace(/{([^{}]*?)}\s*<([^[\]]*?)>/gm, (_, css, item) => {
-            const statements: string[] = css.split(/\s*;\s*/);
-            for (const statement of statements) {
-                const [attr, val] = statement.split(/\s*:\s*/);
-                if (attr.trim() === item.trim()) return val || '';
-            }
-            return '';
-        });
-        cssOutput = cssOutput.replace(/{([^{}]*?)}\s*!/gm, (_, css) => css);
-
         // Parse functions //
 
         let allFunctions: CustomFunction[] = [];
@@ -223,18 +196,16 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         type TokenName = 'Root' | 'Style' | 'Block';
         type Token = { name: TokenName, content: string, body: Token[] };
-        const tokenized: Token[] = [{ name: 'Root', content: '', body: [] }];
         let content: string = '';
-        let tokenTree: Token[] = [tokenized[0]];
-        let selectorTree: string[] = [''];
-        let passthroughContent = '';
-        cssOutput = cssOutput.replace(/@(import|charset|namespace)(.+?);/g, (m) => { passthroughContent += m; return ''; });
+        let tokenTree: Token[] = [{ name: 'Root', content: '', body: [] }];
+        let selectorTree: string[] = [];
+        let rawAtRules = '';
+        cssOutput = cssOutput.replace(/@(import|charset|namespace)(.+?);/g, (m) => { rawAtRules += m; return ''; });
         // loop through stylesheet and create a token tree
         for (let i = 0; i < cssOutput.length; i++) {
             const char: string = cssOutput[i];
             const stylesMatch: RegExp = /[\w-]+:[^;]+;/g;
             const trailingSelectorMatch: RegExp = /[^;]+$/;
-            selectorTree = selectorTree.map(str => str.replace(stylesMatch, ''));
             let currentToken: Token = tokenTree[tokenTree.length - 1];
             if (char === '{') {
                 if (!content) continue;
@@ -242,14 +213,14 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 let selector: string = content.replace(stylesMatch, '').trim();
                 let styles: string = content.replace(trailingSelectorMatch, '').trim();
 
-                if (styles.trim()) {
+                if (styles) {
                     currentToken.body.push({ name: 'Style', content: styles, body: [] });
                 }
 
-                const parentSelector: string = selectorTree.slice(0, selectorTree.length - 1).join(' ');
+                const parentSelector: string = selectorTree[selectorTree.length - 1] || '';
                 const explicitParent: boolean = selector.includes('&');
-                selector = explicitParent ? selector.replace(/&/g, parentSelector.trim()) : parentSelector + ' ' + selector;
-                selectorTree.push(selector);
+                selector = explicitParent ? selector.replace(/&/g, parentSelector).trim() : parentSelector + ' ' + selector;
+                selectorTree.push(selector.trim());
 
                 let newToken: Token = { name: 'Block', content: selector, body: [] };
                 currentToken.body.push(newToken);
@@ -268,7 +239,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             }
             else {
                 content += char;
-                selectorTree[selectorTree.length - 1] = content;
             }
         }
         // clear parsed blocks
@@ -279,21 +249,49 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // move all sub-blocks to root
         let blocks: Token[] = [];
         const flatten = (obj: Token): void => {
-            for (const o of obj?.body) {
+            if (!obj) return;
+            for (const o of obj.body) {
                 if (o.name === 'Style') blocks.push({ name: obj.name, content: obj.content, body: [o] });
                 else flatten(o);
             }
         };
         flatten(tokenTree[0]);
         // create unnested CSS
-        let flattenedCssOutput: string = passthroughContent + cssOutput;
+        let flattenedOutput: string = '';
         for (const block of blocks) {
-            flattenedCssOutput += block.content + ' {' + block.body[0].content + '}';
+            flattenedOutput += block.content + ' {' + block.body[0].content + '}';
         }
+        let compiledOutput = rawAtRules + flattenedOutput + cssOutput;
         const mediaRegex: string = r`@media[^{}]+(?:\([^()]+?\))+`;
-        cssOutput = flattenedCssOutput
+        cssOutput = compiledOutput
             .replace(RegExp(r`(${mediaRegex})\s*(?:{})?(?=\s*@media)`, 'g'), '')
             .replace(RegExp(r`(${mediaRegex})\s*([^{}]+){([^{}]+)}`, 'g'), '$1 { $2 {$3} }')
+
+        // Parse CSS block substitutions //
+
+        //save CSS declarations as variables
+        let cssBlocks: Record<string, string> = {};
+        flattenedOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
+            if (selector.includes('$(') || selector.startsWith('@')) return '';
+            selector = selector.replace(/\$(<.+?>){1,2}/g, '')
+            cssBlocks[escapeRegex(selector.trim())] = css;
+            return '';
+        });
+        //substitute blocks
+        for (let name in cssBlocks) {
+            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name}\s*>`), cssBlocks[name] || '{}');
+        }
+        cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
+        //parse object notation
+        cssOutput = cssOutput.replace(/{([^{}]*?)}\s*<([^[\]]*?)>/gm, (_, css, item) => {
+            const statements: string[] = css.split(/\s*;\s*/);
+            for (const statement of statements) {
+                const [attr, val] = statement.split(/\s*:\s*/);
+                if (attr.trim() === item.trim()) return val || '';
+            }
+            return '';
+        });
+        cssOutput = cssOutput.replace(/{([^{}]*?)}\s*!/gm, (_, css) => css);
 
         // Parse simple breakpoints //
 
@@ -314,7 +312,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         );
         const dupedMediaQuery: RegExp = /(@media.+?\s*){(.+?)}\s*\1\s*{/gms;
         while (dupedMediaQuery.test(cssOutput)) {
-            cssOutput = cssOutput.replace(dupedMediaQuery, '$1{$2');  }
+            cssOutput = cssOutput.replace(dupedMediaQuery, '$1{$2');
+        }
 
     }
 
