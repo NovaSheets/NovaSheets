@@ -1,7 +1,7 @@
 # Changelog for NovaSheets
 - [1.0.0](#100)
   - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4)
-  • [1.0.0-rc1](#100-rc1) • [1.0.0-rc2](#100-rc2)
+  • [1.0.0-rc1](#100-rc1) • [1.0.0-rc2](#100-rc2) • [1.0.0-rc3](#100-rc3)
 - [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
@@ -12,8 +12,18 @@
 ## 1.0.0
 *Upcoming*
 
+### 1.0.0-rc3
+*2021-05-22*
+- **Changes**
+  - [Syntax] Changed comma-separated parent selectors to have each selector part distributed over its children.
+- **Fixes**
+  - [Syntax] Fixed CSS `calc()` functions incorrectly having brackets removed.
+  - [Syntax] Fixed the `/` separator in vanilla CSS color functions being treated as a division operator.
+  - [Syntax] Fixed constructs like `0 -1em` being treated as subtraction.
+  - [Syntax] Fixed spaced double negatives not being parsed as math.
+
 ### 1.0.0-rc2
-*2021-05*
+*2021-05-18*
 - **Changes**
   - [Syntax] Changed CSS `calc()` functions to be static with math operations unparsed.
 - **Fixes**

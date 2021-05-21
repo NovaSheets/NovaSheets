@@ -15,7 +15,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         const o = r`\(\s*`, c = r`\s*\)`; // open and close brackets
         const numberValue: string = r`(?:-?${basedNumber}(?:${numberUnit})?)`;
         const optBracketedNumber: string = `(?:${o}${numberValue}${c}|${numberValue})`;
-        const operators: string = r`(?:[-^*/+]+\s*(?=\d|\.))`;
+        const operators: string = r`(?:(?:[-^*/+]+\s*)+(?=\d|\.))`;
         const unbracketed: string = r`(?:(?:${optBracketedNumber}\s*${operators}\s*)+${numberValue})`;
         return r`\(\s*${unbracketed}\s*\)|${unbracketed}`;
     })();
@@ -65,7 +65,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
         .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         .replace(/}}/g, '} }') // ensure the second brace is not skipped over
-        .replace(/calc\(.+?\)/g, '/*/$&/*/') // skip parsing of calc()
+        .replace(/calc\(.+?\)/g, '/*/$&/*/') // skip parsing of vanilla CSS calc()
+        .replace(/(rgba?|hsla?)\(\d+%?\s+\d+%?\s*\d+%?\s*(\/\s*\d+%?)?\)/g, '/*/$&/*/') // skip parsing of vanilla CSS4 color functions
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
     let lines: string[] = styleContents.split('\n');
@@ -138,10 +139,10 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         lastCssOutput = cssOutput;
 
         // Parse math //
-
         cssOutput = cssOutput.replace(RegExp(r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`, 'gi'), (_, a, b) => String(+a * 10 ** +b));
         for (let i = 0; i < constants.MAX_MATH_RECURSION; i++) {
             if (!cssOutput.match(RegExp(mathChecker))) break;
+            if (/\d\s+-\d/.test(cssOutput)) break; // avoid edge cases like '0 -2em'
             cssOutput = cssOutput.replace(RegExp(mathChecker, 'g'), mathMatch => {
                 let matchesOnlyBrackets: boolean = !/[-+^*/]/.test(mathMatch);
                 let containsUnitList: string[] = mathMatch.match(RegExp(r`${numberUnit}\s-?${basedNumber}`)) as string[];
@@ -160,7 +161,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                         }
                     })
                     .replace(RegExp(numberUnit, 'g'), '')
-                    .replace(/--|\+\+/g, '+') // double operators don't work in js
+                    .replace(/-\s*-|\+\s*\+/g, '+') // double operators don't work in js
                     .replace(/\^/g, '**') // '^' is xor operator in js
                 try { return eval(content) + unit; } catch { return content + unit; }
             });
@@ -218,8 +219,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 }
 
                 const parentSelector: string = selectorTree[selectorTree.length - 1] || '';
-                const explicitParent: boolean = selector.includes('&');
-                selector = explicitParent ? selector.replace(/&/g, parentSelector).trim() : parentSelector + ' ' + selector;
+                if (selector.includes('&')) {
+                    selector = selector.replace(/&/g, parentSelector).trim();
+                }
+                else {
+                    selector = parentSelector.split(',').map(psel => psel + ' ' + selector).join(',');
+                }
                 selectorTree.push(selector.trim());
 
                 let newToken: Token = { name: 'Block', content: selector, body: [] };

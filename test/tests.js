@@ -60,6 +60,7 @@ QUnit.module('NovaSheets content', () => {
             ['a { b { x:y; } color: red; }', 'a b {x:y;} a {color: red;}'],
             ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media only screen and (min-width: 10px) { a { a:b; } } @media only screen and (min-width: 20px) { ac { d:1 } }'],
             ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a b {c:a} a d e {x:y} a {x:y}'],
+            ['a,b { c {x:y} }', 'a c, b c {x:y}']
         ];
         test(q, tests);
     });
@@ -70,11 +71,13 @@ QUnit.module('Math', () => {
             ['1+2', '3'],
             ['1 +2', '3'],
             ['1 + 2', '3'],
+            ['1 + +2', '3'],
+            ['1 + -2', '-1'],
             ['1--2', '3'],
             ['1-2', '-1'],
             ['1- 2', '-1'],
             ['1 - 2', '-1'],
-            ['1 -2', '-1'],
+            ['1 - -2', '3'],
             ['1-2-3-4-5-6-7-8-9-10', '-53'],
             ['1/2', '0.5'],
             ['1*2', '2'],
@@ -87,6 +90,7 @@ QUnit.module('Math', () => {
             ['(1+3)/2', '2'],
             ['(1 -- 2) /3', '1'],
             ['(1 + 3**2) - (2 / 2**4 + 1 / 4)', '9.625'],
+            ['0 -3em', ditto],
             ['1em -2em', ditto],
             ['1em 2em', ditto],
             ['(1+3)em/2', '2em'],
@@ -213,7 +217,10 @@ QUnit.module('Misc', () => {
             ['::root {color: red;}', ditto],
             ['#1e4', ditto],
             ['a {a:b;} [attr] {a:b;}', ditto],
+            ['padding: 0 -2em;', ditto],
             ['@import url(foo); a {x:y;}', ditto],
+            ['calc(1 + 2 / 3)', ditto],
+            ['rgb(0% 64 12 / 50%)', ditto],
         ];
         test(q, tests);
     });
