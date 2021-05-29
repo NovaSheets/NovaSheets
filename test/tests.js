@@ -44,11 +44,11 @@ QUnit.module('NovaSheets content', () => {
     });
     QUnit.test('Simple breakpoints', q => {
         const tests = [
-            ['.element @ ..10px {display: none;}', '@media only screen and (max-width: 9px) { .element { display: none; } }'],
-            ['.element @ 10px {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
-            ['.element @ 10px... {display: none;}', '@media only screen and (min-width: 10px) { .element { display: none; } }'],
-            ['.element @ 10px 20px {display: none;}', '@media only screen and (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
-            ['a @ 100px {x:y;} b @ 100px {x:y;}', '@media only screen and (min-width: 100px) { a { x:y; } b { x:y; } }'],
+            ['.element @ ..10px {display: none;}', '@media (max-width: 9px) { .element { display: none; } }'],
+            ['.element @ 10px {display: none;}', '@media (min-width: 10px) { .element { display: none; } }'],
+            ['.element @ 10px... {display: none;}', '@media (min-width: 10px) { .element { display: none; } }'],
+            ['.element @ 10px 20px {display: none;}', '@media (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
+            ['a @ 100px {x:y;} b @ 100px {x:y;}', '@media (min-width: 100px) { a { x:y; } b { x:y; } }'],
         ];
         test(q, tests);
     });
@@ -58,7 +58,7 @@ QUnit.module('NovaSheets content', () => {
             ['a { b { x:y; } }', 'a b {x:y;}'],
             ['a { color: red; b { x:y; } }', 'a {color: red;} a b {x:y;}'],
             ['a { b { x:y; } color: red; }', 'a b {x:y;} a {color: red;}'],
-            ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media only screen and (min-width: 10px) { a { a:b; } } @media only screen and (min-width: 20px) { ac { d:1 } }'],
+            ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media (min-width: 10px) { a { a:b; } } @media (min-width: 20px) { ac { d:1 } }'],
             ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a b {c:a} a d e {x:y} a {x:y}'],
             ['a,b { c {x:y} }', 'a c, b c {x:y}']
         ];
@@ -182,6 +182,7 @@ QUnit.module('Built-in functions', () => {
         const tests = [
             ['$(@breakpoint | 500px | selector | less: 1 | more: 1 )', ' @media (max-width: 499px) { selector { less: 1 } } @media (min-width: 500px) { selector { more: 1 } }'],
             ['$(@breakpoint | 500px | less {a:b} | more {a:b} )', ' @media (max-width: 499px) { less {a:b} } @media (min-width: 500px) { more {a:b} }'],
+            ['x {$(@breakpoint|300px|y|a:b;|c:d;)}', '@media (max-width: 299px) { x y {a:b;} } @media (min-width: 300px) { x y {c:d;} }'],
             ['$(@prefix | transition | all 1s )', '-webkit-transition: all 1s; -moz-transition: all 1s; -ms-transition: all 1s; -o-transition: all 1s; transition: all 1s;']
         ];
         test(q, tests);
@@ -221,6 +222,7 @@ QUnit.module('Misc', () => {
             ['@import url(foo); a {x:y;}', ditto],
             ['calc(1 + 2 / 3)', ditto],
             ['rgb(0% 64 12 / 50%)', ditto],
+            ['td {height: $(@round|1.2)em; margin: calc(var(--a)+1);}', 'td {height: 1em; margin: calc(var(--a)+1);}'],
         ];
         test(q, tests);
     });

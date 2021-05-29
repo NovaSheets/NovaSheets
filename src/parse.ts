@@ -65,18 +65,16 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
         .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         .replace(/}}/g, '} }') // ensure the second brace is not skipped over
-        .replace(/calc\(.+?\)/g, '/*/$&/*/') // skip parsing of vanilla CSS calc()
-        .replace(/(rgba?|hsla?)\(\d+%?\s+\d+%?\s*\d+%?\s*(\/\s*\d+%?)?\)/g, '/*/$&/*/') // skip parsing of vanilla CSS4 color functions
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
     let lines: string[] = styleContents.split('\n');
     let cssOutput: string = styleContents
-        .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@option\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove syntactic declarations
-        .replace(/\/\*(.+?)\*\//gs, (_, a) => {
+        .replace(/\s*(?:@var.*?((?=@var)|@endvar)|@endvar|@option\s*[A-Z_]+\s*(true|false|[0-9]+))/gms, ' ') // remove syntactic declarations
+        .replace(/\/\*(.+?)\*\//gs, (_, content) => {
             if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[(.+)\]\*\/$/, '/*$1*/'); // parsed comment
             if (_.startsWith('/*/') || _.endsWith('/*/')) return _; // static comment; skip
-            if (commentedContent.indexOf(a) < 0) commentedContent.push(a);
-            return '/*COMMENT#' + commentedContent.indexOf(a) + '*/';
+            if (commentedContent.indexOf(content) < 0) commentedContent.push(content);
+            return '/*COMMENT#' + commentedContent.indexOf(content) + '*/';
         }) // store commented content for replacement at end
         .replace(/\/\*\/(.+?)\/\*\//gs, (_, a) => {
             if (staticContent.indexOf(a) < 0) staticContent.push(a);
@@ -139,16 +137,20 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         lastCssOutput = cssOutput;
 
         // Parse math //
-        cssOutput = cssOutput.replace(RegExp(r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`, 'gi'), (_, a, b) => String(+a * 10 ** +b));
+        const exponentMatcher: string = r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`;
+        cssOutput = cssOutput.replace(RegExp(exponentMatcher, 'gi'), (_, a, b) => String(+a * 10 ** +b));
         for (let i = 0; i < constants.MAX_MATH_RECURSION; i++) {
             if (!cssOutput.match(RegExp(mathChecker))) break;
-            if (/\d\s+-\d/.test(cssOutput)) break; // avoid edge cases like '0 -2em'
             cssOutput = cssOutput.replace(RegExp(mathChecker, 'g'), mathMatch => {
+                const matchContent: string = cssOutput.slice(0, cssOutput.indexOf(mathMatch) + mathMatch.length) + ')';
+                const isCssFunc: boolean = /\w+\(.+?\)/.test(matchContent); // avoid treating '/' in CSS color functions as division
+                const isDelimited: boolean = /\d\s+-\d/.test(mathMatch);  // avoid cases like '0 -2em'
+                if (isCssFunc || isDelimited) return mathMatch;
                 let matchesOnlyBrackets: boolean = !/[-+^*/]/.test(mathMatch);
                 let containsUnitList: string[] = mathMatch.match(RegExp(r`${numberUnit}\s-?${basedNumber}`)) as string[];
                 if (matchesOnlyBrackets || containsUnitList) return mathMatch;
 
-                let numMatch = mathMatch.match(RegExp(numberUnit, 'g')) || [];
+                let numMatch: string[] = Array.from(mathMatch.match(RegExp(numberUnit, 'g')) || []);
                 let unit: string = numMatch.pop() || '';
                 let content: string = mathMatch
                     .replace(RegExp(r`(${number})\s*(${numberUnit})`, 'g'), (_, num, u): string => {
@@ -188,7 +190,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         let allFunctions: CustomFunction[] = [];
         if (constants.BUILTIN_FUNCTIONS) allFunctions.push(...builtInFunctions({ constants }));
-        allFunctions.push(...(novasheets?.getFunctions() || []));
+        allFunctions.push(...(novasheets?.getFunctions() ?? []));
         for (const obj of allFunctions) {
             parseFunction(obj.name, obj.body);
         }
@@ -218,7 +220,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                     currentToken.body.push({ name: 'Style', content: styles, body: [] });
                 }
 
-                const parentSelector: string = selectorTree[selectorTree.length - 1] || '';
+                const parentSelector: string = selectorTree.slice(-1)[0]?.replace(/\/\*.+?\*\//g, '') || '';
                 if (selector.includes('&')) {
                     selector = selector.replace(/&/g, parentSelector).trim();
                 }
@@ -309,10 +311,10 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 if (selMatch) [, min, max] = selMatch[selMatch.length - 1].match(RegExp(simpleBreakpoint)) as string[];
                 let selector: string = (sel + selAfter).replace(RegExp(simpleBreakpoint, 'g'), '');
 
-                let query: string = 'only screen';
-                if (min) query += ` and (min-width: ${min})`;
-                if (max) query += ` and (max-width: ${max}-1px)`;
-                return `@media ${query} { ${selector} { ${block} } }`;
+                let query: string[] = [];
+                if (min) query.push(`(min-width: ${min})`);
+                if (max) query.push(`(max-width: ${max.replace(/\d+/, (d: string) => +d - 1)})`);
+                return `@media ${query.join(' and ')} { ${selector} { ${block} } }`;
             }
         );
         const dupedMediaQuery: RegExp = /(@media.+?\s*){(.+?)}\s*\1\s*{/gms;
@@ -357,6 +359,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             if (constants.DECIMAL_PLACES === 0) return roundsUp ? parseInt(pre) + 1 : pre;
             else return roundsUp ? val.replace(/.$/, '') + (parseInt(val.substr(-1)) + 1) : val;
         })
+        // fix calc() output
+        .replace(/calc(\d)/g, '$1')
     // re-add comments to output
     for (const i in staticContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));

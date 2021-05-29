@@ -147,7 +147,7 @@ The command-line tool uses the same functions as the Node usage, giving you two 
   - Parses NovaSheets input and outputs it back in the command line.
 - `novasheets [{-c, --compile}] <input> [<output>]`
   - Compiles the file(s) set as the input (which may be a glob) into the output (which, if unset or set to a folder, uses the original filename but with an extension of `.css`).
-  
+
 ### Browser usage
 
 See the [releases](https://github.com/NovaSheets/NovaSheets/releases) page of this repository to choose a version to use.

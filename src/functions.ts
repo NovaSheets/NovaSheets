@@ -321,7 +321,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
     novasheets.addFunction('@breakpoint', (_, a = '0', b = '', c = '', d = '') => {
         if (!a) return _;
         const makeQuery = (type: string, width: string, content: string): string => {
-            return `@media (${type}-width: ${width.trim()}${type === 'max' ? '-1px' : ''}) { ${content}}`;
+            return `@ ${type === 'min' ? `${width}..` : `..${width}`} { ${content} }`;
         };
         let isBlock: boolean = (b + c).includes('{');
         let content: string[] = isBlock ? [b, c] : [`${b} {${c}} `, `${b} {${d}} `];

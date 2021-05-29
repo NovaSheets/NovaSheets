@@ -15,12 +15,17 @@ jake.task('compile', function () {
 jake.desc('Compiles example NovaSheets files into bin/ folder');
 jake.task('test-compile', ['compile'], function () {
     fs.rmdirSync('bin', { recursive: true });
-    fs.mkdirSync('bin/');
-    fs.mkdirSync('bin/glob/');
+    fs.mkdirSync('bin/glob/', { recursive: true });
+    fs.mkdirSync('test/bin/', { recursive: true });
+    // Per-file compilation
     exec('node src/cli -c test/example.nvss bin/');
     exec('node src/cli -c test/example.nvss bin/no-extension');
     exec('node src/cli -c test/example.nvss bin/output-w-ext.css');
-    exec('node src/cli -c test/*.nvss bin/glob/');
+    // Globbed compilation
+    for (let i = 0; i < 3; i++) {
+        fs.copyFileSync('test/example.nvss', `test/bin/example${i}.nvss`);
+    }
+    exec('node src/cli -c test/bin/*.nvss bin/glob/');
 });
 
 jake.desc('Run unit tests');
