@@ -48,7 +48,6 @@ QUnit.module('NovaSheets content', () => {
             ['.element @ 10px {display: none;}', '@media (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px... {display: none;}', '@media (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px 20px {display: none;}', '@media (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
-            ['a @ 100px {x:y;} b @ 100px {x:y;}', '@media (min-width: 100px) { a { x:y; } b { x:y; } }'],
         ];
         test(q, tests);
     });
@@ -220,7 +219,7 @@ QUnit.module('Misc', () => {
             ['a {a:b;} [attr] {a:b;}', ditto],
             ['padding: 0 -2em;', ditto],
             ['@import url(foo); a {x:y;}', ditto],
-            ['calc(1 + 2 / 3)', ditto],
+            ['calc(1 + 2 / 4)', '1.5'],
             ['rgb(0% 64 12 / 50%)', ditto],
             ['td {height: $(@round|1.2)em; margin: calc(var(--a)+1);}', 'td {height: 1em; margin: calc(var(--a)+1);}'],
         ];

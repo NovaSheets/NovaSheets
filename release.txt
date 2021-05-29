@@ -1,0 +1,11 @@
+Steps for releasing a new version:
+- Remove all instances of `debug` and 'todo'
+- Make sure changelog.md is accurate
+- Run npm test
+- Update package.json
+- Check readme.md is accurate
+- Commit to GitHub
+- Tag release
+- npm publish
+- Push changes
+- Write release notes

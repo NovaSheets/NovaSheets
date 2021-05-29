@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "1.0.0-rc4",
+    "version": "1.0.0-rc5",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -13,8 +13,8 @@
     ],
     "files": [
         "src/*.js",
-        "!src/browser.js",
-        "src/*.d.ts"
+        "src/*.d.ts",
+        "!src/browser.*"
     ],
     "main": "src/novasheets.js",
     "bin": {

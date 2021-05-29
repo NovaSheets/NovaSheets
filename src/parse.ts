@@ -22,7 +22,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     const toNumber = (val: any): number => constants.KEEP_NAN ? +val : (isNaN(+val) ? 0 : +val);
     const parseFunction = (name: string, func: Function, opts: CustomFunctionOptions = {}): void => {
         if (RegExp(mathChecker).test(cssOutput)) return; // only run after math is parsed
-        const match: string[] = Array.from(cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`)) || []);
+        const match: string[] = Array.from(cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i')) || []);
         if (match.length === 0) return;
         const searchString: string = cssOutput.substr(cssOutput.indexOf(match[0]));
         let segment: string = '';
@@ -65,6 +65,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
         .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         .replace(/}}/g, '} }') // ensure the second brace is not skipped over
+        .replace(/;(\s*)@/g, ';$1&@') // implicit parent selector for simple breakpoints
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
     let lines: string[] = styleContents.split('\n');
@@ -131,24 +132,23 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
     // Compile NovaSheets styles //
 
+    const SLASH: string = Math.random().toString(36).substr(2);
     const hasNovaSheetsStyles = (): boolean => cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput);
     for (let loop = 0, lastCssOutput; loop < 1 || loop < constants.MAX_RECURSION && hasNovaSheetsStyles(); loop++) {
         if (lastCssOutput === cssOutput) break;
         lastCssOutput = cssOutput;
 
         // Parse math //
-        const exponentMatcher: string = r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`;
-        cssOutput = cssOutput.replace(RegExp(exponentMatcher, 'gi'), (_, a, b) => String(+a * 10 ** +b));
+        cssOutput = cssOutput
+            .replace(RegExp(r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`, 'gi'), (_, a, b) => String(+a * 10 ** +b))
+            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, (_, before: string, after: string) => before + SLASH + after);
         for (let i = 0; i < constants.MAX_MATH_RECURSION; i++) {
             if (!cssOutput.match(RegExp(mathChecker))) break;
             cssOutput = cssOutput.replace(RegExp(mathChecker, 'g'), mathMatch => {
-                const matchContent: string = cssOutput.slice(0, cssOutput.indexOf(mathMatch) + mathMatch.length) + ')';
-                const isCssFunc: boolean = /\w+\(.+?\)/.test(matchContent); // avoid treating '/' in CSS color functions as division
-                const isDelimited: boolean = /\d\s+-\d/.test(mathMatch);  // avoid cases like '0 -2em'
-                if (isCssFunc || isDelimited) return mathMatch;
-                let matchesOnlyBrackets: boolean = !/[-+^*/]/.test(mathMatch);
-                let containsUnitList: string[] = mathMatch.match(RegExp(r`${numberUnit}\s-?${basedNumber}`)) as string[];
-                if (matchesOnlyBrackets || containsUnitList) return mathMatch;
+                const isDelimited: boolean = /\d\s+-\d/.test(mathMatch);
+                const matchesOnlyBrackets: boolean = !/[-+^*/]/.test(mathMatch);
+                const containsUnitList = mathMatch.match(RegExp(r`${numberUnit}\s-?${basedNumber}`));
+                if (isDelimited || matchesOnlyBrackets || containsUnitList) return mathMatch;
 
                 let numMatch: string[] = Array.from(mathMatch.match(RegExp(numberUnit, 'g')) || []);
                 let unit: string = numMatch.pop() || '';
@@ -227,7 +227,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 else {
                     selector = parentSelector.split(',').map(psel => psel + ' ' + selector).join(',');
                 }
-                selectorTree.push(selector.trim());
+                selectorTree.push(selector.trim().replace(/\s+/g, ' '));
 
                 let newToken: Token = { name: 'Block', content: selector, body: [] };
                 currentToken.body.push(newToken);
@@ -303,7 +303,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // Parse simple breakpoints //
 
         cssOutput = cssOutput.replace(
-            /([^{}]*?)\s*@\s*(?:(\d+px)(?:\s*\.{2,})?(\s*\d+px)?|(\d+px)?(?:\s*\.{2,})?(\s*\d+px))([^{}]*?){(.*?)}/gms,
+            /([^{};]*?)\s*@\s*(?:(\d+px)(?:\s*\.{2,})?(\s*\d+px)?|(\d+px)?(?:\s*\.{2,})?(\s*\d+px))([^{}]*?){(.*?)}/gms,
             (_, sel, min1, max1, min2, max2, selAfter, block) => {
                 let [min, max] = [min1 || min2, max1 || max2];
                 let simpleBreakpoint: string = r`@\s*(\d+px)?\s*(?:\.{2,})?\s*(\d+px)?`;
@@ -317,10 +317,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 return `@media ${query.join(' and ')} { ${selector} { ${block} } }`;
             }
         );
-        const dupedMediaQuery: RegExp = /(@media.+?\s*){(.+?)}\s*\1\s*{/gms;
-        while (dupedMediaQuery.test(cssOutput)) {
-            cssOutput = cssOutput.replace(dupedMediaQuery, '$1{$2');
-        }
 
     }
 
@@ -361,6 +357,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         })
         // fix calc() output
         .replace(/calc(\d)/g, '$1')
+        // restore characters
+        .replace(new RegExp(SLASH, 'g'), '/')
     // re-add comments to output
     for (const i in staticContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));
@@ -370,7 +368,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     }
 
     // Return output //
-    return cssOutput.trim();
+    return cssOutput.trim() + '\n';
 }
 
 //@end

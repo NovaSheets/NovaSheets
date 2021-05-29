@@ -14,7 +14,7 @@ jake.task('compile', function () {
 
 jake.desc('Compiles example NovaSheets files into bin/ folder');
 jake.task('test-compile', ['compile'], function () {
-    fs.rmdirSync('bin', { recursive: true });
+    fs.rmSync('bin', { recursive: true });
     fs.mkdirSync('bin/glob/', { recursive: true });
     fs.mkdirSync('test/bin/', { recursive: true });
     // Per-file compilation
