@@ -17,8 +17,8 @@ abbr {cursor: help;}
 @var border | size | type
     $[size] $[type] $(theme color)
 @endvar
-body {border: $(border | size=$(base-font-size) | type=solid); padding: 4em / 2;}
-.title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $(border|type=dotted|size=1px);}
+body {border: $( border | size = $(base-font-size) | type = solid ); padding: 4em / 2;}
+.title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $( border | type = dotted | size = 1px );}
 .title:hover {font-size: $(base-font-size) * 125e-2;}
 .content {padding: 1/2em 1em;}
 .content p {font-family: "sans-serif";}
@@ -32,7 +32,7 @@ header {
     background: $(color2); display: flex; border-bottom: 2px solid white;
     [data-icon] img {cursor: pointer; height: 32px;}
     .menu-icon {width: 80px;}
-    &-search, #menu-icon {align-self: center; text-align: center; color: white; cursor: pointer; z-index: 10;}
+    &-search, #menu-icon::first-child {align-self: center; text-align: center; color: white; cursor: pointer; z-index: 10;}
     &-search a, #menu-icon a {color: white;}
     #menu-logo {
         margin: auto;
@@ -41,3 +41,4 @@ header {
     &-search {display: block;}
 }
 
+$( @each | tr td th | | $v {color: red;} )

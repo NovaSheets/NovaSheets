@@ -1,32 +1,64 @@
 #!/usr/bin/env node
 
 const fs = require('fs');
+const yargs = require('yargs-parser');
 const { parse, compile } = require('./novasheets');
 const NOVASHEETS_VERSION: string = require('../package.json').version;
 
-const arg = (n: number): string => process.argv[n + 1] || '';
 const indent = (n: number): string => ' '.repeat(n * 4);
 const usage = (cmd: string, desc: string): void =>
     console.log('\n' + indent(2) + cmd.replace(/\n/g, '\n' + indent(2)) + '\n' + indent(3) + desc);
 
-if (/^-*h/.test(arg(1))) {
-    console.log(`\n${indent(1)}NovaSheets usage:`);
-    usage(`novasheets {--compile|-c} <input> [<output>]`, 'Compile a NovaSheets file from an exact or globbed input.');
-    usage(`novasheets {--parse|-p} "<input>"\n(or)\n<cmd> | novasheets (--parse|-p)`, 'Parse raw NovaSheets input from raw input.');
-    usage(`novasheets {--help|-h}`, 'Display this help message.');
-    usage(`novasheets {--version|-v}`, 'Display the current version of NovaSheets. ');
+const argOpts = {
+    alias: {
+        help: ['h'],
+        version: ['v'],
+        parse: ['p'],
+        compile: ['c'],
+    },
+    boolean: ['help', 'version', 'parse', 'compile'],
 }
-else if (/^-*v/.test(arg(1))) {
+const args = yargs(process.argv.slice(2), argOpts);
+
+if (args.help) {
+    const descs: Record<string, [string, string]> = {
+        compile: [
+            `novasheets {--compile|-c} <input> [<output>]`,
+            'Compile a NovaSheets file from an exact or globbed input.'
+        ],
+        parse: [
+            `novasheets {--parse|-p} "<input>"\n(or)\n<...> | novasheets (--parse|-p)`,
+            'Parse raw NovaSheets input from raw input.'
+        ],
+        help: [
+            `novasheets {--help|-h} [<command>]`,
+            'Display this help message.'
+        ],
+        version: [
+            `novasheets {--version|-v}`,
+            'Display the current version of NovaSheets.'
+        ],
+    };
+    console.log(`\n${indent(1)}NovaSheets usage:`);
+    let helpOpt: string = args._[0];
+    let desc: [string, string] | '' = helpOpt && (descs[helpOpt] || descs[helpOpt[0]]);
+    if (desc)
+        usage(...desc);
+    else
+        for (const desc of Object.keys(descs))
+            usage(...descs[desc]);
+}
+else if (args.version) {
     console.log(`<NovaSheets> Current version: ${NOVASHEETS_VERSION}`);
 }
-else if (/^-*p/.test(arg(1))) {
-    let data: string = ''
-    try { data = fs.readFileSync(process.stdin.fd, 'utf-8'); }
+else if (args.parse) {
+    let pipedStdin: string = '';
+    try { pipedStdin = fs.readFileSync(process.stdin.fd, 'utf-8'); }
     catch { }
-    console.log(parse(arg(2) || data));
+    console.log(parse(args._[0] || pipedStdin));
 }
-else if (/^-*c/.test(arg(1))) {
-    compile(arg(2), arg(3));
+else if (args.compile) {
+    compile(args._[0], args._[1]);
 }
 else {
     console.log(' Welcome to NovaSheets, the simple but versatile CSS preprocessor.');

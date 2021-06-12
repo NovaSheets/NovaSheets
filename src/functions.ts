@@ -3,7 +3,6 @@
 import NovaSheets from './novasheets';
 import { Constants, CustomFunction } from './common';
 
-//@export
 function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFunction[] {
     const novasheets: NovaSheets = new (typeof require !== 'undefined' ? require('./novasheets') : NovaSheets)();
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
@@ -339,6 +338,5 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
     return novasheets.getFunctions();
 
 }
-//@end
-;
+
 export = addBuiltInFunctions;

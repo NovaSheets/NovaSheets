@@ -6,8 +6,6 @@ interface PreparedInput {
     sources: string[],
 }
 
-//@export
-
 function parseNovaSheets(rawInput: string = '', novasheets: NovaSheets): string | void {
     if (rawInput) return parse(rawInput, novasheets);
     const hashCode = (str: string, length: number = 8): string => {
@@ -58,4 +56,3 @@ function prepare(rawInput: string = ''): PreparedInput {
 
     return { stylesheetContents, sources };
 }
-//@end

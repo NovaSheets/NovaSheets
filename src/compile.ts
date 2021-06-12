@@ -6,7 +6,7 @@ import NovaSheets from './novasheets';
 import parse from './parse';
 
 function compileNovaSheets(inputStr: string, outputStr: string, novasheets: NovaSheets): void {
-    outputStr = outputStr.replace(/[/\/]/g, path.sep);
+    outputStr = outputStr.replace(/[/\\]/g, path.sep);
     const compile = (inputFiles: string[]): void => {
         for (let input of inputFiles) {
             fs.readFile(input, 'utf8', (err: Error, contents: string) => {

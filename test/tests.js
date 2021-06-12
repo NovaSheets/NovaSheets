@@ -56,10 +56,9 @@ QUnit.module('NovaSheets content', () => {
             ['a { &b { x:y; } }', 'ab {x:y;}'],
             ['a { b { x:y; } }', 'a b {x:y;}'],
             ['a { color: red; b { x:y; } }', 'a {color: red;} a b {x:y;}'],
-            ['a { b { x:y; } color: red; }', 'a b {x:y;} a {color: red;}'],
+            ['a { b { x:y; } color: red; }', 'a {color: red;} a b {x:y;}'],
             ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media (min-width: 10px) { a { a:b; } } @media (min-width: 20px) { ac { d:1 } }'],
-            ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a b {c:a} a d e {x:y} a {x:y}'],
-            ['a,b { c {x:y} }', 'a c, b c {x:y}']
+            ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b;} a d e {x:y} a {x:y;} a b {c:a}'],
         ];
         test(q, tests);
     });
@@ -216,7 +215,6 @@ QUnit.module('Misc', () => {
             ['https://example.com', ditto],
             ['::root {color: red;}', ditto],
             ['#1e4', ditto],
-            ['a {a:b;} [attr] {a:b;}', ditto],
             ['padding: 0 -2em;', ditto],
             ['@import url(foo); a {x:y;}', ditto],
             ['calc(1 + 2 / 4)', '1.5'],

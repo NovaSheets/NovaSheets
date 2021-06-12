@@ -7,7 +7,7 @@ src/*.d.ts
 
 # Build output
 bin/
-build/novasheets*
+dist/
 test/*.css
 
 # Local

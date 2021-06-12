@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "1.0.0-rc5",
+    "version": "1.0.0-rc6",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -22,7 +22,7 @@
     },
     "scripts": {
         "prepublish": "tsc",
-        "build": "tsc && node build/browser",
+        "build": "tsc && webpack",
         "test": "tsc && qunit && jake test"
     },
     "repository": {
@@ -36,12 +36,17 @@
     "homepage": "https://novasheets.js.org",
     "license": "ISC",
     "dependencies": {
-        "glob": "^7.1.7"
+        "balanced-match": "^2.0.0",
+        "glob": "^7.1.7",
+        "math-and-unit-parser": "^1.3.6",
+        "yargs-parser": "^20.2.7"
     },
     "devDependencies": {
         "@types/node": "ts4.3",
         "jake": "^10.8.2",
-        "qunit": "^2.15.0",
-        "typescript": "~4.3.2"
+        "qunit": "^2.16.0",
+        "typescript": "~4.3.2",
+        "webpack": "^5.38.1",
+        "webpack-cli": "^4.7.2"
     }
 }

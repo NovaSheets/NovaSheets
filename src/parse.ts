@@ -1,8 +1,9 @@
+const balanced = require('balanced-match')
+const { MathParser } = require('math-and-unit-parser');
+
 import NovaSheets from './novasheets';
 import { CustomFunction, CustomFunctionOptions, Constants } from './common';
 import builtInFunctions from './functions';
-
-//@export
 
 function parse(content: string, novasheets: NovaSheets = new NovaSheets()): string {
     const r = String.raw;
@@ -19,7 +20,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         const unbracketed: string = r`(?:(?:${optBracketedNumber}\s*${operators}\s*)+${numberValue})`;
         return r`\(\s*${unbracketed}\s*\)|${unbracketed}`;
     })();
-    const toNumber = (val: any): number => constants.KEEP_NAN ? +val : (isNaN(+val) ? 0 : +val);
     const parseFunction = (name: string, func: Function, opts: CustomFunctionOptions = {}): void => {
         if (RegExp(mathChecker).test(cssOutput)) return; // only run after math is parsed
         const match: string[] = Array.from(cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i')) || []);
@@ -55,11 +55,17 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         parts[0] = segment;
         cssOutput = cssOutput.replace(segment, func(...parts));
     };
+    const ESC: Record<string, string> = {
+        OPEN_BRACE: Math.random().toString(36).substr(2),
+        CLOSE_BRACE: Math.random().toString(36).substr(2),
+        SLASH: Math.random().toString(36).substr(2),
+    }
+
 
     // Prepare stylesheet for parsing //
 
     let styleContents: string = content
-        .replace(/&amp;/g, '&').replace(/&gt;/g, '>').replace(/&lt;/g, '<') // fix html
+        .replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&') // fix html
         .replace(/(?<![a-z]:)\n?\/\/.*$/gm, '') // remove single-line comments
         .replace(/(?:@var.+?=.*$|@var\s*[^=]*(?=\n\s*@var\s.))(?!\n\s*@endvar)/gm, '$& @endvar') // single-line @var declarations
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
@@ -85,10 +91,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     let constants: Constants = {
         BUILTIN_FUNCTIONS: true,
         DECIMAL_PLACES: false,
-        KEEP_NAN: false,
         KEEP_UNPARSED: false,
         MAX_ARGUMENTS: 10,
-        MAX_MATH_RECURSION: 5,
         MAX_RECURSION: 50,
     };
 
@@ -113,7 +117,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             const blockContent: string = linesAfter.slice(1, varEnding).join('\n');
             const variables: RegExp = new RegExp(r`\$\(\s*${varName}\s*\)`, 'g');
             let varContent: string = (inlineContent + blockContent).trim().replace(variables, customVars[varName] || '');
-            customVars[varName] = varContent;
+            customVars[varName] = varContent.replace('{', ESC.OPEN_BRACE).replace('}', ESC.CLOSE_BRACE);
         }
         else if (lines[i].match(matcher = /^\s*@option\s+/)) {
             let [name, val]: string[] = lines[i].replace(matcher, '').split(/\s+/);
@@ -121,10 +125,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             switch (name.toUpperCase()) {
                 case 'BUILTIN_FUNCTIONS': constants.BUILTIN_FUNCTIONS = isNotFalse(val); break;
                 case 'DECIMAL_PLACES': constants.DECIMAL_PLACES = val !== 'false' && +val; break;
-                case 'KEEP_NAN': constants.KEEP_NAN = isNotFalse(val); break;
                 case 'KEEP_UNPARSED': constants.KEEP_UNPARSED = isNotFalse(val); break;
                 case 'MAX_ARGUMENTS': constants.MAX_ARGUMENTS = parseInt(val); break;
-                case 'MAX_MATH_RECURSION': constants.MAX_MATH_RECURSION = parseInt(val); break;
                 case 'MAX_RECURSION': constants.MAX_RECURSION = parseInt(val); break;
             }
         }
@@ -132,7 +134,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
     // Compile NovaSheets styles //
 
-    const SLASH: string = Math.random().toString(36).substr(2);
     const hasNovaSheetsStyles = (): boolean => cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput);
     for (let loop = 0, lastCssOutput; loop < 1 || loop < constants.MAX_RECURSION && hasNovaSheetsStyles(); loop++) {
         if (lastCssOutput === cssOutput) break;
@@ -140,34 +141,28 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         // Parse math //
         cssOutput = cssOutput
+            // convert exponential notation
             .replace(RegExp(r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`, 'gi'), (_, a, b) => String(+a * 10 ** +b))
-            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, (_, before: string, after: string) => before + SLASH + after);
-        for (let i = 0; i < constants.MAX_MATH_RECURSION; i++) {
-            if (!cssOutput.match(RegExp(mathChecker))) break;
-            cssOutput = cssOutput.replace(RegExp(mathChecker, 'g'), mathMatch => {
-                const isDelimited: boolean = /\d\s+-\d/.test(mathMatch);
-                const matchesOnlyBrackets: boolean = !/[-+^*/]/.test(mathMatch);
-                const containsUnitList = mathMatch.match(RegExp(r`${numberUnit}\s-?${basedNumber}`));
-                if (isDelimited || matchesOnlyBrackets || containsUnitList) return mathMatch;
-
-                let numMatch: string[] = Array.from(mathMatch.match(RegExp(numberUnit, 'g')) || []);
-                let unit: string = numMatch.pop() || '';
-                let content: string = mathMatch
+            // fix edge case of slashes in CSS functions
+            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, (_, before: string, after: string) => before + ESC.SLASH + after)
+            // compile math
+            .replace(RegExp(mathChecker, 'g'), _ => {
+                if (/\d[a-z]{0,2}\s+-\d/.test(_)) return _; // delimited values, not subtraction
+                let unit: string = '';
+                let content: string = _
+                    .replace(/\*\*/g, '^')
                     .replace(RegExp(r`(${number})\s*(${numberUnit})`, 'g'), (_, num, u): string => {
                         switch (u) {
-                            case 'mm': case 'ms': unit = u[1]; return String((toNumber(num) || 0) / 1000);
-                            case 'cm': unit = 'm'; return String((toNumber(num) || 0) / 100);
-                            case 'in': unit = 'm'; return String((toNumber(num) || 0) * 0.0254);
-                            case 'ft': unit = 'm'; return String((toNumber(num) || 0) * 0.3048);
-                            default: return _;
+                            case 'mm': case 'ms': unit = u[1]; return String(+num / 1000);
+                            case 'cm': unit = 'm'; return String(+num / 100);
+                            case 'in': unit = 'm'; return String(+num * 0.0254);
+                            case 'ft': unit = 'm'; return String(+num * 0.3048);
+                            default: unit = u; return num;
                         }
                     })
-                    .replace(RegExp(numberUnit, 'g'), '')
-                    .replace(/-\s*-|\+\s*\+/g, '+') // double operators don't work in js
-                    .replace(/\^/g, '**') // '^' is xor operator in js
-                try { return eval(content) + unit; } catch { return content + unit; }
-            });
-        }
+                try { return MathParser(content) + unit; }
+                catch { return _; }
+            })
 
         // Parse variable contents //
 
@@ -197,78 +192,47 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         // Parse nesting //
 
-        type TokenName = 'Root' | 'Style' | 'Block';
-        type Token = { name: TokenName, content: string, body: Token[] };
-        let content: string = '';
-        let tokenTree: Token[] = [{ name: 'Root', content: '', body: [] }];
-        let selectorTree: string[] = [];
-        let rawAtRules = '';
-        cssOutput = cssOutput.replace(/@(import|charset|namespace)(.+?);/g, (m) => { rawAtRules += m; return ''; });
-        // loop through stylesheet and create a token tree
-        for (let i = 0; i < cssOutput.length; i++) {
-            const char: string = cssOutput[i];
-            const stylesMatch: RegExp = /[\w-]+:[^;]+;/g;
-            const trailingSelectorMatch: RegExp = /[^;]+$/;
-            let currentToken: Token = tokenTree[tokenTree.length - 1];
-            if (char === '{') {
-                if (!content) continue;
-
-                let selector: string = content.replace(stylesMatch, '').trim();
-                let styles: string = content.replace(trailingSelectorMatch, '').trim();
-
-                if (styles) {
-                    currentToken.body.push({ name: 'Style', content: styles, body: [] });
-                }
-
-                const parentSelector: string = selectorTree.slice(-1)[0]?.replace(/\/\*.+?\*\//g, '') || '';
-                if (selector.includes('&')) {
-                    selector = selector.replace(/&/g, parentSelector).trim();
-                }
-                else {
-                    selector = parentSelector.split(',').map(psel => psel + ' ' + selector).join(',');
-                }
-                selectorTree.push(selector.trim().replace(/\s+/g, ' '));
-
-                let newToken: Token = { name: 'Block', content: selector, body: [] };
-                currentToken.body.push(newToken);
-                currentToken = newToken;
-                tokenTree.push(currentToken);
-                content = '';
+        let compiledOutput = '';
+        const check = (s: string) => balanced('{', '}', s);
+        function unnest(css: string, parent: string) {
+            const data = check(css);
+            // check if block has no children
+            if (!data) {
+                // write styles if there are any
+                let styleContent: string = css.trim();
+                if (styleContent) compiledOutput += parent ? `{${styleContent}}` : styleContent;
+                return;
             }
-            else if (char === '}') {
-                if (tokenTree.length < 1 || !content) continue;
-                selectorTree.pop();
-                currentToken = tokenTree.pop() as Token;
-                if (content.trim()) {
-                    currentToken.body.push({ name: 'Style', content: content.trim(), body: [] });
+            // move any trailing styles to front of block
+            let endStylesMatch: RegExpMatchArray = data.body.match(/(?<=}).+?$/g);
+            if (endStylesMatch) {
+                let endStyles = endStylesMatch[0];
+                if (endStyles.trim()) endStyles += ';';
+                data.body = data.body.replace(endStylesMatch[0], '').replace(/[^;]+{/, endStyles + '$&');
+            }
+            // check if block has both styles and children
+            let styles: string[] = data.pre.split(';');
+            if (styles.length) {
+                // remove styles from child selector content
+                data.pre = styles.pop();
+                // if there are selectors add them to parent selector
+                if (styles.length) {
+                    let styleContent: string = styles.join(';') + ';';
+                    compiledOutput += parent ? `${parent} {${styleContent}}` : styleContent;
                 }
-                content = '';
             }
-            else {
-                content += char;
-            }
+            // create selector
+            let fullSelector: string = data.pre.includes('&') ? data.pre.replace(/&/g, parent) : parent + ' ' + data.pre;
+            // write selector if the block has styles
+            if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
+            // if selector has no styles add empty styles
+            if (parent && !data.pre) compiledOutput += '{}';
+            // parse children
+            unnest(data.body, fullSelector);
+            // continue to next block
+            unnest(data.post, parent.trim());
         }
-        // clear parsed blocks
-        const blockRegex: RegExp = /[^{}]+{[^{}]*}/gs;
-        while (blockRegex.test(cssOutput)) {
-            cssOutput = cssOutput.replace(blockRegex, '');
-        }
-        // move all sub-blocks to root
-        let blocks: Token[] = [];
-        const flatten = (obj: Token): void => {
-            if (!obj) return;
-            for (const o of obj.body) {
-                if (o.name === 'Style') blocks.push({ name: obj.name, content: obj.content, body: [o] });
-                else flatten(o);
-            }
-        };
-        flatten(tokenTree[0]);
-        // create unnested CSS
-        let flattenedOutput: string = '';
-        for (const block of blocks) {
-            flattenedOutput += block.content + ' {' + block.body[0].content + '}';
-        }
-        let compiledOutput = rawAtRules + flattenedOutput + cssOutput;
+        unnest(cssOutput, '');
         const mediaRegex: string = r`@media[^{}]+(?:\([^()]+?\))+`;
         cssOutput = compiledOutput
             .replace(RegExp(r`(${mediaRegex})\s*(?:{})?(?=\s*@media)`, 'g'), '')
@@ -277,8 +241,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // Parse CSS block substitutions //
 
         //save CSS declarations as variables
+        cssOutput = cssOutput.replace(ESC.OPEN_BRACE, '{').replace(ESC.CLOSE_BRACE, '}'); // unescape
         let cssBlocks: Record<string, string> = {};
-        flattenedOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
+        compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
             if (selector.includes('$(') || selector.startsWith('@')) return '';
             selector = selector.replace(/\$(<.+?>){1,2}/g, '')
             cssBlocks[escapeRegex(selector.trim())] = css;
@@ -358,7 +323,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // fix calc() output
         .replace(/calc(\d)/g, '$1')
         // restore characters
-        .replace(new RegExp(SLASH, 'g'), '/')
+        .replace(new RegExp(ESC.SLASH, 'g'), '/')
     // re-add comments to output
     for (const i in staticContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));
@@ -371,6 +336,4 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     return cssOutput.trim() + '\n';
 }
 
-//@end
-;
 export = parse;
