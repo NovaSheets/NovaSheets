@@ -2,11 +2,10 @@ import parse from './parse';
 import compileNovaSheets from './compile';
 import { CustomFunction, CustomFunctionBody, CustomFunctionOptions } from './common';
 
-//@export
 class NovaSheets {
-    functions: CustomFunction[]
+    #functions: CustomFunction[];
     constructor() {
-        this.functions = [];
+        this.#functions = [];
     }
     static parse(rawInput = '', novasheets: NovaSheets = new NovaSheets()): string {
         return parse(rawInput, novasheets);
@@ -15,13 +14,12 @@ class NovaSheets {
         return compileNovaSheets(input, output, novasheets);
     }
     addFunction(name: string, body: CustomFunctionBody, options: CustomFunctionOptions = {}): NovaSheets {
-        this.functions.push({ name, body, options });
+        this.#functions.push({ name, body, options });
         return this;
     }
     getFunctions(): CustomFunction[] {
-        return this.functions;
+        return this.#functions;
     }
 }
-//@end
-;
+
 export = NovaSheets;

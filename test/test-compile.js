@@ -1,19 +1,8 @@
 const fs = require('fs');
-const jake = require('jake');
 const { execSync: exec } = require('child_process');
 
-jake.desc('Build for browser');
-jake.task('build', function () {
-    exec('node build/browser');
-});
-
-jake.desc('Build from TypeScript');
-jake.task('compile', function () {
+function test_compile() {
     exec('tsc');
-});
-
-jake.desc('Compiles example NovaSheets files into bin/ folder');
-jake.task('test-compile', ['compile'], function () {
     fs.rmdirSync('bin', { recursive: true });
     fs.mkdirSync('bin/glob/', { recursive: true });
     fs.mkdirSync('test/bin/', { recursive: true });
@@ -26,8 +15,6 @@ jake.task('test-compile', ['compile'], function () {
         fs.copyFileSync('test/example.nvss', `test/bin/example${i}.nvss`);
     }
     exec('node src/cli -c test/bin/*.nvss bin/glob/');
-});
+}
 
-jake.desc('Run unit tests');
-jake.task('test', ['test-compile'], function () {
-});
+test_compile();

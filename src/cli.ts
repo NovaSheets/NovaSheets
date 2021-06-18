@@ -2,8 +2,9 @@
 
 const fs = require('fs');
 const yargs = require('yargs-parser');
-const { parse, compile } = require('./novasheets');
 const NOVASHEETS_VERSION: string = require('../package.json').version;
+
+import NovaSheets from "./index";
 
 const indent = (n: number): string => ' '.repeat(n * 4);
 const usage = (cmd: string, desc: string): void =>
@@ -55,10 +56,11 @@ else if (args.parse) {
     let pipedStdin: string = '';
     try { pipedStdin = fs.readFileSync(process.stdin.fd, 'utf-8'); }
     catch { }
-    console.log(parse(args._[0] || pipedStdin));
+    let parsedContent: string = NovaSheets.parse(args._[0] || pipedStdin);
+    console.log(parsedContent);
 }
 else if (args.compile) {
-    compile(args._[0], args._[1]);
+    NovaSheets.compile(args._[0], args._[1]);
 }
 else {
     console.log(' Welcome to NovaSheets, the simple but versatile CSS preprocessor.');

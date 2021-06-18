@@ -1,8 +1,9 @@
 const path = require('path');
 const fs = require('fs');
-const glob = require('glob');
+const isNode = typeof process !== "undefined" && process?.versions?.node;
+const glob = isNode && require('glob');
 
-import NovaSheets from './novasheets';
+import NovaSheets from './index';
 import parse from './parse';
 
 function compileNovaSheets(inputStr: string, outputStr: string, novasheets: NovaSheets): void {
@@ -41,9 +42,9 @@ function compileNovaSheets(inputStr: string, outputStr: string, novasheets: Nova
         }
     };
 
-    const hasGlobs: boolean = glob.hasMagic(inputStr);
+    const hasGlobs: boolean = glob?.hasMagic(inputStr);
     if (hasGlobs) {
-        glob(inputStr, {}, (err: Error, files: string[]) => {
+        glob?.(inputStr, {}, (err: Error, files: string[]) => {
             if (err) throw err;
             compile(files);
         });
