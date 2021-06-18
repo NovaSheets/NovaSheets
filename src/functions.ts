@@ -4,7 +4,8 @@ import NovaSheets from './novasheets';
 import { Constants, CustomFunction } from './common';
 
 function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFunction[] {
-    const novasheets: NovaSheets = new (typeof require !== 'undefined' ? require('./novasheets') : NovaSheets)();
+    const novasheets: NovaSheets = new (require('./novasheets'))();
+    // const novasheets: NovaSheets = new NovaSheets();
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
     const strim = (str: string): string => str.toString().replace(/^\s*(.+?)\s*$/, '$1').replace(/\s+/g, ' ');
     const r = String.raw;
@@ -273,7 +274,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
     });
 
 
-    /// Logical functions
+    /// Logic functions
 
     const bracketedNumber: string = r`(?:\(\s*${basedNumber}\s*\)|${basedNumber})`;
     const logicRegex = (arg: string): RegExp => RegExp(r`([+-]?${bracketedNumber})\s*(?:${arg})\s*([+-]?${bracketedNumber})`);
@@ -290,7 +291,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
                 .replace(/(?!=)(!?)=(==)?(?!=)/g, '$1$2==') // normalise equality signs
                 ;
         }
-        if (/(<|<=|>|>=|==|!=|&|!|\|)/.test(arg)) arg = eval(arg);
+        if (/(<|<=|>|>=|==|!=|&|!|\|)/.test(arg)) arg = eval('!!' + arg);
         if (['false', 'undefined', 'null', 'NaN', ''].includes(arg)) arg = 'false';
         return arg;
     };
@@ -310,23 +311,23 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
         }
         return arg;
     });
-
     novasheets.addFunction('@boolean', (_, ...a) => parseLogic(a.join('|')));
     novasheets.addFunction('@if', (_, a, b = '', c = '') => parseLogic(a) ? b : c);
 
 
     /// CSS functions
 
-    novasheets.addFunction('@breakpoint', (_, a = '0', b = '', c = '', d = '') => {
-        if (!a) return _;
-        const makeQuery = (type: string, width: string, content: string): string => {
-            return `@ ${type === 'min' ? `${width}..` : `..${width}`} { ${content} }`;
+    novasheets.addFunction('@breakpoint', (_, px = '0', a = '', b = '', c = '') => {
+        if (!px) return _;
+        const makeQuery = (type: string, width: string, [sel, val]: string[]): string => {
+            const brkp = type === 'min' ? `${width}..` : `..${width}`;
+            return `${sel} @ ${brkp} { ${val} }`;
         };
-        let isBlock: boolean = (b + c).includes('{');
-        let content: string[] = isBlock ? [b, c] : [`${b} {${c}} `, `${b} {${d}} `];
-        let ltContent: string = (isBlock ? b : c).trim() ? makeQuery('max', a, content[0]) : '';
-        let gtContent: string = (isBlock ? c : d).trim() ? makeQuery('min', a, content[1]) : '';
-        return ltContent + (ltContent && gtContent ? '\n' : '') + gtContent;
+        let isBlock: boolean = !c;
+        let content: string[][] = isBlock ? [['', a], ['', b]] : [[a, b], [a, c]];
+        let ltContent: string = (isBlock ? a : b).trim() ? makeQuery('max', px, content[0]) : '';
+        let gtContent: string = (isBlock ? b : c).trim() ? makeQuery('min', px, content[1]) : '';
+        return ltContent + gtContent;
     }, { trim: false });
 
     novasheets.addFunction('@prefix', (_, a, b) => {
