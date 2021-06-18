@@ -210,7 +210,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 return;
             }
             // move any trailing styles to front of block
-            let endStylesMatch: string = data.body.match(/(?<=}).+?$/g)?.[0] || '';
+            let endStylesMatch: string = data.body.match(/(?<=})[^{}]+?$/g)?.[0] || '';
             if (endStylesMatch) {
                 let endStyles = endStylesMatch;
                 if (endStyles.trim() && !/}\s*$/.test(data.body)) endStyles += ';';

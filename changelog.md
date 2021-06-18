@@ -15,6 +15,7 @@
 ### 1.0.0-rc7
 - **Fixes**
   - [Syntax] Fixed parent selectors substituted using `&` not being trimmed.
+  - [Syntax] Fixed nested selectors being outputted out of order.
   - [Functions] Fixed `@breakpoint` outputting invalid selectors when nested.
   - [Functions] Fixed `@boolean` not having its output value coerced into `true`/`false`.
 
