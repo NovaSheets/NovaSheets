@@ -2,11 +2,14 @@ const NovaSheets = require('../src/novasheets.js');
 const QUnit = require('qunit');
 
 const ditto = null;
+const notrim = true;
 
 function test(assert, content, functions) {
     for (let item of content) {
-        if (!item[1]) item[1] = item[0];
-        assert.equal(NovaSheets.parse(item[0], functions).replace(/\s/g, ''), item[1].replace(/\s/g, ''), item[0] + ' -> ' + item[1]);
+        let execVal = NovaSheets.parse(item[0], functions);
+        let expecVal = item[1] || item[0];
+        if (!item[3]) [execVal, expecVal] = [execVal, expecVal].map(val => val.replace(/\s/g, ''));
+        assert.equal(execVal, expecVal, item[0] + ' -> ' + item[1]);
     }
 }
 
@@ -53,8 +56,8 @@ QUnit.module('NovaSheets content', () => {
     });
     QUnit.test('Nesting', q => {
         const tests = [
-            ['a { &b { x:y; } }', 'ab {x:y;}'],
-            ['a { b { x:y; } }', 'a b {x:y;}'],
+            ['a { &b { x:y; } }', 'ab {x:y;}', notrim],
+            ['a { b { x:y; } }', 'a b {x:y;}', notrim],
             ['a { color: red; b { x:y; } }', 'a {color: red;} a b {x:y;}'],
             ['a { b { x:y; } color: red; }', 'a {color: red;} a b {x:y;}'],
             ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media (min-width: 10px) { a { a:b; } } @media (min-width: 20px) { ac { d:1 } }'],

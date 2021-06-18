@@ -12,6 +12,10 @@
 ## 1.0.0
 *Upcoming*
 
+### 1.0.0-rc7
+- **Fixes**
+  - [Syntax] Fixed parent selectors substituted using `&` not being trimmed.
+
 ### 1.0.0-rc6
 *2021-06-12*
 - **Additions**
