@@ -1,18 +1,24 @@
 import parse from './parse';
-import NovaSheets from './novasheets';
+import NovaSheets from './index';
+
+window.NovaSheets = NovaSheets;
 
 interface PreparedInput {
     stylesheetContents: string[],
     sources: string[],
 }
 
+declare const window: any;
+
+const hashCode = (str: string, length: number = 8): string => {
+    let hash: number = 0;
+    for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i);
+    return Math.abs(hash).toString(16).substring(0, length).padStart(length, '0');
+};
+
+window.parseNovaSheets = parseNovaSheets;
 function parseNovaSheets(rawInput: string = '', novasheets: NovaSheets): string | void {
     if (rawInput) return parse(rawInput, novasheets);
-    const hashCode = (str: string, length: number = 8): string => {
-        let hash: number = 0;
-        for (let i = 0; i < str.length; i++) hash = ((hash << 5) - hash) + str.charCodeAt(i);
-        return Math.abs(hash).toString(16).substring(0, length).padStart(length, '0');
-    };
     const { stylesheetContents, sources } = prepare(rawInput);
     for (let i in stylesheetContents) {
         const cssOutput = parse(stylesheetContents[i], novasheets);
@@ -25,6 +31,7 @@ function parseNovaSheets(rawInput: string = '', novasheets: NovaSheets): string 
     }
 }
 
+window.prepare = prepare;
 function prepare(rawInput: string = ''): PreparedInput {
     // Generate list of NovaSheet files and get the contents of each stylesheet
 

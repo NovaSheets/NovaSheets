@@ -1,7 +1,7 @@
 const balanced = require('balanced-match')
 const { MathParser } = require('math-and-unit-parser');
 
-import NovaSheets from './novasheets';
+import NovaSheets from './index';
 import { CustomFunction, CustomFunctionOptions, Constants } from './common';
 import builtInFunctions from './functions';
 
@@ -144,14 +144,14 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             // convert exponential notation
             .replace(RegExp(r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`, 'gi'), (_, a, b) => String(+a * 10 ** +b))
             // fix edge case of slashes in CSS functions
-            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, (_, before: string, after: string) => before + ESC.SLASH + after)
+            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, (_, before, after) => before + ESC.SLASH + after)
             // compile math
             .replace(RegExp(mathChecker, 'g'), _ => {
                 if (/\d[a-z]{0,2}\s+-\d/.test(_)) return _; // delimited values, not subtraction
                 let unit: string = '';
                 let content: string = _
                     .replace(/\*\*/g, '^')
-                    .replace(RegExp(r`(${number})\s*(${numberUnit})`, 'g'), (_, num, u): string => {
+                    .replace(RegExp(r`(${number})\s*(${numberUnit})`, 'g'), (_, num, u) => {
                         switch (u) {
                             case 'mm': case 'ms': unit = u[1]; return String(+num / 1000);
                             case 'cm': unit = 'm'; return String(+num / 100);
@@ -173,7 +173,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                     if (!paramArgs[i]) continue;
                     const parts: string[] = paramArgs[i].split('=');
                     const param: string = parts[1] ? strim(parts[0]) : (+i + 1).toString();
-                    const arg: string = parts[1] ? strim(parts[1]) : strim(parts[0]);
+                    const arg: string = parts[1] ? strim(parts.slice(1).join('=')) : strim(parts[0]);
                     content = content.replace(RegExp(r`\$\[${param}[^\]]*\]`, 'g'), arg);
                 }
                 content = content.replace(/\$\[.*?(?:\|([^\]]*))?\]/g, '$1'); // default args
@@ -194,7 +194,13 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         let compiledOutput = '';
         const check = (s: string) => balanced('{', '}', s);
-        function unnest(css: string, parent: string) {
+        function unnest(css: string, parent: string): void {
+            // early return if block has no parent (is an object literal)
+            if (!parent && /^\s*{/.test(css)) {
+                compiledOutput += css;
+                return;
+            }
+            // parse data
             const data = check(css);
             // check if block has no children
             if (!data) {
@@ -204,18 +210,18 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 return;
             }
             // move any trailing styles to front of block
-            let endStylesMatch: RegExpMatchArray = data.body.match(/(?<=}).+?$/g);
+            let endStylesMatch: string = data.body.match(/(?<=})[^{}]+?$/g)?.[0] || '';
             if (endStylesMatch) {
-                let endStyles = endStylesMatch[0];
-                if (endStyles.trim()) endStyles += ';';
-                data.body = data.body.replace(endStylesMatch[0], '').replace(/[^;]+{/, endStyles + '$&');
+                let endStyles = endStylesMatch;
+                if (endStyles.trim() && !/}\s*$/.test(data.body)) endStyles += ';';
+                data.body = data.body.replace(endStylesMatch, '').replace(/[^;]+{/, endStyles + '$&');
             }
             // check if block has both styles and children
             let styles: string[] = data.pre.split(';');
             if (styles.length) {
                 // remove styles from child selector content
                 data.pre = styles.pop();
-                // if there are selectors add them to parent selector
+                // add selectors to parent selector if applicable
                 if (styles.length) {
                     let styleContent: string = styles.join(';') + ';';
                     compiledOutput += parent ? `${parent} {${styleContent}}` : styleContent;
@@ -225,10 +231,10 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             let fullSelector: string = data.pre.includes('&') ? data.pre.replace(/&/g, parent) : parent + ' ' + data.pre;
             // write selector if the block has styles
             if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
-            // if selector has no styles add empty styles
+            // add empty styles if selector has no styles
             if (parent && !data.pre) compiledOutput += '{}';
             // parse children
-            unnest(data.body, fullSelector);
+            unnest(data.body, fullSelector.trim());
             // continue to next block
             unnest(data.post, parent.trim());
         }
@@ -242,11 +248,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         //save CSS declarations as variables
         cssOutput = cssOutput.replace(ESC.OPEN_BRACE, '{').replace(ESC.CLOSE_BRACE, '}'); // unescape
-        let cssBlocks: Record<string, string> = {};
+        const cssBlocks: Record<string, string> = {};
         compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
             if (selector.includes('$(') || selector.startsWith('@')) return '';
             selector = selector.replace(/\$(<.+?>){1,2}/g, '')
-            cssBlocks[escapeRegex(selector.trim())] = css;
+            const selectorVal: string = escapeRegex(strim(selector));
+            cssBlocks[selectorVal] = css;
             return '';
         });
         //substitute blocks
