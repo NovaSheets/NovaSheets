@@ -16,6 +16,7 @@
 - **Fixes**
   - [Syntax] Fixed parent selectors substituted using `&` not being trimmed.
   - [Syntax] Fixed nested selectors being outputted out of order.
+  - [Syntax] Fixed object substitution not working due to selectors not being trimmed.
   - [Functions] Fixed `@breakpoint` outputting invalid selectors when nested.
   - [Functions] Fixed `@boolean` not having its output value coerced into `true`/`false`.
 

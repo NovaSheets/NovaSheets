@@ -248,11 +248,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         //save CSS declarations as variables
         cssOutput = cssOutput.replace(ESC.OPEN_BRACE, '{').replace(ESC.CLOSE_BRACE, '}'); // unescape
-        let cssBlocks: Record<string, string> = {};
+        const cssBlocks: Record<string, string> = {};
         compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
             if (selector.includes('$(') || selector.startsWith('@')) return '';
             selector = selector.replace(/\$(<.+?>){1,2}/g, '')
-            cssBlocks[escapeRegex(selector.trim())] = css;
+            const selectorVal: string = escapeRegex(strim(selector));
+            cssBlocks[selectorVal] = css;
             return '';
         });
         //substitute blocks
