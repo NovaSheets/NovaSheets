@@ -28,6 +28,8 @@ For testing NovaSheets syntax, see [the demo page](https://novasheets.js.org/dem
 
 The canonical file extension for NovaSheets is `.nvss`.
 
+→ [Skip overview](#installation)
+
 Start with some normal CSS:
 
 ```css
@@ -76,7 +78,7 @@ div {
   color: #444; font-size: 16px; padding-left: 1em; border-bottom: 2px solid #123;
   h1 {
     color: $<body><color>; font-size: 2em; margin-top: 2em; border-bottom: $<div><border-bottom>;
-    .subtitle {font-style: italic;}
+    &.subtitle {font-style: italic;}
   }
   h2 {margin-top: 1em;}
 }
@@ -114,9 +116,9 @@ Download [NovaSheets on npm](https://www.npmjs.com/package/novasheets) using `np
 
 This package gives you two methods, `parse` and `compile`:
 
-- `parse(<input>, [<class>]`:
+- `parse(<input>, [<class>])`:
   - Takes in NovaSheets syntax as `input` and returns the compiled CSS as a string.
-- `compile(<input>, [<output>], [<class>]`
+- `compile(<input>, [<output>], [<class>])`
   - `input` may be a glob (file path pattern) and `output` may be a folder (with the output filename being automatically generated).
 
 In both cases, the optional `class` parameter is an instance of the NovaSheets class, containing the following non-static methods:
@@ -135,7 +137,7 @@ compile('styles.nvss', 'output.css'); // parses `styles.nvss` and saves it to `o
 const NovaSheets = require('novasheets');
 const sheet = new NovaSheets();
 sheet.addFunction('@invert boolean', (match, val) => val === 'false');
-NovaSheets.parse('$(@invert boolean | true)', novasheets); // 'false'
+NovaSheets.parse('$(@invert boolean | true)', sheet); // 'false'
 ```
 
 ### Command-line usage
@@ -143,9 +145,9 @@ NovaSheets.parse('$(@invert boolean | true)', novasheets); // 'false'
 Download NovaSheets for the command line globally using `npm install -g novasheets` then get started by typing `novasheets --help`.
 The command-line tool uses the same functions as the Node usage, giving you two commands: `--parse` and `--compile`.
 
-- `novasheets {-p, --parse} "<input">`
+- `novasheets {-p|--parse} "<input">`
   - Parses NovaSheets input and outputs it back in the command line.
-- `novasheets [{-c, --compile}] <input> [<output>]`
+- `novasheets [{-c|--compile}] <input> [<output>]`
   - Compiles the file(s) set as the input (which may be a glob) into the output (which, if unset or set to a folder, uses the original filename but with an extension of `.css`).
 
 ### Browser usage
@@ -154,8 +156,7 @@ See the [releases](https://github.com/NovaSheets/NovaSheets/releases) page of th
 
 Simply import the script into your HTML document and any embedded NovaSheets stylesheets will be parsed:
 ```html
-<script src="https://novasheets.js.org/src/0.6.x/min"></script> // latest stable release
-<script src="https://novasheets.js.org/src/1.0.0-pre/min"></script> // latest pre-release
+<script src="https://novasheets.js.org/src/stable/min"></script> // latest stable release
 ```
 
 NovaSheets styles can be written inline or imported from external files:
@@ -163,7 +164,7 @@ NovaSheets styles can be written inline or imported from external files:
 <script type="novasheets">`
   // inline usage
 `</script>
-<link rel="novasheet" href="stylesheet.nvss"> // import usage
+<link rel="novasheet" href="stylesheet.nvss"> <!-- import usage -->
 ```
 
 If you are using a static site generator that supports npm packages (such as [eleventy](https://github.com/11ty/eleventy)), it is recommended to use the command-line usage to compile NovaSheets during the site's build process instead of client-side.
@@ -171,9 +172,9 @@ This can be done by adding `novasheets --compile **/*.nvss` to your post-build c
 
 The NovaSheets class is available to use in the browser, allowing you to add custom functions. Example:
 ```js
-const novasheets = new NovaSheets();
-novasheets.addFunction('@invert boolean', (match, val) => val === 'false');
-NovaSheets.parse('$(@invert boolean | true)', novasheets); // 'false'
+const sheet = new NovaSheets();
+sheet.addFunction('@invert boolean', (match, val) => val === 'false');
+NovaSheets.parse('$(@invert boolean | true)', sheet); // 'false'
 ```
 
 ## VSCode extension

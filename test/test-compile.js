@@ -27,7 +27,7 @@ function test_compile() {
         fs.copyFileSync('test/example.nvss', `test/bin/example${i}.nvss`);
     }
     compile('test/bin/*.nvss', 'bin/glob/');
-    console.log(`\nCompiled ${total} file globs | ${success} passed | ${failure} failed`);
+    console.log(`\nCompiled ${total} file globs | ${success} passed | ${failure} failed\n`);
 }
 
 test_compile();

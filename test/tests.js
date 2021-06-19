@@ -42,6 +42,7 @@ QUnit.module('NovaSheets content', () => {
             ['{color: blue;}!', 'color: blue;'],
             ['@var obj\n{color: blue;}@endvar$(obj)<color>', 'blue'],
             ['div {width: 100%} a {width: $<div><width>}', 'div {width: 100%} a {width: 100%}'],
+            ['a { b {color: red;} u {color: $<a b><color>;} }', 'a b {color: red;} a u {color:red;}'],
         ];
         test(q, tests);
     });
