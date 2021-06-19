@@ -6,14 +6,14 @@ const glob = isNode && require('glob');
 import NovaSheets from './index';
 import parse from './parse';
 
-function compileNovaSheets(inputStr: string, outputStr: string, novasheets: NovaSheets): void {
-    outputStr = outputStr.replace(/[/\\]/g, path.sep);
-    const compile = (inputFiles: string[]): void => {
+async function compileNovaSheets(source: string, outPath: string, novasheets: NovaSheets): Promise<void> {
+    outPath = outPath.replace(/[/\\]/g, path.sep);
+    const compile = async (inputFiles: string[]): Promise<void> => {
         for (let input of inputFiles) {
-            fs.readFile(input, 'utf8', (err: Error, contents: string) => {
+            await fs.readFile(input, 'utf8', async (err: Error, contents: string) => {
                 if (err) throw `FS_ReadError: Input file '${input}' not found.\n` + err.message;
 
-                let output = outputStr;
+                let output = outPath;
 
                 const folder: string = output.includes(path.sep) ? output.replace(/[/\\][^/\\]+$/, '') : '';
                 if (folder) {
@@ -34,7 +34,7 @@ function compileNovaSheets(inputStr: string, outputStr: string, novasheets: Nova
                 else if (!output.match(/\.\w+$/)) output += '.css'; // 'foo.nvss bar' -> 'bar.css'
                 output = output.replace(/\.\w+$/, '.css'); // force .css extension
 
-                fs.writeFile(output, parse(contents, novasheets), (err: Error) => {
+                await fs.writeFile(output, parse(contents, novasheets), (err: Error) => {
                     if (err) throw `FS_WriteError: Cannot write to file '${output}'.\n` + err.message;
                     console['log'](`<NovaSheets> Wrote file '${input}' to '${output}'`);
                 });
@@ -42,14 +42,14 @@ function compileNovaSheets(inputStr: string, outputStr: string, novasheets: Nova
         }
     };
 
-    const hasGlobs: boolean = glob?.hasMagic(inputStr);
+    const hasGlobs: boolean = glob?.hasMagic(source);
     if (hasGlobs) {
-        glob?.(inputStr, {}, (err: Error, files: string[]) => {
+        glob?.(source, {}, async (err: Error, files: string[]) => {
             if (err) throw err;
-            compile(files);
+            await compile(files);
         });
     } else {
-        compile([inputStr]);
+        await compile([source]);
     }
 }
 

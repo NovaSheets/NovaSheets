@@ -1,17 +1,6 @@
 const fs = require('fs');
 const { execSync: exec } = require('child_process');
-
-let success = 0, failure = 0, total = 0;
-
-function compile(infile, out) {
-    console.log(`Compiling ${infile} to ${out}`)
-    try {
-        exec(`node src/cli -c ${infile} ${out}`);
-        success++;
-    }
-    catch { failure++; }
-    total++;
-}
+const { compile } = require('../src/index');
 
 function test_compile() {
     exec('tsc');
@@ -27,7 +16,6 @@ function test_compile() {
         fs.copyFileSync('test/example.nvss', `test/bin/example${i}.nvss`);
     }
     compile('test/bin/*.nvss', 'bin/glob/');
-    console.log(`\nCompiled ${total} file globs | ${success} passed | ${failure} failed\n`);
 }
 
 test_compile();

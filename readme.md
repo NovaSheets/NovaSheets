@@ -116,14 +116,20 @@ Download [NovaSheets on npm](https://www.npmjs.com/package/novasheets) using `np
 
 This package gives you two methods, `parse` and `compile`:
 
-- `parse(<input>, [<class>])`:
+- `parse(input: string, class?: NovaSheets): string`:
   - Takes in NovaSheets syntax as `input` and returns the compiled CSS as a string.
-- `compile(<input>, [<output>], [<class>])`
-  - `input` may be a glob (file path pattern) and `output` may be a folder (with the output filename being automatically generated).
+  - Option `class` parameter may be used to supply custom functions.
+- `async compile(source: string, output?: string, class?: NovaSheets): Promise<void>`
+  - Compiles a NovaSheets source file.
+  - `source` may be a glob (file path pattern) and `output` may be a folder (with the output filename being automatically generated).
 
 In both cases, the optional `class` parameter is an instance of the NovaSheets class, containing the following non-static methods:
-- `addFunction(name, func)`
-  - Adds a new built-in function named `name`. The first parameter of `func` is the entire function match (`$(name|...)`) while the rest are the individual arguments of the function.
+- `addFunction(name: string, func: function (match: string, ...args: string[]), options?: object)`
+  - Adds a new built-in function named `name`.
+  - The first parameter of `func` is the entire function match (`$(name|...)`) while the rest are the individual arguments of the function.
+  - The optional `options` object has the following options available:
+    - `trim?: boolean` (default: `true`): Whether arguments are trimmed.
+    - `allArgs?: boolean` (default: `false`): Whether arguments are trimmed.
 
 **Basic usage:**
 ```js
@@ -136,7 +142,7 @@ compile('styles.nvss', 'output.css'); // parses `styles.nvss` and saves it to `o
 ```js
 const NovaSheets = require('novasheets');
 const sheet = new NovaSheets();
-sheet.addFunction('@invert boolean', (match, val) => val === 'false');
+sheet.addFunction('@invert boolean', (_match, val) => val === 'false');
 NovaSheets.parse('$(@invert boolean | true)', sheet); // 'false'
 ```
 

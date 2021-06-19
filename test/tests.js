@@ -1,4 +1,4 @@
-const NovaSheets = require('../src/novasheets.js');
+const NovaSheets = require('../src/index');
 const QUnit = require('qunit');
 
 const ditto = null;
