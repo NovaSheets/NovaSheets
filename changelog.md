@@ -1,7 +1,7 @@
 # Changelog for NovaSheets
 - [1.0.0](#100)
   - [1.0.0-pre1](#100-pre1) • [1.0.0-pre2](#100-pre2) • [1.0.0-pre3](#100-pre3) • [1.0.0-pre4](#100-pre4)
-  • [1.0.0-rc1](#100-rc1) • [1.0.0-rc2](#100-rc2) • [1.0.0-rc3](#100-rc3) • [1.0.0-rc4](#100-rc4) • [1.0.0-rc5](#100-rc5) • [1.0.0-rc6](#100-rc6)
+  • [1.0.0-rc1](#100-rc1) • [1.0.0-rc2](#100-rc2) • [1.0.0-rc3](#100-rc3) • [1.0.0-rc4](#100-rc4) • [1.0.0-rc5](#100-rc5) • [1.0.0-rc6](#100-rc6) • [1.0.0](#100-release)
 - [0.6.0](#060) • [0.6.1](#061) • [0.6.2](#062) • [0.6.3](#063) • [0.6.4](#064) • [0.6.5](#065) • [0.6.6](#066) • [0.6.7](#067)
 - [0.5.0](#050) • [0.5.1](#051) • [0.5.2](#052)
 - [0.4.0](#040) • [0.4.1](#041) • [0.4.2](#042) • [0.4.3](#043) • [0.4.4](#044) • [0.4.5](#045) • [0.4.6](#046) • [0.4.7](#047)
@@ -10,9 +10,51 @@
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
 ## 1.0.0
-*Upcoming*
+*2021-06-19*
 
-### 1.0.0-rc7
+The full release of NovaSheets!
+
+The following changelog is as compared with [0.6.7](#067).
+For the changes since the last release candidate, see the [1.0.0-release](#100-release) section.
+
+- **Additions**
+  - [Syntax] Added CSS nesting, using `&` to refer to the parent selector explicitly.
+  - [Syntax] Added parser constant `BUILTIN_FUNCTIONS` for controlling whether or not to implement built-in functions.
+  - [CLI] Added support for reading syntax from piped stdin.
+  - [CLI] Added `[<command>]` option to `novasheets --help` to display help for a given command.
+  - [Scripting] Added an API for adding custom NovaSheets functions using class `NovaSheets` with method `addFunction(name, function)`, where the first argument of `function` is the matched content and the remainder are variable arguments.
+  - [Scripting] Added a second parameter to `parse` for passing through a class with custom functions.
+  - [Scripting] Added a third parameter to `compile` for passing through a class with custom functions.
+- **Removals**
+  - [Syntax] Removed parser constants `MAX_MATH_RECURSION` and `KEEP_NAN`.
+  - [Syntax] Removed previous and parent selectors, `%` an `&`, as this usage is now accomplished by nesting.
+  - [Syntax] Removed item slicer `<`.
+  - [Scripting] Removed `addFunction` option `nonest`.
+- **Changes**
+  - [Syntax] Changed parser constant keyword from `@const` to `@option`.
+  - [Syntax] Changed function names to be case insensitive.
+  - [Syntax] Changed media query output to not condense duplicated queries as it sometimes broke output.
+  - [CLI] Changed compilation to require using the `--compile`/`-c` flag.
+  - [Scripting] Changed `compile` function to be asyncronous.
+  - [Scripting] Renamed `addFunction` option `notrim` to `trim` (inverting its usage) and `allargs` to `allArgs`.
+  - [Functions] Changed math functions to return just their argument when invalid.
+  - [Functions] Changed built-in color functions to no longer output console warnings for invalid colors.
+- **Fixes**
+  - [Syntax] Fixed object substitution not working due to selectors not being trimmed.
+  - [Syntax] Fixed small numbers receiving incorrect decimal places.
+  - [Syntax] Fixed negative exponents not being parsed.
+  - [Syntax] Fixed hexadecimal colours not being coerced.
+  - [Functions] Fixed `@boolean` treating pipes as argument separators.
+  - [Functions] Fixed `@boolean` not having its output value coerced into `true`/`false`.
+  - [Functions] Fixed value `NaN` not being checked properly.
+  - [Security] Fixed a code injection issue using built-in boolean functions.
+- **Internal**
+  - [Source] Rewrote source code in TypeScript.
+
+### 1.0.0 (release)
+*2021-06-19*
+- **Changes**
+  - [Scripting] Changed `compile` function to be asyncronous.
 - **Fixes**
   - [Syntax] Fixed parent selectors substituted using `&` not being trimmed.
   - [Syntax] Fixed nested selectors being outputted out of order.
@@ -24,8 +66,6 @@
 *2021-06-12*
 - **Additions**
   - [CLI] Added `[<command>]` option to `novasheets --help` to display help for a given command.
-- **Changes**
-  - [Syntax] Changed selectors to no longer distribute comma-separated segments over children.
 - **Removals**
   - [Syntax] Removed parser constants `MAX_MATH_RECURSION` and `KEEP_NAN`.
 - **Fixes**
@@ -85,7 +125,6 @@
 *2021-04-04*
 - **Additions**
   - [Syntax] Added CSS nesting, using `&` to refer to the parent selector explicitly.
-  - [Scripting] Added type definitions for exported functions.
   - [CLI] Added support for reading syntax from piped stdin.
 - **Removals**
   - [Syntax] Removed previous and parent selectors, `%` an `&`, as this usage is now accomplished by nesting.
@@ -99,7 +138,9 @@
   - [Functions] Fixed various errors relating to incorrect type assumptions in built-in functions.
   - [Functions] Fixed built-in function `$(@boolean)` treating pipes as argument separators.
   - [Functions] Fixed built-in functions not checking `NaN` properly.
-  - [Security] Fixes a code injection issue using built-in boolean functions.
+  - [Security] Fixed a code injection issue using built-in boolean functions.
+- **Internal**
+  - [Scripting] Added type definitions for exported functions.
 
 ### 1.0.0-pre3
 *2021-03-06*
@@ -127,8 +168,6 @@
   - [CLI] **Breaking:** Compiling NovaSheets files must now be done explicitly using the `--compile`/`-c` flag.
   - [Syntax] **Breaking:** Changed parser constant keyword from `@const` to `@option`.
   - [Syntax] Changed built-in color functions to no longer output console warnings for invalid colors.
-- **Fixes**
-  - [Syntax] Fixed unparsed content not being removed from the output even when `KEEP_UNPARSED` is true.
 
 ## 0.6.7
 *2021-01-17*

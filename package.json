@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "1.0.0-rc6",
+    "version": "1.0.0",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -25,7 +25,7 @@
     "scripts": {
         "prepublish": "tsc",
         "build": "tsc && node build",
-        "test": "tsc && qunit && node test/test-compile"
+        "test": "tsc && qunit"
     },
     "repository": {
         "type": "git",
