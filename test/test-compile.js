@@ -4,12 +4,9 @@ const { compile } = require('../src/index');
 
 function test_compile() {
     exec('tsc');
-    try {
-        fs.rmdirSync('./bin/', { recursive: true, force: true });
-        fs.mkdirSync('./bin/glob/', { recursive: true });
-        fs.mkdirSync('./test/bin/', { recursive: true });
-    }
-    catch { }
+    try { fs.rmdirSync('./bin/', { recursive: true, force: true }); } catch { }
+    fs.mkdirSync('./bin/glob/', { recursive: true });
+    fs.mkdirSync('./test/bin/', { recursive: true });
     // Per-file compilation
     compile('test/example.nvss', 'bin/');
     compile('test/example.nvss', 'bin/no-extension');
