@@ -20,7 +20,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         const unbracketed: string = r`(?:(?:${optBracketedNumber}\s*${operators}\s*)+${numberValue})`;
         return r`\(\s*${unbracketed}\s*\)|${unbracketed}`;
     })();
-    const parseFunction = (name: string, func: Function, opts: CustomFunctionOptions = {}): void => {
+    const parseFunction = (name: string, func: (...args: string[]) => string, opts: CustomFunctionOptions = {}): void => {
         if (RegExp(mathChecker).test(cssOutput)) return; // only run after math is parsed
         const match: string[] = Array.from(cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i')) || []);
         if (match.length === 0) return;
@@ -166,7 +166,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // Parse variable contents //
 
         for (const name in customVars) {
-            parseFunction(name, (_: string, ...paramArgs: string[]): string => {
+            parseFunction(name, (_, ...paramArgs) => {
                 let content: string = customVars[name];
                 for (const i in paramArgs) {
                     if (!paramArgs[i]) continue;
@@ -193,7 +193,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         let compiledOutput = '';
         const check = (s: string) => balanced('{', '}', s);
-        function unnest(css: string, parent: string): void {
+        const unnest = (css: string, parent: string): void => {
             // early return if block has no parent (is an object literal)
             if (!parent && /^\s*{/.test(css)) {
                 compiledOutput += css;
@@ -209,7 +209,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 return;
             }
             // move any trailing styles to front of block
-            let endStylesMatch: string = data.body.match(/(?<=})[^{}]+?$/g)?.[0] || '';
+            let endStylesMatch: string = data.body.match(/(?<=})[^{}]+?$/g)?.[0] ?? '';
             if (endStylesMatch) {
                 let endStyles = endStylesMatch;
                 if (endStyles.trim() && !/}\s*$/.test(data.body)) endStyles += ';';
@@ -257,7 +257,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         });
         //substitute blocks
         for (let name in cssBlocks) {
-            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name}\s*>`), cssBlocks[name] || '{}');
+            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name}\s*>`), cssBlocks[name] ?? '{}');
         }
         cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
         //parse object notation
@@ -265,7 +265,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             const statements: string[] = css.split(/\s*;\s*/);
             for (const statement of statements) {
                 const [attr, val] = statement.split(/\s*:\s*/);
-                if (attr.trim() === item.trim()) return val || '';
+                if (attr.trim() === item.trim()) return val ?? '';
             }
             return '';
         });
@@ -276,7 +276,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         cssOutput = cssOutput.replace(
             /([^{};]*?)\s*@\s*(?:(\d+px)(?:\s*\.{2,})?(\s*\d+px)?|(\d+px)?(?:\s*\.{2,})?(\s*\d+px))([^{}]*?){(.*?)}/gms,
             (_, sel, min1, max1, min2, max2, selAfter, block) => {
-                let [min, max] = [min1 || min2, max1 || max2];
+                let [min, max] = [min1 ?? min2, max1 ?? max2];
                 let simpleBreakpoint: string = r`@\s*(\d+px)?\s*(?:\.{2,})?\s*(\d+px)?`;
                 let selMatch: string[] = selAfter.match(RegExp(simpleBreakpoint, 'g')) as string[];
                 if (selMatch) [, min, max] = selMatch[selMatch.length - 1].match(RegExp(simpleBreakpoint)) as string[];
@@ -295,12 +295,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
     if (!constants.KEEP_UNPARSED) {
         cssOutput = cssOutput.replace(/@endvar/g, '');
-        let unparsedContent: string[] = cssOutput.match(/\$[[(](.+?)[\])]/g) || [];
+        const unparsedContent: string[] = cssOutput.match(/\$[[(](.+?)[\])]/g) ?? [];
         for (const val of unparsedContent) {
-            let nssVarName: string = strim(val.replace(/\$[[(](.*?)(\|.*)?[\])]/, '$1'));
             cssOutput = cssOutput.replace(val, '');
-            let type: string = val.includes('$(') ? 'variable' : 'argument';
-            console.log(`<NovaSheets> Instances of unparsed ${type} '${nssVarName}' have been removed from the output.`);
+            const varName: string = strim(val.replace(/\$[[(](.*?)(\|.*)?[\])]/, '$1'));
+            const type: string = val.includes('$(') ? 'variable' : 'argument';
+            console.log(`<NovaSheets> Instances of unparsed ${type} '${varName}' have been removed from the output.`);
         }
     }
 
@@ -321,15 +321,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/(\d+)([5-9])\2{10,}\d?(?=\D)/g, (_, a) => String(+a + 1))
         .replace(/\d*\.?\d+e-(?:7|8|9|\d{2,})/, '0')
         // cleanup decimal places
-        .replace(RegExp(r`((\d)\.\d{0,${constants.DECIMAL_PLACES}})(\d?)\d*`, 'g'), (_, val, pre, after) => {
-            const roundsUp: boolean = /[5-9]$/.test(after);
-            if (constants.DECIMAL_PLACES === 0) return roundsUp ? parseInt(pre) + 1 : pre;
-            else return roundsUp ? val.replace(/.$/, '') + (parseInt(val.substr(-1)) + 1) : val;
-        })
+        .replace(/\d\.\d+/g, (val) => constants.DECIMAL_PLACES === false ? val : (+val).toFixed(+constants.DECIMAL_PLACES))
         // fix calc() output
         .replace(/calc(\d)/g, '$1')
         // restore characters
-        .replace(new RegExp(ESC.SLASH, 'g'), '/')
+        .replace(RegExp(ESC.SLASH, 'g'), '/')
     // re-add comments to output
     for (const i in staticContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));

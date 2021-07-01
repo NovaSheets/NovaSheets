@@ -1,14 +1,14 @@
 import parse from './parse';
 import NovaSheets from './index';
 
+declare const window: any;
+
 window.NovaSheets = NovaSheets;
 
 interface PreparedInput {
     stylesheetContents: string[],
     sources: string[],
 }
-
-declare const window: any;
 
 const hashCode = (str: string, length: number = 8): string => {
     let hash: number = 0;
@@ -46,11 +46,11 @@ function prepare(rawInput: string = ''): PreparedInput {
     for (let sheet of externalSheets) {
         fileNames.full.push(sheet.href);
         fileNames.rel.push(sheet.href);
-    };
+    }
     for (let i in fileNames.full) {
         //await fetch(fileNames.full[i]).then(data => data.text()).then(text => stylesheetContents.push(text)).catch(err => console.warn(`<NovaSheets> File '${fileNames.rel[i]}' is inacessible.`, err));
         let req = new XMLHttpRequest();
-        req.open("GET", fileNames.full[i], false);
+        req.open('GET', fileNames.full[i], false);
         req.send();
         stylesheetContents.push(req.responseText);
         sources.push(fileNames.rel[i]);
@@ -59,7 +59,7 @@ function prepare(rawInput: string = ''): PreparedInput {
         let content = (contents instanceof HTMLInputElement && contents.value) || contents.innerHTML || contents.innerText;
         stylesheetContents.push(content.replace(/^\s*`|`\s*$/, ''));
         sources.push('inline');
-    };
+    }
 
     return { stylesheetContents, sources };
 }

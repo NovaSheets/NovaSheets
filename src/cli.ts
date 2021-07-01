@@ -4,7 +4,7 @@ const fs = require('fs');
 const yargs = require('yargs-parser');
 const NOVASHEETS_VERSION: string = require('../package.json').version;
 
-import NovaSheets from "./index";
+import NovaSheets from './index';
 
 const indent = (n: number): string => ' '.repeat(n * 4);
 const usage = (cmd: string, desc: string): void =>

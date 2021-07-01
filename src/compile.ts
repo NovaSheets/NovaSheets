@@ -1,6 +1,6 @@
 const path = require('path');
 const fs = require('fs');
-const isNode = typeof process !== "undefined" && process?.versions?.node;
+const isNode = typeof process !== 'undefined' && process?.versions?.node;
 const glob = isNode && require('glob');
 
 import NovaSheets from './index';

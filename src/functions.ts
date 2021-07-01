@@ -43,13 +43,13 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
 
     const number = r`(?:[0-9]*\.?[0-9]+)`;
     const basedNumber = r`(?:0x[0-9a-f]*\.?[0-9a-f]+|0b[01]*\.?[01]+|0o[0-7]*\.?[0-7]+|${number})`;
-    const toNum = (val: string | number): number => constants.KEEP_NAN ? +val : (Number.isNaN(val) ? 0 : parseFloat(val + ""));
-    const testNaN = (arg: any, def: string) => {
-        let test: boolean = !arg || arg === Infinity || Number.isNaN(arg);
-        if (test && constants.KEEP_NAN) return 'NaN';
-        else if (test && !constants.KEEP_NAN) return def || 0;
-        else if (Math.abs(+arg) <= 1e-7) return 0;
-        else return +arg;
+    const toNum = (val: string | number): number => constants.KEEP_NAN ? +val : (Number.isNaN(val) ? 0 : parseFloat(val + ''));
+    const testNaN = (arg: number, def: string) => {
+        const invalid: boolean = arg === Infinity || Number.isNaN(arg);
+        if (invalid && constants.KEEP_NAN) return 'NaN';
+        else if (invalid && !constants.KEEP_NAN) return def || 0;
+        else if (Math.abs(arg) <= 1e-7) return 0;
+        else return arg;
     };
 
     novasheets.addFunction('@e', () => Math.E);
@@ -166,7 +166,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
         for (let i in parts) {
             let num: string = parts[i];
             if (!parts[i]) {
-                parts[i] = "0";
+                parts[i] = '0';
             }
             else if (parts[i].includes('%')) {
                 num = num.replace('%', '');
@@ -300,13 +300,13 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
         let arg: string = a;
         for (let i = 0; i < constants.MAX_ARGUMENTS; i++) {
             arg = arg
-                .replace(RegExp(r`(?:~|!|not)\s*([+-]?${bracketedNumber})`), (_, a) => eval('~' + toNum(a))) // bitwise not
-                .replace(logicRegex('or|\\|'), (_, a, b) => eval(`(${toNum(a)}) | (${toNum(b)})`)) // bitwise or
-                .replace(logicRegex('nor'), (_, a, b) => eval(`~ (${toNum(a)}) | (${toNum(b)})`)) // bitwise nor
-                .replace(logicRegex('and|&'), (_, a, b) => eval(`(${toNum(a)}) & (${toNum(b)})`)) // bitwise and
-                .replace(logicRegex('nand'), (_, a, b) => eval(`~ (${toNum(a)}) & (${toNum(b)})`)) // bitwise nand
-                .replace(logicRegex('xor'), (_, a, b) => eval(`(${toNum(a)}) ^ (${toNum(b)})`)) // bitwise xor
-                .replace(logicRegex('xnor'), (_, a, b) => eval(`~ (${toNum(a)}) ^ (${toNum(b)})`)) // bitwise xnor
+                .replace(RegExp(r`(?:~|!|not)\s*([+-]?${bracketedNumber})`), (_, a) => (~toNum(a)).toString()) // bitwise not
+                .replace(logicRegex('or|\\|'), (_, a, b) => (toNum(a) | toNum(b)).toString()) // bitwise or
+                .replace(logicRegex('nor'), (_, a, b) => (~(toNum(a) | toNum(b))).toString()) // bitwise nor
+                .replace(logicRegex('and|&'), (_, a, b) => (toNum(a) & toNum(b)).toString()) // bitwise and
+                .replace(logicRegex('nand'), (_, a, b) => (~toNum(a) & toNum(b)).toString()) // bitwise nand
+                .replace(logicRegex('xor'), (_, a, b) => (toNum(a) ^ toNum(b)).toString()) // bitwise xor
+                .replace(logicRegex('xnor'), (_, a, b) => (~toNum(a) ^ toNum(b)).toString()) // bitwise xnor
                 ;
         }
         return arg;
