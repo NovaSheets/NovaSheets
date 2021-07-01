@@ -157,6 +157,7 @@ QUnit.module('Built-in functions', () => {
             ['$(@length | 123456 )', '6'],
             ['$(@encode | [text]="true")', '%5Btext%5D%3D%22true%22'],
             ['$(@replace | text | /te(.)t/ | !$1! )', '!x!'],
+            ['$(@replace | teExt | /e/gi | 3)', 't33xt'],
         ];
         test(q, tests);
     });

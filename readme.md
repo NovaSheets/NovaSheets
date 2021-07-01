@@ -129,7 +129,7 @@ In both cases, the optional `class` parameter is an instance of the NovaSheets c
   - The first parameter of `func` is the entire function match (`$(name|...)`) while the rest are the individual arguments of the function.
   - The optional `options` object has the following options available:
     - `trim?: boolean` (default: `true`): Whether arguments are trimmed.
-    - `allArgs?: boolean` (default: `false`): Whether arguments are trimmed.
+  <!-- - `allArgs?: boolean` (default: `false`): Whether all arguments should be loaded. -->
 
 **Basic usage:**
 ```js

@@ -12,8 +12,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
 
     /// Loop functions
 
-    novasheets.addFunction('@each', (_, a = '', b = '', c = '', ...rest) => {
-        let d: string = rest.join('|');
+    novasheets.addFunction('@each', (_, a = '', b = '', c = '', d = '') => {
         let [items, splitter, joiner, content]: string[] = d ? [a, b, c, d] : (c ? [a, b, b, c] : [a, ',', ',', b]);
         let arr: string[] = strim(items).split(strim(splitter));
         let output: string[] = [];
@@ -27,7 +26,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
             output.push(parsed);
         }
         return output.join(joiner);
-    }, { trim: false, allArgs: true });
+    }, { trim: false });
 
     novasheets.addFunction('@repeat', (_, a, ...b) => {
         let [delim, content]: string[] = b[1] ? [b[0], b.slice(1).join('|')] : ['', b.join('|')];
@@ -36,7 +35,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
             output += (i > 0 ? delim : '') + content.replace(/\$i/gi, (+i + 1).toString());
         }
         return output;
-    }, { trim: false, allArgs: true });
+    }, { trim: false });
 
 
     /// Math functions
@@ -132,7 +131,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
             regexFinder = RegExp(parts[0], parts[1] || 's');
         }
         return text.replace(isRegex ? regexFinder : RegExp(escapeRegex(finder), 'g'), replacer);
-    }, { trim: false, allArgs: true });
+    }, { trim: false });
 
 
     /// Colour functions

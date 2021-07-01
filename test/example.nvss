@@ -3,27 +3,23 @@
 @var desktop = 800px
 @var color1 = linear-gradient(135deg, #333, #111)
 @var color2 = #222
-
-* {box-sizing: border-box;}
-body {margin: 0; background: $(color1); line-height: 1.8; font: normal 16px sans-serif; color: #eee;}
-code {font-size: 1.1em;}
-kbd {border: 1px solid #fff; background-color: #fff4; padding: 2px 3px; font-family: monospace;}
-img {max-width: 100%; vertical-align: middle; border: 0;}
-abbr {cursor: help;}
-
 @var base-font-size = 2em
 @var theme color = #7f5d4a
 @var url = url("https://example.com")
 @var border | size | type
     $[size] $[type] $(theme color)
 @endvar
+@var border | color // or just `@var border`; arguments are automatically created
+  2px solid $[color];
+@endvar
 
-body {border: $( border | size = $(base-font-size) | type = solid ); padding: 4em / 2;}
+body {background: $(color1); border: $( border | size = $(base-font-size) | type = solid ); padding: 4em / 2;}
 .title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $( border | type = dotted | size = 1px );}
 .title:hover {font-size: $(base-font-size) * 125e-2;}
-.content {padding: 1/2em 1em;}
-.content p {font-family: "sans-serif";}
-.content .p-styled {color: $(theme color);}
+.content {
+    padding: 1/2em 1em;
+    .p-styled {color: $(theme color);}
+}
 
 header {
     width: 100%; z-index: 100;
@@ -33,7 +29,7 @@ header {
     background: $(color2); display: flex; border-bottom: 2px solid white;
     [data-icon] img {cursor: pointer; height: 32px;}
     .menu-icon {width: 80px;}
-    &-search, #menu-icon::first-child {align-self: center; text-align: center; color: white; cursor: pointer; z-index: 10;}
+    &-search, #menu-icon:first-child {align-self: center; text-align: center; color: white; cursor: pointer; z-index: 10;}
     &-search a, #menu-icon a {color: white;}
     #menu-logo {
         margin: auto;
@@ -42,4 +38,4 @@ header {
     &-search {display: block;}
 }
 
-$( @each | tr td th | | $v {color: red;} )
+$( @each | tr td th | | | $v {color: red;} )

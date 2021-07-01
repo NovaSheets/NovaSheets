@@ -22,24 +22,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     })();
     const parseFunction = (name: string, func: (...args: string[]) => string, opts: CustomFunctionOptions = {}): void => {
         if (RegExp(mathChecker).test(cssOutput)) return; // only run after math is parsed
-        const match: string[] = Array.from(cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i')) || []);
-        if (match.length === 0) return;
+        const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
+        if (!match) return;
         const searchString: string = cssOutput.substr(cssOutput.indexOf(match[0]));
-        let segment: string = '';
-        let brackets: number = 0;
-        let hasBrackets: boolean = false;
-        for (let i = 0; i < searchString.length; i++) {
-            // search until the initial bracket is matched
-            segment += searchString[i];
-            if (brackets > 0) hasBrackets = true;
-            if (searchString[i] === '(') brackets++;
-            if (searchString[i] === ')') brackets--;
-            if (hasBrackets && brackets === 0) break;
-            if (i === searchString.length - 1 && brackets > 0) return; // prevent overflow
-        }
-        if (!segment.trim()) return;
+        const segment = balanced('(', ')', searchString).body;
         const replacer: RegExp = opts.trim === false ? /^\$\(|\)$/ : /^\$\(\s*|\s*\)$/g;
-        const splitter: RegExp | string = opts.trim === false ? '|' : /\s*\|\s*/;
+        const splitter: RegExp = opts.trim === false ? /\|/ : /\s*\|\s*/;
         let parts: string[] = segment.replace(replacer, '').split(splitter); // [name, arg1, arg2, ...]
         for (let i = 0; i < constants.MAX_ARGUMENTS; i++) {
             if (!parts[i]) parts[i] = '';
@@ -53,7 +41,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             }
         }
         parts[0] = segment;
-        cssOutput = cssOutput.replace(segment, func(...parts));
+        cssOutput = cssOutput.replace(`$(${segment})`, func(...parts));
     };
     const ESC: Record<string, string> = {
         OPEN_BRACE: Math.random().toString(36).substr(2),
@@ -186,7 +174,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         if (constants.BUILTIN_FUNCTIONS) allFunctions.push(...builtInFunctions({ constants }));
         allFunctions.push(...(novasheets?.getFunctions() ?? []));
         for (const obj of allFunctions) {
-            parseFunction(obj.name, obj.body);
+            parseFunction(obj.name, obj.body, obj.options);
         }
 
         // Parse nesting //
