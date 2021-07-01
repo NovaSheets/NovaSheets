@@ -12,6 +12,7 @@
 ## Next
 
 - **Fixes**
+  - [Syntax] Fixed keywords `@var` and `@endvar` not being parsed properly when not separated from other content by newlines.
   - [Syntax] Fixed superfluous whitespace being added to CSS output.
   - [Syntax] Fixed parser option `DECIMAL_PLACES` not being applied to all applicable values.
 

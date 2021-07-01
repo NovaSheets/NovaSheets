@@ -61,7 +61,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         SLASH: Math.random().toString(36).substr(2),
     }
 
-
     // Prepare stylesheet for parsing //
 
     let styleContents: string = content
@@ -100,13 +99,13 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
     for (let i in lines) {
         let matcher: RegExp;
-        if (lines[i].match(/^\s*@var\s/)) {
-            let varDeclParts: string[] = lines[i].replace(/^\s*@var\s/, '').split('=');
-            let linesAfter: string[] = lines.slice(+i);
+        if (lines[i].match(/\s*@var\s/)) {
+            const varDeclParts: string[] = lines[i].replace(/\s*@var\s/, '').split('=');
+            const linesAfter: string[] = lines.slice(+i);
 
             let varEnding: number | undefined;
             for (let j in linesAfter) {
-                if (linesAfter[j].match(/^\s*@endvar\s*$|^\s*@var\s/) && +j !== 0) {
+                if (linesAfter[j].match(/\s*@endvar\s*|\s*@var\s/) && +j !== 0) {
                     varEnding = +j;
                     break;
                 }

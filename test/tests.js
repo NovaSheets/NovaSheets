@@ -63,6 +63,7 @@ QUnit.module('NovaSheets content', () => {
             ['a { b { x:y; } color: red; }', 'a {color: red;} a b {x:y;}'],
             ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media (min-width: 10px) { a { a:b; } } @media (min-width: 20px) { ac { d:1 } }'],
             ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b; x:y;} a b {c:a} a d e {x:y}'],
+            ['@var x = red;\n a {color: $(x)}', 'a {color: red;}'],
         ];
         test(q, tests);
     });
@@ -218,6 +219,7 @@ QUnit.module('Misc', () => {
         const tests = [
             ['https://example.com', ditto],
             ['::root {color: red;}', ditto],
+            ['@a; @b;', ditto],
             ['#1e4', ditto],
             ['padding: 0 -2em;', ditto],
             ['@import url(foo); a {x:y;}', ditto],
