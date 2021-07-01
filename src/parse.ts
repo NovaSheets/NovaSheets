@@ -70,7 +70,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
         .replace(/@option\s*[A-Z_]+\s*(true|false|[0-9]+)|@endvar/g, '$&\n') // put each const on its own line
         .replace(/}}/g, '} }') // ensure the second brace is not skipped over
-        .replace(/;(\s*)@/g, ';$1&@') // implicit parent selector for simple breakpoints
+        .replace(/;(\s*)@(?![a-z])/gi, ';$1&@') // implicit parent selector for simple breakpoints
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
     let lines: string[] = styleContents.split('\n');
@@ -148,7 +148,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             .replace(RegExp(mathChecker, 'g'), _ => {
                 if (/\d[a-z]{0,2}\s+-\d/.test(_)) return _; // delimited values, not subtraction
                 let unit: string = '';
-                let content: string = _
+                const content: string = _
                     .replace(/\*\*/g, '^')
                     .replace(RegExp(r`(${number})\s*(${numberUnit})`, 'g'), (_, num, u) => {
                         switch (u) {
@@ -165,7 +165,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         // Parse variable contents //
 
-        for (let name in customVars) {
+        for (const name in customVars) {
             parseFunction(name, (_: string, ...paramArgs: string[]): string => {
                 let content: string = customVars[name];
                 for (const i in paramArgs) {
