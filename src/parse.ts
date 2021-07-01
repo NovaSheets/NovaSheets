@@ -7,7 +7,7 @@ import builtInFunctions from './functions';
 
 function parse(content: string, novasheets: NovaSheets = new NovaSheets()): string {
     const r = String.raw;
-    const strim = (str: string): string => str.replace(/^\s*(.+?)\s*$/, '$1').replace(/\s+/g, ' ');
+    const strim = (str: string): string => str.trim().replace(/\s+/g, ' ');
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
     const number: string = r`(?:\d*\.?\d+|\d+\.)`;
     const basedNumber: string = r`(?:-?(?:0x[0-9a-f]*\.?[0-9a-f]+|0b[01]*\.?[01]+|0o[0-7]*\.?[0-7]+|${number}))`;
@@ -228,15 +228,15 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 }
             }
             // create selector
-            let fullSelector: string = data.pre.includes('&') ? data.pre.replace(/&/g, parent) : parent + ' ' + data.pre;
+            let fullSelector: string = strim(data.pre.includes('&') ? data.pre.replace(/&/g, parent) : parent + ' ' + data.pre);
             // write selector if the block has styles
             if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
             // add empty styles if selector has no styles
             if (parent && !data.pre) compiledOutput += '{}';
             // parse children
-            unnest(data.body, fullSelector.trim());
+            unnest(data.body, fullSelector);
             // continue to next block
-            unnest(data.post, parent.trim());
+            unnest(data.post, strim(parent));
         }
         unnest(cssOutput, '');
         const mediaRegex: string = r`@media[^{}]+(?:\([^()]+?\))+`;
@@ -322,7 +322,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/(\d+)([5-9])\2{10,}\d?(?=\D)/g, (_, a) => String(+a + 1))
         .replace(/\d*\.?\d+e-(?:7|8|9|\d{2,})/, '0')
         // cleanup decimal places
-        .replace(RegExp(r`((\d)\.\d{0,${constants.DECIMAL_PLACES}})(\d?)\d*`), (_, val, pre, after) => {
+        .replace(RegExp(r`((\d)\.\d{0,${constants.DECIMAL_PLACES}})(\d?)\d*`, 'g'), (_, val, pre, after) => {
             const roundsUp: boolean = /[5-9]$/.test(after);
             if (constants.DECIMAL_PLACES === 0) return roundsUp ? parseInt(pre) + 1 : pre;
             else return roundsUp ? val.replace(/.$/, '') + (parseInt(val.substr(-1)) + 1) : val;

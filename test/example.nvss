@@ -17,6 +17,7 @@ abbr {cursor: help;}
 @var border | size | type
     $[size] $[type] $(theme color)
 @endvar
+
 body {border: $( border | size = $(base-font-size) | type = solid ); padding: 4em / 2;}
 .title {margin-left: 1em; font-size: $(base-font-size); border-bottom: $( border | type = dotted | size = 1px );}
 .title:hover {font-size: $(base-font-size) * 125e-2;}

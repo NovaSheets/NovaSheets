@@ -9,6 +9,12 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## Next
+
+- **Fixes**
+  - [Syntax] Fixed superfluous whitespace being added to CSS output.
+  - [Syntax] Fixed parser option `DECIMAL_PLACES` not being applied to all applicable values.
+
 ## 1.0.0
 *2021-06-19*
 
@@ -29,14 +35,12 @@ For the changes since the last release candidate, see the [1.0.0-release](#100-r
   - [Syntax] Removed parser constants `MAX_MATH_RECURSION` and `KEEP_NAN`.
   - [Syntax] Removed previous and parent selectors, `%` an `&`, as this usage is now accomplished by nesting.
   - [Syntax] Removed item slicer `<`.
-  - [Scripting] Removed `addFunction` option `nonest`.
 - **Changes**
   - [Syntax] Changed parser constant keyword from `@const` to `@option`.
   - [Syntax] Changed function names to be case insensitive.
   - [Syntax] Changed media query output to not condense duplicated queries as it sometimes broke output.
   - [CLI] Changed compilation to require using the `--compile`/`-c` flag.
   - [Scripting] Changed `compile` function to be asyncronous.
-  - [Scripting] Renamed `addFunction` option `notrim` to `trim` (inverting its usage) and `allargs` to `allArgs`.
   - [Functions] Changed math functions to return just their argument when invalid.
   - [Functions] Changed built-in color functions to no longer output console warnings for invalid colors.
 - **Fixes**
