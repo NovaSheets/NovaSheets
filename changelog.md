@@ -10,6 +10,8 @@
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
 ## Next
+- **Changes**
+  - [CLI] Revamped CLI usage, which now allows unprefixed command names (e.g., `novasheets help` can now be used instead of `novasheets --help`).
 - **Fixes**
   - [Syntax] Fixed keywords `@var` and `@endvar` not being parsed properly when not separated from other content by newlines.
   - [Syntax] Fixed superfluous whitespace being added to CSS output.

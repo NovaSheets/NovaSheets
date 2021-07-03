@@ -3,7 +3,6 @@
     /* More info: https://aka.ms/tsconfig.json */
 
     /* Basic Options */
-    //"incremental": true,
     "target": "es2019",
     "module": "commonjs",
     //"lib": [],
@@ -44,6 +43,7 @@
 
     /* Module Resolution Options */
     "moduleResolution": "node",
+    "resolveJsonModule": true,
     //"baseUrl": "./",
     //"paths": {},
     //"rootDirs": [],
@@ -53,12 +53,6 @@
     "esModuleInterop": true,
     //"preserveSymlinks": true,
     //"allowUmdGlobalAccess": true,
-
-    /* Source Map Options */
-    //"sourceRoot": "",
-    //"mapRoot": "",
-    //"inlineSourceMap": true,
-    //"inlineSources": true,
 
     /* Advanced Options */
     "skipLibCheck": true,
