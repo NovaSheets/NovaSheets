@@ -27,7 +27,8 @@
         "lint": "eslint . --ignore-path .gitignore",
         "lint:fix": "eslint . --ignore-path .gitignore --fix",
         "build": "tsc && node build",
-        "test": "tsc && qunit"
+        "test": "tsc && qunit",
+        "test:compile": "node test/test-compile"
     },
     "repository": {
         "type": "git",
