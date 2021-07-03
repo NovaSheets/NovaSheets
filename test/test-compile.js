@@ -15,7 +15,7 @@ async function compileTest(input, output) {
     fs.mkdirSync('./bin/glob/', { recursive: true });
     fs.mkdirSync('./test/bin/', { recursive: true });
     // Per-file compilation
-    await compileTest('test/invalid.nvss', 'bin/');
+    await compileTest('this test should fail', 'bin/');
     await compileTest('test/example.nvss', 'bin/no-extension');
     await compileTest('test/example.nvss', 'bin/output-w-ext.css');
     // Globbed compilation

@@ -26,22 +26,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         if (!match) return;
         const searchString: string = cssOutput.substr(cssOutput.indexOf(match[0]));
         const segment = balanced('(', ')', searchString).body;
-        const replacer: RegExp = opts.trim === false ? /^\$\(|\)$/ : /^\$\(\s*|\s*\)$/g;
-        const splitter: RegExp = opts.trim === false ? /\|/ : /\s*\|\s*/;
-        let parts: string[] = segment.replace(replacer, '').split(splitter); // [name, arg1, arg2, ...]
-        for (let i = 0; i < constants.MAX_ARGUMENTS; i++) {
-            if (!parts[i]) parts[i] = '';
-        }
-        if (!opts.allArgs) {
-            for (let i = +constants.MAX_ARGUMENTS; i > 0; i--) {
-                if (parts[+i]) {
-                    parts = parts.slice(0, i + 1);
-                    break;
-                }
-            }
-        }
-        parts[0] = segment;
-        cssOutput = cssOutput.replace(`$(${segment})`, func(...parts));
+        const fullSegment = '$(' + segment + ')';
+        let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
+        if (opts.trim !== false) parts = parts.map(part => part.trim());
+        parts[0] = fullSegment;
+        cssOutput = cssOutput.replace(fullSegment, func(...parts));
     };
     const ESC: Record<string, string> = {
         OPEN_BRACE: Math.random().toString(36).substr(2),

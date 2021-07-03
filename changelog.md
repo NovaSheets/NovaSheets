@@ -18,6 +18,7 @@
   - [Syntax] Fixed parser option `DECIMAL_PLACES` not being applied to all applicable values.
   - [Syntax] Fixed at-rules being prefixed with erroneous ampersands.
   - [Scripting] Fixed custom options not being applied.
+  - [Functions] Fixed `@each` and `@repeat` not treating whitespace properly.
 
 ## 1.0.0
 *2021-06-19*

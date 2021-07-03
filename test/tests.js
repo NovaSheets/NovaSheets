@@ -176,6 +176,7 @@ QUnit.module('Built-in functions', () => {
     });
     QUnit.test('Loop functions', q => {
         const tests = [
+            ['$(@each | tr td | | | $v {display:none;} )', 'tr {display:none;} td {display:none;}'],
             ['$(@each | a,b,c | , |; | $v: $(@cos|$(@pi)*$i) )', 'a: -1; b: 1; c: -1'],
             ['$(@repeat | 3 | ; | (10x$i)exp2=$(@root | 0.5 | 10*$i ) );', '(10x1)exp2=100;(10x2)exp2=400;(10x3)exp2=900;'],
             ['$(@each | 1,2,3,4,5,6,7,8,9 | , | | $v($i) )', '1(1) 2(2) 3(3) 4(4) 5(5) 6(6) 7(7) 8(8) 9(9)'],

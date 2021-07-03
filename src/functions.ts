@@ -12,24 +12,25 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
 
     /// Loop functions
 
-    novasheets.addFunction('@each', (_, a = '', b = '', c = '', d = '') => {
-        let [items, splitter, joiner, content]: string[] = d ? [a, b, c, d] : (c ? [a, b, b, c] : [a, ',', ',', b]);
-        let arr: string[] = strim(items).split(strim(splitter));
+    novasheets.addFunction('@each', (_, a = '', b = '', c = '', ...rest) => {
+        let d: string = rest.join('|');
+        const [items, splitter, joiner, content]: string[] = d ? [a, b, c, d] : (c ? [a, b, b, c] : [a, ',', ',', b]);
+        const arr: string[] = strim(items).split(splitter === ' ' ? splitter : splitter.trim());
         let output: string[] = [];
         for (let i in arr) {
             let parsed = strim(content)
-                .replace(/\$i/gi, String(+i + 1))
+                .replace(/\$i/gi, (+i + 1).toString())
                 .replace(/\$v\[([0-9]+)([-+*/][0-9]+)?\]/g, (_, a, b) => arr[+a - 1 + (b || 0)])
-                .replace(/.?\s*undefined/g, '')
+                .replace(RegExp(r`${escapeRegex(joiner)}\s*undefined`, 'g'), '')
                 .replace(/\$v/gi, arr[i])
-                ;
             output.push(parsed);
         }
-        return output.join(joiner);
+        return output.join(joiner === ' ' ? joiner : joiner.trim());
     }, { trim: false });
 
     novasheets.addFunction('@repeat', (_, a, ...b) => {
-        let [delim, content]: string[] = b[1] ? [b[0], b.slice(1).join('|')] : ['', b.join('|')];
+        const delim = b[1] ? b[0] : '';
+        const content = b.slice(b[1] ? 1 : 0).join('|');
         let output: string = '';
         for (let i = 0; i < +a; i++) {
             output += (i > 0 ? delim : '') + content.replace(/\$i/gi, (+i + 1).toString());
@@ -288,7 +289,6 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
                 .replace(/(.+?)\bxor\b(.+)?/gi, '($1 && !($2)) || (!($1) && $2)') // 'xor' logical operator
                 .replace(/(.+?)\bxnor\b(.+)?/gi, '$1 == $2') // 'xnor' logical operator
                 .replace(/(?!=)(!?)=(==)?(?!=)/g, '$1$2==') // normalise equality signs
-                ;
         }
         if (/(<|<=|>|>=|==|!=|&|!|\|)/.test(arg)) arg = eval('!!' + arg);
         if (['false', 'undefined', 'null', 'NaN', ''].includes(arg)) arg = 'false';
@@ -306,7 +306,6 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
                 .replace(logicRegex('nand'), (_, a, b) => (~toNum(a) & toNum(b)).toString()) // bitwise nand
                 .replace(logicRegex('xor'), (_, a, b) => (toNum(a) ^ toNum(b)).toString()) // bitwise xor
                 .replace(logicRegex('xnor'), (_, a, b) => (~toNum(a) ^ toNum(b)).toString()) // bitwise xnor
-                ;
         }
         return arg;
     });
