@@ -162,7 +162,7 @@ See the [releases](https://github.com/NovaSheets/NovaSheets/releases) page of th
 
 Simply import the script into your HTML document and any embedded NovaSheets stylesheets will be parsed:
 ```html
-<script src="https://novasheets.js.org/src/stable/min"></script> // latest stable release
+<script src="https://novasheets.js.org/src/stable/min"></script> <!-- latest stable release -->
 ```
 
 NovaSheets styles can be written inline or imported from external files:
@@ -174,7 +174,7 @@ NovaSheets styles can be written inline or imported from external files:
 ```
 
 If you are using a static site generator that supports npm packages (such as [eleventy](https://github.com/11ty/eleventy)), it is recommended to use the command-line usage to compile NovaSheets during the site's build process instead of client-side.
-This can be done by adding `novasheets --compile **/*.nvss` to your post-build command after installing NovaSheets using `novasheets install --save-dev novasheets`.
+This can be done by adding `novasheets --compile **/*.nvss` to your post-build command after installing NovaSheets using `npm install --save-dev novasheets`.
 
 The NovaSheets class is available to use in the browser, allowing you to add custom functions. Example:
 ```js

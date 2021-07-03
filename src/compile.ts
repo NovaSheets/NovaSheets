@@ -1,4 +1,4 @@
-import fs from 'fs/promises';
+import { promises as fs } from 'fs';
 import path from 'path';
 const isNode = typeof process !== 'undefined' && process?.versions?.node;
 const glob = isNode && require('glob');
