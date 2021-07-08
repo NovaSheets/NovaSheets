@@ -206,7 +206,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             // create selector
             let fullSelector: string = strim(data.pre.includes('&') ? data.pre.replace(/&/g, parent) : parent + ' ' + data.pre);
             // write selector if the block has styles
-            if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
+            if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector.replace(/\/\*.+?\*\//gs, '');
             // add empty styles if selector has no styles
             if (parent && !data.pre) compiledOutput += '{}';
             // parse children
@@ -284,10 +284,14 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     // Cleanup output //
 
     cssOutput = cssOutput
-        // remove redundant chars
-        .replace(/(\s*;)+/g, ';')
-        .replace(/(?<!^ *) +/gm, ' ')
-        .replace(/}\s*/g, '}\n').replace(/}\s*}/g, '} }')
+        // cleanup whitespace
+        .replace(/(?<!^ *) +/gm, ' ') // remove redundant whitespace
+        .replace(/\*\/\s*/g, '$&\n') // newline after block comment
+        .replace(/}\s*/g, '}\n').replace(/}\s*}/g, '} }') // space after braces
+        .replace(/\s*{/g, ' {') // space before braces
+        .replace(/^([ \t])\1+/gm, '$1') // single indent
+        .replace(/^([ \t].+)}/gm, '$1\n}') // newline before indented block ending
+        .replace(/{\s*(.+\r?\n)([ \t])/g, '{\n$2$1$2') // newline after indent block start
         // clean up length units
         .replace(/(?<![1-9]+)(0\.\d+)\s*(m|s)/, (_, n, u) => +n * 1000 + 'm' + u)
         .replace(/(?<=\d)0\s*mm/g, 'cm')
