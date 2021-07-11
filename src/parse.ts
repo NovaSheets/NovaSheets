@@ -209,6 +209,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             if (data.pre.includes('@media')) fullSelector = data.pre + parent.replace(RegExp(mediaRegex, 'g'), '');
             else if (data.pre.includes('&')) fullSelector = data.pre.replace(/&/g, parent);
             else fullSelector = parent + ' ' + data.pre;
+            fullSelector = strim(fullSelector);
             // write selector if the block has styles
             if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector.replace(/\/\*.+?\*\//gs, '');
             // add empty styles if selector has no styles
@@ -223,6 +224,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             .replace(RegExp(r`(${mediaRegex})([^{}]+{.+?})`, 'g'), '$1 { $2 }')
             .replace(RegExp(r`(${mediaRegex})\s*(?:{})?(?=\s*@media)`, 'g'), '')
             .replace(RegExp(r`(${mediaRegex})\s*([^{}]+){([^{}]+)}`, 'g'), '$1 { $2 {$3} }')
+        const bodyRegex: string = r`[^]*?{[^]*?}\s*`;
+        const undupeMatch: RegExp = RegExp(r`(${mediaRegex})\s*{(${bodyRegex})}\s*\1\s*{(${bodyRegex})}\s*`, 'g');
+        while (undupeMatch.test(cssOutput)) {
+            cssOutput = cssOutput.replace(undupeMatch, `$1 {$2 $3}`);
+        }
 
         // Parse CSS block substitutions //
 

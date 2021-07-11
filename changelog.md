@@ -12,6 +12,7 @@
 ## Next
 - **Changes**
   - [Syntax] Changed output indentation to more closely follow input indentation.
+  - [Syntax] Changed output to merge duplicate media selectors.
 - **Fixes**
   - [Syntax] Fixed comments in CSS output being duplicated over child selectors.
   - [Syntax] Fixed nested media queries not working.
