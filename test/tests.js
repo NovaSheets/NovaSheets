@@ -64,6 +64,7 @@ QUnit.module('NovaSheets content', () => {
             ['a @ 10px {a:b; &c @ 20px {d:1} }', '@media (min-width: 10px) { a { a:b; } } @media (min-width: 20px) { ac { d:1 } }'],
             ['a {a:b; b {c:a} d {e{x:y}} x:y }', 'a {a:b; x:y;} a b {c:a} a d e {x:y}'],
             ['@var x = red;\n a {color: $(x)}', 'a {color: red;}'],
+            ['a { @media (min-width: 100px) { color: red; } }', '@media (min-width: 100px) { a {color: red;} }'],
         ];
         test(q, tests);
     });

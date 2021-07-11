@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "1.0.1",
+    "version": "1.0.2",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -47,8 +47,8 @@
     },
     "devDependencies": {
         "@types/node": "ts4.3",
-        "@typescript-eslint/eslint-plugin": "^4.28.1",
-        "@typescript-eslint/parser": "^4.28.1",
+        "@typescript-eslint/eslint-plugin": "^4.28.2",
+        "@typescript-eslint/parser": "^4.28.2",
         "browserify": "^17.0.0",
         "eslint": "^7.30.0",
         "qunit": "^2.16.0",
