@@ -14,6 +14,7 @@
   - [Syntax] Changed output indentation to more closely follow input indentation.
 - **Fixes**
   - [Syntax] Fixed comments in CSS output being duplicated over child selectors.
+  - [Syntax] Fixed nested media queries not working.
 
 ## 1.0.1
 *2021-07-03*

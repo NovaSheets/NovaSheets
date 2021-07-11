@@ -1,10 +1,10 @@
 // Default built-in functions
 
-import NovaSheets from './novasheets';
+import NovaSheets from './index';
 import { Constants, CustomFunction } from './common';
 
 function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFunction[] {
-    const novasheets: NovaSheets = new (require('./novasheets'))();
+    const novasheets: NovaSheets = new (require('./index'))(); // ???
     // const novasheets: NovaSheets = new NovaSheets();
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
     const strim = (str: string): string => str.toString().replace(/^\s*(.+?)\s*$/, '$1').replace(/\s+/g, ' ');

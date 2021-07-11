@@ -169,6 +169,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // Parse nesting //
 
         let compiledOutput = '';
+        const mediaRegex: string = r`@media[^{}]*(?:\([^()]+?\))+`;
         const check = (s: string) => balanced('{', '}', s);
         const unnest = (css: string, parent: string): void => {
             // early return if block has no parent (is an object literal)
@@ -204,7 +205,10 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 }
             }
             // create selector
-            let fullSelector: string = strim(data.pre.includes('&') ? data.pre.replace(/&/g, parent) : parent + ' ' + data.pre);
+            let fullSelector: string = '';
+            if (data.pre.includes('@media')) fullSelector = data.pre + parent.replace(RegExp(mediaRegex, 'g'), '');
+            else if (data.pre.includes('&')) fullSelector = data.pre.replace(/&/g, parent);
+            else fullSelector = parent + ' ' + data.pre;
             // write selector if the block has styles
             if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector.replace(/\/\*.+?\*\//gs, '');
             // add empty styles if selector has no styles
@@ -215,8 +219,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             unnest(data.post, strim(parent));
         }
         unnest(cssOutput, '');
-        const mediaRegex: string = r`@media[^{}]+(?:\([^()]+?\))+`;
         cssOutput = compiledOutput
+            .replace(RegExp(r`(${mediaRegex})([^{}]+{.+?})`, 'g'), '$1 { $2 }')
             .replace(RegExp(r`(${mediaRegex})\s*(?:{})?(?=\s*@media)`, 'g'), '')
             .replace(RegExp(r`(${mediaRegex})\s*([^{}]+){([^{}]+)}`, 'g'), '$1 { $2 {$3} }')
 
@@ -292,6 +296,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/^([ \t])\1+/gm, '$1') // single indent
         .replace(/^([ \t].+)}/gm, '$1\n}') // newline before indented block ending
         .replace(/{\s*(.+\r?\n)([ \t])/g, '{\n$2$1$2') // newline after indent block start
+        // remove extra punctutation
+        .replace(/(\s*;)+/g, ';')
         // clean up length units
         .replace(/(?<![1-9]+)(0\.\d+)\s*(m|s)/, (_, n, u) => +n * 1000 + 'm' + u)
         .replace(/(?<=\d)0\s*mm/g, 'cm')
