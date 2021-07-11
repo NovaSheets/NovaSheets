@@ -9,7 +9,9 @@ import parse from './parse';
 async function compileNovaSheets(source: string, outPath: string, novasheets: NovaSheets): Promise<void> {
 
     const compile = async (inputFiles: string[]): Promise<void> => {
-        for (let input of inputFiles) {
+        for (const inputPath of inputFiles) {
+            const input = /\.\w+/.test(inputPath) ? inputPath : inputPath + '.nvss';
+
             const contents = await fs.readFile(input, { encoding: 'utf8' }).catch(err => {
                 throw `ReadError: Input file '${input}' not found.\n` + err.message;
             });
