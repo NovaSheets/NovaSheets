@@ -14,8 +14,9 @@
         "parser"
     ],
     "files": [
-        "src/*.js",
-        "src/*.d.ts",
+        "src/**/*.js",
+        "src/**/*.d.ts",
+        "src/**/*.yaml",
         "!src/browser.*"
     ],
     "main": "src/index.js",

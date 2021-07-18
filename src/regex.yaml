@@ -1,0 +1,227 @@
+# Numbers
+
+number: |
+    (?: \d*\. )?\d+
+    |
+    \d+\.
+
+basedNumber: |
+    -?
+    (?:
+        0x [0-9a-f]* \.? [0-9a-f]+
+        |
+        0b [01]* \.? [01]+
+        |
+        0o [0-7]* \.? [0-7]+
+    |
+    {{number}}
+    )
+
+numberUnit: |
+    \s*
+    (?:
+        em|rem|en|ex|px|pt|pc|ft|in|s|ms|cm|mm|m
+    )
+    \b
+
+numberWithUnit: |
+    ( {{number}} )
+    \s*
+    ( {{numberUnit}} )
+
+exponential: |
+    (?<! [#\w] )
+    ( {{number}} ) # Group 1 used
+    \s* e \s*
+    ( [+-]? {{number}} ) # Group 2 used
+
+# Comments
+
+singleLineComment: |
+    (?<![a-z]:) # Exclude e.g. "http://"
+    \/\/ # Double slash
+    .*$ # Content until end of lint
+
+blockComment: |
+    \/\*
+    (.+?)
+    \*\/
+
+staticComment: |
+    \/\*\/
+    (.+?)
+    \/\*\/
+
+# Declarations
+
+singleLineVarDeclaration: |
+    (?:
+        @var\s # Variable declaration
+        .+?
+        =
+        .*$ # Content goes until end of line
+    |
+        @var\s* # Variable declaration
+        [^=]* # No equals on line
+        (?=
+            \n\s*
+            @var\s # Variable declaration on next line implicitly ends this one
+            .
+        )
+    )
+    (?!
+        \n\s*
+        @endvar # Explcit end
+    )
+
+singleLineDeclarations: |
+    {{parserOption}}
+    |
+    @endvar
+
+syntacticDeclaration: |
+    @var\s
+    .*?
+    ( (?=@var) | @endvar )
+    |
+    @endvar
+    |
+    {{parserOption}}
+
+parserOption: |
+    @option
+    \s*
+    [A-Z_]+
+    \s*
+    (true|false|[0-9]+)
+
+# Substitutions
+
+unparsedContent: |
+    \$
+    [\[(]
+    (.+?)
+    [\])]
+
+variableName: |
+    \$
+    [\[(]
+    (.*?) # Name # Group 1 used
+    (\|.*)? # Arguments
+    [\])]
+
+# Selectors
+
+implicitParentSelector: |
+    ;
+    (\s*) # Group 1 used
+    @(?!\w)
+
+# Object notation
+
+block: |
+    {
+    ( [^{}]*? )
+    }
+
+objectNotation: |
+    {{block}}
+    \s*
+    <
+    ( [^[\]]*? )
+    >
+
+blockSubstitutions: |
+    {{block}}
+    \s* !
+
+# Simple breakpoints
+
+simpleBreakpoint: |
+    ([^{};]*?)
+    \s* @ \s*
+    (?:(\d+px)
+    (?:\s*\.{2,})?
+    (\s*\d+px)?
+    |
+    (\d+px)?
+    (?:\s*\.{2,})?
+    (\s*\d+px))
+    ([^{}]*?)
+    {(.*?)}
+
+# Edge cases
+
+slashEdgeCaseFunction: |
+    (
+        (?:rgba?|hsla?)
+        \(
+        .+?
+        [\s\d%]+
+    )
+    \/
+    ([\s\d%]+\))
+
+slashEdgeCaseAttribute: |
+    (
+        (?:grid|font)
+        (?:-\w+)?
+        :
+        [^;]+?
+        \d\w*
+    )
+    \s*\/\s*
+    (\d)
+
+slashEdgeCases: |
+    {{slashEdgeCase:function}}
+    |
+    {{slashEdgeCase:attribute}}
+
+edgeCaseDelimited: |
+    \d[a-z]{0,2} # Unit value
+    \s+ # Space
+    -\d # Unspaced negative value
+
+# Media queries
+
+mediaQuery: |
+    @media
+    (?:
+        [\s\w]+ # Words
+        \([^()]+?\) # Parentherical values
+    )+
+
+mediaQueryBlock: |
+    ( {{mediaQuery}} ) # Group 1 used
+    ( # Group 2 used
+        [^{}]+
+        { .+? } # Block content
+    )
+
+emptyMediaQueryBlock: |
+    ( {{mediaQuery}} ) # Group 1 used
+    \s*
+    (?:{})? # Empty block
+    \s*
+    (?= @media )
+
+nonEmptyMediaQueryBlock: |
+    ( {{mediaQuery}} ) # Group 1 used
+    \s*
+    ( [^{}]+ ) # Group 2 used
+    {
+    ( [^{}]+ ) # Group 3 used
+    }
+
+mediaQueryBody: |
+    .*?
+    { .*? }
+    \s*
+
+duplicateMediaQueries: |
+    ( {{mediaQuery}} ) # Group 1 used
+    \s*
+    { ( {{mediaQueryBody}} ) } # Group 2 used
+    \s* \1 \s*
+    { ( {{mediaQueryBody}} ) } # Group 3 used
