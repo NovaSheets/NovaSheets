@@ -227,6 +227,8 @@ QUnit.module('Misc', () => {
             ['padding: 0 -2em;', ditto],
             ['@import url(foo); a {x:y;}', ditto],
             ['calc(1 + 2 / 4)', '1.5'],
+            ['font: 12px/18px Arial', ditto],
+            ['grid-area: 2 / 4', ditto],
             ['rgb(0% 64 12 / 50%)', ditto],
             ['td {height: $(@round|1.2)em; margin: calc(var(--a)+1);}', 'td {height: 1em; margin: calc(var(--a)+1);}'],
         ];

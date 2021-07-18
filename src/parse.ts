@@ -117,8 +117,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         cssOutput = cssOutput
             // convert exponential notation
             .replace(RegExp(r`(?<!#|\w)(${number})\s*e\s*([+-]?${number})`, 'gi'), (_, a, b) => String(+a * 10 ** +b))
-            // fix edge case of slashes in CSS functions
-            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, (_, before, after) => before + ESC.SLASH + after)
+            // fix slash edge cases
+            .replace(/((?:rgba?|hsla?)\(.+?[\s\d%]+)\/([\s\d%]+\))/g, '$1' + ESC.SLASH + '$2')
+            .replace(/((?:grid|font)(?:-\w+)?:[^;]+?\d\w*)\s*\/\s*(\d)/g, '$1' + ESC.SLASH + '$2')
             // compile math
             .replace(RegExp(mathChecker, 'g'), _ => {
                 if (/\d[a-z]{0,2}\s+-\d/.test(_)) return _; // delimited values, not subtraction
