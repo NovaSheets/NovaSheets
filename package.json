@@ -27,6 +27,7 @@
         "lint": "eslint . --ignore-path .gitignore",
         "lint:fix": "eslint . --ignore-path .gitignore --fix",
         "build": "tsc && node build",
+        "changelog": "git log --format=\"- %h %s\" --reverse -10",
         "test": "tsc && qunit && npm run lint",
         "test:compile": "node test/test-compile"
     },

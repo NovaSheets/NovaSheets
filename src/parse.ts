@@ -1,4 +1,4 @@
-const balanced = require('balanced-match')
+const balanced = require('balanced-match');
 const { MathParser } = require('math-and-unit-parser');
 
 import NovaSheets from './index';
@@ -69,7 +69,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         DECIMAL_PLACES: false,
         KEEP_UNPARSED: false,
         MAX_ARGUMENTS: 10,
-        MAX_RECURSION: 50,
     };
 
     // Generate a list of lines that start variable declarations //
@@ -103,15 +102,14 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 case 'DECIMAL_PLACES': constants.DECIMAL_PLACES = val !== 'false' && +val; break;
                 case 'KEEP_UNPARSED': constants.KEEP_UNPARSED = isNotFalse(val); break;
                 case 'MAX_ARGUMENTS': constants.MAX_ARGUMENTS = parseInt(val); break;
-                case 'MAX_RECURSION': constants.MAX_RECURSION = parseInt(val); break;
             }
         }
     }
 
     // Compile NovaSheets styles //
 
-    const hasNovaSheetsStyles = (): boolean => cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput);
-    for (let loop = 0, lastCssOutput; loop < 1 || loop < constants.MAX_RECURSION && hasNovaSheetsStyles(); loop++) {
+    let lastCssOutput;
+    do {
         if (lastCssOutput === cssOutput) break;
         lastCssOutput = cssOutput;
 
@@ -277,6 +275,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         );
 
     }
+    while  (cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput))
 
     // Remove unparsed variables //
 
