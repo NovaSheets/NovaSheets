@@ -13,8 +13,14 @@ function cleanDeps() {
     fs.writeFileSync(file, content);
 }
 
+function inlineFiles() {
+    fs.renameSync('src/regex.js', 'src/regex1.js');
+    execSync(`npx brfs src/regex1.js >> src/regex.js`);
+}
+
 function compile() {
     cleanDeps();
+    inlineFiles();
     const browserify = 'npx browserify --detect-globals --exclude=glob src/browser.js';
     execSync(`${browserify} > dist/novasheets.js`);
     execSync(`${browserify} | npx uglifyjs -cm > dist/novasheets.min.js`);

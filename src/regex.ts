@@ -1,11 +1,9 @@
 const fs = require('fs');
 const yaml = require('js-yaml');
 
-const YAML_FILE = __dirname + '/regex.yaml';
-
 const re = (regex: string, flags: string = ''): RegExp => RegExp(regex.replace(/( |^)#.+$|\s+/gm, ''), flags);
 
-const yamlFile: string = fs.readFileSync(YAML_FILE, { encoding: 'utf8' });
+const yamlFile: string = fs.readFileSync(__dirname + '/regex.yaml', { encoding: 'utf8' });
 const parsedYaml = yaml.load(yamlFile) as Record<string, string>;
 const outputObj: Record<string, (flags?: string) => RegExp> = {};
 for (const entry in parsedYaml) {
