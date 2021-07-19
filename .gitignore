@@ -6,9 +6,9 @@ src/*.js
 src/*.d.ts
 
 # Build output
-bin/
+out/
 dist/
 test/*.css
 
 # Local
-*.local.*
+*local*

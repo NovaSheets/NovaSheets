@@ -3,24 +3,27 @@ const { execSync: exec } = require('child_process');
 const { compile } = require('../src/index');
 
 let counter = 1;
+const OUT_FOLDER = 'test/out/';
 
 async function compileTest(input, output) {
+    output = OUT_FOLDER + output;
     await compile(input, output).catch(err => console.error(err));
     console.log(`${counter++} Compiled ${input} to ${output}.`);
 }
 
 (async () => {
     exec('tsc');
-    try { fs.rmdirSync('./bin/', { recursive: true, force: true }); } catch { }
-    fs.mkdirSync('./bin/glob/', { recursive: true });
-    fs.mkdirSync('./test/bin/', { recursive: true });
+    const rmSync = fs.rmSync || fs.rmdirSync;
+    try { rmSync(OUT_FOLDER, { recursive: true, force: true }); }
+    catch { }
+    fs.mkdirSync(`${OUT_FOLDER}glob/`, { recursive: true });
     // Per-file compilation
-    await compileTest('this test should fail', 'bin/');
-    await compileTest('test/example.nvss', 'bin/no-extension');
-    await compileTest('test/example.nvss', 'bin/output-w-ext.css');
+    await compileTest('this test should fail', '');
+    await compileTest('test/example.nvss', 'no-extension');
+    await compileTest('test/example.nvss', 'output-w-ext.css');
     // Globbed compilation
     for (let i = 0; i < 3; i++) {
-        fs.copyFileSync('test/example.nvss', `test/bin/example${i}.nvss`);
+        fs.copyFileSync('test/example.nvss', `${OUT_FOLDER}example${i}.nvss`);
     }
-    await compileTest('test/bin/*.nvss', 'bin/glob/');
+    await compileTest('test/out/*.nvss', 'glob/');
 })()

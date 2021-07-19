@@ -1,5 +1,3 @@
-#!/usr/bin/env node
-
 import fs from 'fs';
 import NovaSheets from './index';
 import { version as NOVASHEETS_VERSION } from '../package.json';
@@ -33,7 +31,7 @@ else if (/^-*p/.test(command)) {
     let pipedStdin: string = '';
     try { pipedStdin = fs.readFileSync(process.stdin.fd, 'utf-8'); }
     catch { }
-    let parsedContent: string = NovaSheets.parse(opts[0] || pipedStdin);
+    let parsedContent: string = NovaSheets.parse(opts[0] || pipedStdin).trim();
     console.log(parsedContent);
 }
 else if (/^-*c/.test(command)) {
