@@ -1,8 +1,5 @@
 # General
 * text=auto
 
-# Project
-package-lock.json -diff
-
 # Linguist
-*.nvss linguist-language=Less
+*.nvss linguist-language=Less linguist-documentation
