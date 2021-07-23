@@ -2,12 +2,19 @@ const fs = require('fs');
 const yaml = require('js-yaml');
 
 const re = (regex: string, flags: string = ''): RegExp => RegExp(regex.replace(/( |^)#.+$|\s+/gm, ''), flags);
+const parseVars = (val: string): string => {
+    return val.replace(/\{\{(.+?)\}\}/g, (_, name) => {
+        const newContent = parsedYaml[name];
+        if (!newContent) throw new Error(`YAML variable '${name}' is undefined`);
+        return '(?:' + parseVars(newContent) + ')';
+    });
+}
 
 const yamlFile: string = fs.readFileSync(__dirname + '/regex.yaml', { encoding: 'utf8' });
 const parsedYaml = yaml.load(yamlFile) as Record<string, string>;
 const outputObj: Record<string, (flags?: string) => RegExp> = {};
 for (const entry in parsedYaml) {
-    const content = parsedYaml[entry].replace(/\{\{(.+?)\}\}/g, (_, name) => '(?:' + parsedYaml[name] + ')');
+    const content = parseVars(parsedYaml[entry]);
     outputObj[entry] = (flags = '') => re(content, flags);
 }
 

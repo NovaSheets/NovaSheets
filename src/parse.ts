@@ -10,19 +10,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     const r = String.raw;
     const strim = (str: string): string => str.trim().replace(/\s+/g, ' ');
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
-    const number: string = regexes.number().source;
-    const basedNumber: string = regexes.basedNumber().source;
-    const numberUnit: string = regexes.numberUnit().source;
-    const mathChecker: string = (() => {
-        const o = r`\(\s*`, c = r`\s*\)`; // open and close brackets
-        const numberValue: string = r`(?:-?${basedNumber}(?:${numberUnit})?)`;
-        const optBracketedNumber: string = `(?:${o}${numberValue}${c}|${numberValue})`;
-        const operators: string = r`(?:(?:[-^*/+]+\s*)+(?=\d|\.))`;
-        const unbracketed: string = r`(?:(?:${optBracketedNumber}\s*${operators}\s*)+${numberValue})`;
-        return r`\(\s*${unbracketed}\s*\)|${unbracketed}`;
-    })();
+    const mathOperation: string = regexes.mathChecker().source;
     const parseFunction = (name: string, func: (...args: string[]) => string, opts: CustomFunctionOptions = {}): void => {
-        if (RegExp(mathChecker).test(cssOutput)) return; // only run after math is parsed
+        if (new RegExp(mathOperation).test(cssOutput)) return; // only run after math is parsed
         const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
         if (!match) return;
         const searchString: string = cssOutput.substr(cssOutput.indexOf(match[0]));
@@ -89,7 +79,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             let varName: string = varDeclParts[0].trim().split('|')[0].trim();
             const inlineContent: string = varDeclParts.slice(1).join('=') || '';
             const blockContent: string = linesAfter.slice(1, varEnding).join('\n');
-            const variables: RegExp = new RegExp(r`\$\(\s*${varName}\s*\)`, 'g');
+            const variables: RegExp = new RegExp(r`\$\(\s*${escapeRegex(varName)}\s*\)`, 'g');
             let varContent: string = (inlineContent + blockContent).trim().replace(variables, customVars[varName] || '');
             customVars[varName] = varContent.replace('{', ESC.OPEN_BRACE).replace('}', ESC.CLOSE_BRACE);
         }
@@ -120,7 +110,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             .replace(regexes.slashEdgeCaseFunction('g'), '$1' + ESC.SLASH + '$2')
             .replace(regexes.slashEdgeCaseAttribute('g'), '$1' + ESC.SLASH + '$2')
             // compile math
-            .replace(RegExp(mathChecker, 'g'), _ => {
+            .replace(new RegExp(mathOperation, 'g'), _ => {
                 if (regexes.edgeCaseDelimited('g').test(_)) return _; // delimited values, not subtraction
                 let unit: string = '';
                 const content: string = _
@@ -148,7 +138,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                     const parts: string[] = paramArgs[i].split('=');
                     const param: string = parts[1] ? strim(parts[0]) : (+i + 1).toString();
                     const arg: string = parts[1] ? strim(parts.slice(1).join('=')) : strim(parts[0]);
-                    content = content.replace(new RegExp(r`\$\[${param}[^\]]*\]`, 'g'), arg);
+                    content = content.replace(new RegExp(r`\$\[${escapeRegex(param)}[^\]]*\]`, 'g'), arg);
                 }
                 content = content.replace(regexes.defaultArguments('g'), '$1');
                 return content;
@@ -233,13 +223,12 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
             if (selector.includes('$(') || selector.startsWith('@')) return '';
             selector = selector.replace(/\$(<.+?>){1,2}/g, '')
-            const selectorVal: string = escapeRegex(strim(selector));
-            cssBlocks[selectorVal] = css;
+            cssBlocks[strim(selector)] = css;
             return '';
         });
         //substitute blocks
         for (const name in cssBlocks) {
-            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name}\s*>`, 'g'), cssBlocks[name] ?? '{}');
+            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${escapeRegex(name)}\s*>`, 'g'), cssBlocks[name] ?? '{}');
         }
         cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
         //parse object notation
@@ -271,7 +260,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         });
 
     }
-    while (cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput))
+    while (cssOutput.includes('$(') || new RegExp(mathOperation).test(cssOutput))
 
     // Remove unparsed variables //
 

@@ -1,3 +1,8 @@
+# General
+
+openBracket: \(\s*
+closeBracket: \s*\)
+
 # Numbers
 
 number: |
@@ -29,11 +34,48 @@ numberWithUnit: |
     \s*
     ( {{numberUnit}} )
 
+numberValue: |
+    (?:
+        -? {{basedNumber}}
+        (?: {{numberUnit}} )?
+    )
+
 exponential: |
     (?<! [#\w] )
     ( {{number}} ) # Group 1 used
     \s* e \s*
     ( [+-]? {{number}} ) # Group 2 used
+
+optBracketedNumber: |
+    (?:
+        {{openBracket}}
+        {{numberValue}}
+        {{closeBracket}}
+        |
+        {{numberValue}}
+    )
+
+operators: |
+    (?:
+        (?: [-^*/+]+ \s* )+
+        (?= \d | \. )
+    )
+
+unbracketedMath: |
+    (?:
+        (?:
+            {{optBracketedNumber}} \s*
+            {{operators}} \s*
+        )+
+        {{numberValue}}
+    )
+
+mathChecker: |
+    {{openBracket}}
+    {{unbracketedMath}}
+    {{closeBracket}}
+    |
+    {{unbracketedMath}}
 
 # Comments
 
@@ -197,9 +239,9 @@ slashEdgeCaseAttribute: |
     (\d)
 
 slashEdgeCases: |
-    {{slashEdgeCase:function}}
+    {{slashEdgeCaseFunction}}
     |
-    {{slashEdgeCase:attribute}}
+    {{slashEdgeCaseAttribute}}
 
 edgeCaseDelimited: |
     \d[a-z]{0,2} # Unit value
