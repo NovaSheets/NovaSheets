@@ -12,6 +12,8 @@
 ## Next
 - **Fixes**
   - [Syntax] Fixed multiple instances of block substitution of the same selector not being parsed.
+  - [Syntax] Fixed multiple substitutions of the same variable not being parsed together.
+  - [Syntax] Fixed parent element substitutions in child selectors of simple breakpoints not being trimmed properly.
 
 ## 1.0.3
 *2021-07-19*

@@ -55,6 +55,7 @@ QUnit.module('NovaSheets content', () => {
             ['.element @ 10px {display: none;}', '@media (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px... {display: none;}', '@media (min-width: 10px) { .element { display: none; } }'],
             ['.element @ 10px 20px {display: none;}', '@media (min-width: 10px) and (max-width: 19px) { .element { display: none; } }'],
+            ['@var bp = 100px @endvar td @ $(bp).. {margin: 0;} a @ ..$(bp) { &&.foo {margin: 0;}}', '@media (min-width:100px) {td{margin:0;}} @media (max-width:99px) {aa.foo{margin:0;}}'],
         ];
         test(q, tests);
     });

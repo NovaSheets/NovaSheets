@@ -31,7 +31,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
         if (opts.trim !== false) parts = parts.map(part => part.trim());
         parts[0] = fullSegment;
-        cssOutput = cssOutput.replace(fullSegment, func(...parts));
+        cssOutput = cssOutput.replaceAll(fullSegment, func(...parts));
     };
     const ESC: Record<string, string> = {
         OPEN_BRACE: Math.random().toString(36).substr(2),
@@ -148,14 +148,14 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                     const parts: string[] = paramArgs[i].split('=');
                     const param: string = parts[1] ? strim(parts[0]) : (+i + 1).toString();
                     const arg: string = parts[1] ? strim(parts.slice(1).join('=')) : strim(parts[0]);
-                    content = content.replace(RegExp(r`\$\[${param}[^\]]*\]`, 'g'), arg);
+                    content = content.replace(new RegExp(r`\$\[${param}[^\]]*\]`, 'g'), arg);
                 }
-                content = content.replace(/\$\[.*?(?:\|([^\]]*))?\]/g, '$1'); // default args
+                content = content.replace(regexes.defaultArguments('g'), '$1');
                 return content;
             });
         }
 
-        // Parse functions //
+        // Parse built-in functions //
 
         let allFunctions: CustomFunction[] = [];
         if (constants.BUILTIN_FUNCTIONS) allFunctions.push(...builtInFunctions({ constants }));
@@ -204,11 +204,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             // create selector
             let fullSelector: string = '';
             if (data.pre.includes('@media')) fullSelector = data.pre + parent.replace(regexes.mediaQuery('g'), '');
-            else if (data.pre.includes('&')) fullSelector = data.pre.replace(/&/g, parent);
+            else if (data.pre.includes('&')) fullSelector = data.pre.replaceAll('&', parent);
             else fullSelector = parent + ' ' + data.pre;
-            fullSelector = strim(fullSelector);
+            fullSelector = strim(fullSelector).replace(regexes.blockComment('g'), '');
             // write selector if the block has styles
-            if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector.replace(/\/\*.+?\*\//gs, '');
+            if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
             // add empty styles if selector has no styles
             if (parent && !data.pre) compiledOutput += '{}';
             // parse children
@@ -256,18 +256,19 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         // Parse simple breakpoints //
 
         cssOutput = cssOutput.replace(regexes.simpleBreakpoint('gms'), (_, sel, min1, max1, min2, max2, selAfter, block) => {
-            let [min, max] = [min1 ?? min2, max1 ?? max2];
-            let simpleBreakpoint: string = r`@\s*(\d+px)?\s*(?:\.{2,})?\s*(\d+px)?`;
-            let selMatch: string[] = selAfter.match(RegExp(simpleBreakpoint, 'g')) as string[];
-            if (selMatch) [, min, max] = selMatch[selMatch.length - 1].match(RegExp(simpleBreakpoint)) as string[];
-            let selector: string = (sel + selAfter).replace(RegExp(simpleBreakpoint, 'g'), '');
+            let [min, max]: string[] = [min1 ?? min2, max1 ?? max2];
+            let selMatch: string[] = selAfter.match(regexes.simpleBreakpointValue('g')) ?? [];
+            if (selMatch.length > 0) {
+                const matches: string[] = selMatch[selMatch.length - 1].match(regexes.simpleBreakpointValue('')) ?? [];
+                [, min, max] = matches;
+            }
+            let selector: string = (sel + selAfter).replace(regexes.simpleBreakpointValue('g'), '');
 
             let query: string[] = [];
             if (min) query.push(`(min-width: ${min})`);
-            if (max) query.push(`(max-width: ${max.replace(/\d+/, (d: string) => +d - 1)})`);
+            if (max) query.push(`(max-width: ${max.replace(/\d+/, (d) => (+d - 1).toString())})`);
             return `@media ${query.join(' and ')} { ${selector} { ${block} } }`;
-        }
-        );
+        });
 
     }
     while (cssOutput.includes('$(') || RegExp(mathChecker).test(cssOutput))
@@ -275,7 +276,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     // Remove unparsed variables //
 
     if (!constants.KEEP_UNPARSED) {
-        cssOutput = cssOutput.replace(/@endvar/g, '');
+        cssOutput = cssOutput.replaceAll('@endvar', '');
         const unparsedContent: string[] = cssOutput.match(regexes.unparsedContent('g')) ?? [];
         for (const val of unparsedContent) {
             cssOutput = cssOutput.replace(val, '');

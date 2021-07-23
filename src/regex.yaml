@@ -44,12 +44,12 @@ singleLineComment: |
 
 blockComment: |
     \/\*
-    (.+?)
+    (.*?)
     \*\/
 
 staticComment: |
     \/\*\/
-    (.+?)
+    (.*?)
     \/\*\/
 
 # Declarations
@@ -110,6 +110,15 @@ variableName: |
     (\|.*)? # Arguments
     [\])]
 
+defaultArguments: |
+    \$\[
+    .*?
+    (?:
+        \|
+        ( [^\]]* ) # Group 1 used
+    )?
+    \]
+
 # Selectors
 
 implicitParentSelector: |
@@ -137,18 +146,32 @@ blockSubstitutions: |
 
 # Simple breakpoints
 
-simpleBreakpoint: |
-    ([^{};]*?)
+simpleBreakpointValue: |
     \s* @ \s*
-    (?:(\d+px)
-    (?:\s*\.{2,})?
-    (\s*\d+px)?
+    ( \d+ px )?
+    \s*
+    (?: \.{2,} )?
+    \s*
+    ( \d+ px )?
+
+simpleBreakpoint: |
+    ( [^{};]*? ) # Group 1: sel
+    \s* @ \s*
+    (?:
+        ( \d+ px ) # Group 2: min1
+        \s*
+        (?: \.{2,} )?
+        \s*
+        ( \d+ px )? # Group 3: max1
     |
-    (\d+px)?
-    (?:\s*\.{2,})?
-    (\s*\d+px))
-    ([^{}]*?)
-    {(.*?)}
+        ( \d+ px )? # Group 4: min2
+        \s*
+        (?: \.{2,} )?
+        \s*
+        ( \d+ px ) # Group 5: max2
+    )
+    ( [^{}]*? ) # Group 6: rest of selector
+    {( .*? )} # Group 7: block content
 
 # Edge cases
 

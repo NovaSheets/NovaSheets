@@ -14,8 +14,8 @@ function cleanDeps() {
 }
 
 function inlineFiles() {
-    fs.renameSync('src/regex.js', 'src/regex1.js');
-    execSync(`npx brfs src/regex1.js >> src/regex.js`);
+    fs.renameSync('src/regex.js', 'src/regex.local');
+    execSync(`npx brfs src/regex.local >> src/regex.js`);
 }
 
 function compile() {
