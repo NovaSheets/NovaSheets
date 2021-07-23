@@ -5,7 +5,7 @@
     /* Basic Options */
     "target": "es2019",
     "module": "commonjs",
-    "lib": ["dom", "es2021"],
+    //"lib": [],
     //"allowJs": true,
     //"checkJs": true,
     //"jsx": "preserve",

@@ -21,7 +21,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
         if (opts.trim !== false) parts = parts.map(part => part.trim());
         parts[0] = fullSegment;
-        cssOutput = cssOutput.replaceAll(fullSegment, func(...parts));
+        cssOutput = cssOutput.replace(new RegExp(escapeRegex(fullSegment), 'g'), func(...parts));
     };
     const ESC: Record<string, string> = {
         OPEN_BRACE: Math.random().toString(36).substr(2),
@@ -265,7 +265,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     // Remove unparsed variables //
 
     if (!constants.KEEP_UNPARSED) {
-        cssOutput = cssOutput.replaceAll('@endvar', '');
+        cssOutput = cssOutput.replace(/@endvar/g, '');
         const unparsedContent: string[] = cssOutput.match(regexes.unparsedContent('g')) ?? [];
         for (const val of unparsedContent) {
             cssOutput = cssOutput.replace(val, '');
