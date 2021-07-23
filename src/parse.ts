@@ -238,8 +238,8 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             return '';
         });
         //substitute blocks
-        for (let name in cssBlocks) {
-            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name}\s*>`), cssBlocks[name] ?? '{}');
+        for (const name in cssBlocks) {
+            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${name}\s*>`, 'g'), cssBlocks[name] ?? '{}');
         }
         cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
         //parse object notation

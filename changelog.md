@@ -9,6 +9,10 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## Next
+- **Fixes**
+  - [Syntax] Fixed multiple instances of block substitution of the same selector not being parsed.
+
 ## 1.0.3
 *2021-07-19*
 - **Removals**
