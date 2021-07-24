@@ -10,6 +10,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     const r = String.raw;
     const strim = (str: string): string => str.trim().replace(/\s+/g, ' ');
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
+    const replaceAll = (src: string, a: string, b: string): string => src.replace(new RegExp(escapeRegex(a), 'g'), b);
     const mathOperation: string = regexes.mathChecker().source;
     const parseFunction = (name: string, func: (...args: string[]) => string, opts: CustomFunctionOptions = {}): void => {
         if (new RegExp(mathOperation).test(cssOutput)) return; // only run after math is parsed
@@ -21,7 +22,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
         if (opts.trim !== false) parts = parts.map(part => part.trim());
         parts[0] = fullSegment;
-        cssOutput = cssOutput.replace(new RegExp(escapeRegex(fullSegment), 'g'), func(...parts));
+        cssOutput = replaceAll(cssOutput, fullSegment, func(...parts));
     };
     const ESC: Record<string, string> = {
         OPEN_BRACE: Math.random().toString(36).substr(2),
@@ -194,7 +195,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             // create selector
             let fullSelector: string = '';
             if (data.pre.includes('@media')) fullSelector = data.pre + parent.replace(regexes.mediaQuery('g'), '');
-            else if (data.pre.includes('&')) fullSelector = data.pre.replaceAll('&', parent);
+            else if (data.pre.includes('&')) fullSelector = data.pre.replace(/&/g, parent);
             else fullSelector = parent + ' ' + data.pre;
             fullSelector = strim(fullSelector).replace(regexes.blockComment('g'), '');
             // write selector if the block has styles
@@ -217,8 +218,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         // Parse CSS block substitutions //
 
-        //save CSS declarations as variables
-        cssOutput = cssOutput.replace(ESC.OPEN_BRACE, '{').replace(ESC.CLOSE_BRACE, '}'); // unescape
+        // save CSS declarations as variables
+        cssOutput = replaceAll(cssOutput, ESC.OPEN_BRACE, '{');
+        cssOutput = replaceAll(cssOutput, ESC.CLOSE_BRACE, '}');
         const cssBlocks: Record<string, string> = {};
         compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
             if (selector.includes('$(') || selector.startsWith('@')) return '';
@@ -226,12 +228,13 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             cssBlocks[strim(selector)] = css;
             return '';
         });
-        //substitute blocks
+        // substitute blocks
         for (const name in cssBlocks) {
             cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${escapeRegex(name)}\s*>`, 'g'), cssBlocks[name] ?? '{}');
         }
+        // substitute leftovers
         cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
-        //parse object notation
+        // parse object notation
         cssOutput = cssOutput.replace(regexes.objectNotation('gm'), (_, css, item) => {
             const statements: string[] = css.split(';');
             for (const statement of statements) {

@@ -9,6 +9,11 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## Next
+- **Fixes**
+  - [Syntax] Fixed the parser crashing when it comes across a child selector.
+  - [Syntax] Fixed multiple substitutions of the same variable containing a CSS block outputting garbage.
+
 ## 1.0.4
 *2021-07-24*
 - **Fixes**
