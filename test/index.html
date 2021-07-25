@@ -3,14 +3,19 @@
 
 <head>
     <title>NovaSheets Test</title>
-    <script src="../build/novasheets-1.0.0-pre4.js"></script>
     <link rel="novasheet" href="example.nvss">
+    <script src="../dist/novasheets.min.js"></script>
     <script>
-        (function() {
+        document.addEventListener('DOMContentLoaded', function() {
             const novasheets = new NovaSheets();
             novasheets.addFunction('@1', () => 1);
             console.log(parseNovaSheets('one=$(@1)', novasheets));
-        })()
+            parseNovaSheets();
+        });
+    </script>
+    <script type="novasheets">
+        @var x = $(@pi)
+        $(x)
     </script>
 </head>
 

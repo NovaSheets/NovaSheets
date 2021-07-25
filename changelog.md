@@ -9,6 +9,12 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## Next
+- **Changes**
+  - [Scripting] Changed browser file imports to be asyncronous using `fetch` instead of `XMLHttpRequest`.
+- **Fixes**
+  - [Scripting] Fixed browser file imports crashing the parser when unavailable.
+
 ## 1.0.5
 *2021-07-24*
 - **Fixes**

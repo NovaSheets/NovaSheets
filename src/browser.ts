@@ -21,20 +21,19 @@ function parseNovaSheets(): void; // parse styles from embedded HTML
 function parseNovaSheets(rawInput: string, novasheets?: NovaSheets): string; // parse styles from input
 function parseNovaSheets(rawInput: string = '', novasheets?: NovaSheets): string | void {
     if (rawInput) return parse(rawInput, novasheets);
-    const { stylesheetContents, sources } = prepare(rawInput);
-    for (let i in stylesheetContents) {
-        const cssOutput = parse(stylesheetContents[i], novasheets);
-        if (document.querySelectorAll(`[data-hash="${hashCode(cssOutput)}"]`).length) continue; // prevent duplicate outputs
+    prepare(rawInput).then((data) => data.stylesheetContents.forEach((content, i) => {
+        const cssOutput = parse(content, novasheets);
+        if (document.querySelectorAll(`[data-hash="${hashCode(cssOutput)}"]`).length) return; // prevent duplicate outputs
         let styleElem = document.createElement('style');
-        styleElem.innerHTML = '\n' + cssOutput;
+        styleElem.innerHTML = '\n' + cssOutput.trim() + '\n';
         styleElem.dataset.hash = hashCode(cssOutput);
-        styleElem.dataset.source = sources[i];
+        styleElem.dataset.source = data.sources[i];
         (document.head || document.body).appendChild(styleElem);
-    }
+    }));
 }
 
 window.prepare = prepare;
-function prepare(rawInput: string = ''): PreparedInput {
+async function prepare(rawInput: string = ''): Promise<PreparedInput> {
     // Generate list of NovaSheet files and get the contents of each stylesheet
 
     if (rawInput) return { stylesheetContents: [rawInput], sources: ['raw'] };
@@ -50,12 +49,9 @@ function prepare(rawInput: string = ''): PreparedInput {
         fileNames.rel.push(sheet.href);
     }
     for (let i in fileNames.full) {
-        //await fetch(fileNames.full[i]).then(data => data.text()).then(text => stylesheetContents.push(text)).catch(err => console.warn(`<NovaSheets> File '${fileNames.rel[i]}' is inacessible.`, err));
-        let req = new XMLHttpRequest();
-        req.open('GET', fileNames.full[i], false);
-        req.send();
-        stylesheetContents.push(req.responseText);
-        sources.push(fileNames.rel[i]);
+        await fetch(fileNames.full[i])
+            .then(data => data.text()).then(text => stylesheetContents.push(text))
+            .catch(err => console.warn(`<NovaSheets> File '${fileNames.rel[i]}' is inacessible.`, err))
     }
     for (const contents of inlineSheets) {
         const content = (contents instanceof HTMLInputElement && contents.value) || contents.innerText;
