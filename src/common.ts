@@ -7,7 +7,7 @@ export interface CustomFunction {
 }
 
 export interface CustomFunctionBody {
-    (match: string, ...args: string[]): any & (string | number);
+    (match: string, ...args: string[]): string | number;
 }
 
 export interface CustomFunctionOptions {

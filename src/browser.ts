@@ -17,14 +17,16 @@ const hashCode = (str: string, length: number = 8): string => {
 };
 
 window.parseNovaSheets = parseNovaSheets;
-function parseNovaSheets(rawInput: string = '', novasheets: NovaSheets): string | void {
+function parseNovaSheets(): void; // parse styles from embedded HTML
+function parseNovaSheets(rawInput: string, novasheets?: NovaSheets): string; // parse styles from input
+function parseNovaSheets(rawInput: string = '', novasheets?: NovaSheets): string | void {
     if (rawInput) return parse(rawInput, novasheets);
     const { stylesheetContents, sources } = prepare(rawInput);
     for (let i in stylesheetContents) {
         const cssOutput = parse(stylesheetContents[i], novasheets);
-        if (document.querySelectorAll(`[data-hash="${hashCode(cssOutput)}"]`).length) return; // prevent duplicate outputs
+        if (document.querySelectorAll(`[data-hash="${hashCode(cssOutput)}"]`).length) continue; // prevent duplicate outputs
         let styleElem = document.createElement('style');
-        styleElem.innerHTML = '\n' + cssOutput.trim() + '\n';
+        styleElem.innerHTML = '\n' + cssOutput;
         styleElem.dataset.hash = hashCode(cssOutput);
         styleElem.dataset.source = sources[i];
         (document.head || document.body).appendChild(styleElem);
@@ -55,9 +57,9 @@ function prepare(rawInput: string = ''): PreparedInput {
         stylesheetContents.push(req.responseText);
         sources.push(fileNames.rel[i]);
     }
-    for (let contents of inlineSheets) {
-        let content = (contents instanceof HTMLInputElement && contents.value) || contents.innerHTML || contents.innerText;
-        stylesheetContents.push(content.replace(/^\s*`|`\s*$/, ''));
+    for (const contents of inlineSheets) {
+        const content = (contents instanceof HTMLInputElement && contents.value) || contents.innerText;
+        stylesheetContents.push(content);
         sources.push('inline');
     }
 

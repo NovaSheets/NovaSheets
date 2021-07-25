@@ -46,7 +46,7 @@ class NovaSheets {
 
     /**
      * Return a list of all registered custom functions.
-     * @returns `[{name1, body1, options1}, ...]`
+     * @returns `[{name, body, options}, ...]`
      */
     getFunctions(): CustomFunction[] {
         return this.#functions;

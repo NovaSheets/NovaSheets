@@ -2,7 +2,7 @@ const balanced = require('balanced-match');
 const { MathParser } = require('math-and-unit-parser');
 
 import NovaSheets from './index';
-import { CustomFunction, CustomFunctionOptions, Constants } from './common';
+import { CustomFunction, CustomFunctionOptions, Constants, CustomFunctionBody } from './common';
 import builtInFunctions from './functions';
 import { regexes } from './regex';
 
@@ -12,7 +12,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
     const replaceAll = (src: string, a: string, b: string): string => src.replace(new RegExp(escapeRegex(a), 'g'), b);
     const mathOperation: string = regexes.mathChecker().source;
-    const parseFunction = (name: string, func: (...args: string[]) => string, opts: CustomFunctionOptions = {}): void => {
+    const parseFunction = (name: string, func: CustomFunctionBody, opts: CustomFunctionOptions = {}): void => {
         if (new RegExp(mathOperation).test(cssOutput)) return; // only run after math is parsed
         const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
         if (!match) return;
@@ -21,8 +21,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         const fullSegment = '$(' + segment + ')';
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
         if (opts.trim !== false) parts = parts.map(part => part.trim());
-        parts[0] = fullSegment;
-        cssOutput = replaceAll(cssOutput, fullSegment, func(...parts));
+        cssOutput = replaceAll(cssOutput, fullSegment, func(fullSegment, ...parts.slice(1)).toString());
     };
     const ESC: Record<string, string> = {
         OPEN_BRACE: Math.random().toString(36).substr(2),

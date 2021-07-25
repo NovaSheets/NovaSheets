@@ -167,9 +167,9 @@ Simply import the script into your HTML document and any embedded NovaSheets sty
 
 NovaSheets styles can be written inline or imported from external files:
 ```html
-<script type="novasheets">`
-  // inline usage
-`</script>
+<script type="novasheets">
+  /* inline usage */
+</script>
 <link rel="novasheet" href="stylesheet.nvss"> <!-- import usage -->
 ```
 
