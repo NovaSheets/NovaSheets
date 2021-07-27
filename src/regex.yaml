@@ -278,6 +278,11 @@ mediaQueryBlock: |
         { .+? } # Block content
     )
 
+mediaQueryBody: |
+    [^{}]*?
+    { [^{}]*? }
+    \s*
+
 emptyMediaQueryBlock: |
     ( {{mediaQuery}} ) # Group 1 used
     \s*
@@ -292,11 +297,6 @@ nonEmptyMediaQueryBlock: |
     {
     ( [^{}]+ ) # Group 3 used
     }
-
-mediaQueryBody: |
-    .*?
-    { .*? }
-    \s*
 
 duplicateMediaQueries: |
     ( {{mediaQuery}} ) # Group 1 used

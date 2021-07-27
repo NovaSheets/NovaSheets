@@ -15,6 +15,7 @@
 - **Fixes**
   - [Syntax] Fixed newlines breaking parsed comments.
   - [Syntax] Fixed empty blocks being removed from the output.
+  - [Syntax] Fixed duplicate media queries being condensed incorrectly.
   - [Scripting] Fixed browser file imports crashing the parser when unavailable.
 
 ## 1.0.5

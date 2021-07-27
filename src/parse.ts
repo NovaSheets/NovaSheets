@@ -197,9 +197,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             .replace(regexes.mediaQueryBlock('gs'), '$1 { $2 }')
             .replace(regexes.emptyMediaQueryBlock('g'), '')
             .replace(regexes.nonEmptyMediaQueryBlock('g'), '$1 { $2 {$3} }')
-        while (regexes.duplicateMediaQueries('gs').test(cssOutput)) {
-            cssOutput = cssOutput.replace(regexes.duplicateMediaQueries('gs'), `$1 {$2 $3}`);
-        }
 
         // Parse CSS block substitutions //
 
@@ -290,6 +287,10 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(/calc(\d)/g, '$1')
         // restore characters
         .replace(RegExp(ESC.SLASH, 'g'), '/')
+    // remove duplicate media queries
+    while (regexes.duplicateMediaQueries('gs').test(cssOutput)) {
+        cssOutput = cssOutput.replace(regexes.duplicateMediaQueries('gs'), `$1 {$2 $3}`);
+    }
     // re-add comments to output
     for (const i in staticContent) {
         cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));
