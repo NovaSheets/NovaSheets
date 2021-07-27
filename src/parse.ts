@@ -186,7 +186,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             // write selector if the block has styles
             if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
             // add empty styles if selector has no styles
-            if (parent && !data.pre) compiledOutput += '{}';
+            if (!data.body) compiledOutput += '{}';
             // parse children
             unnest(data.body, fullSelector);
             // continue to next block

@@ -13,6 +13,8 @@
 - **Changes**
   - [Scripting] Changed browser file imports to be asyncronous using `fetch` instead of `XMLHttpRequest`.
 - **Fixes**
+  - [Syntax] Fixed newlines breaking parsed comments.
+  - [Syntax] Fixed empty blocks being removed from the output.
   - [Scripting] Fixed browser file imports crashing the parser when unavailable.
 
 ## 1.0.5

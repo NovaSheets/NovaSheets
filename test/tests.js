@@ -207,6 +207,7 @@ QUnit.module('CSS aspects', () => {
             ['/*/static comment, $(@e)/*/', 'static comment, $(@e)'],
             ['/*[parsed comment, $(@e)]*/', '/*parsed comment, 2.718281828459045*/'],
             ['/*[\n newline $(@e) \n]*/', '/*\n newline 2.718281828459045 \n*/'],
+            ['/*[ sel @ 200px {body} ]*/', '/* @media (min-width: 200px) { sel { body } } */'],
         ];
         test(q, tests);
     });
@@ -236,6 +237,7 @@ QUnit.module('Misc', () => {
             ['font: 12px/18px Arial', ditto],
             ['grid-area: 2 / 4', ditto],
             ['rgb(0% 64 12 / 50%)', ditto],
+            ['a {} b {}', ditto],
             ['td {height: $(@round|1.2)em; margin: calc(var(--a)+1);}', 'td {height: 1em; margin: calc(var(--a)+1);}'],
         ];
         test(q, tests);
