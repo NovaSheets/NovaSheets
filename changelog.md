@@ -14,6 +14,7 @@
   - [Scripting] Changed browser file imports to be asyncronous using `fetch` instead of `XMLHttpRequest`.
 - **Fixes**
   - [Syntax] Fixed newlines breaking parsed comments.
+  - [Syntax] Fixed simple breakpoints inside parsed comments being parsed incorrectly.
   - [Syntax] Fixed empty blocks being removed from the output.
   - [Syntax] Fixed duplicate media queries being condensed incorrectly.
   - [Scripting] Fixed browser file imports crashing the parser when unavailable.

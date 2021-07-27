@@ -211,7 +211,7 @@ simpleBreakpointValue: |
     ( \d+ px )?
 
 simpleBreakpoint: |
-    ( [^{};]*? ) # Group 1: sel
+    ( [^{};/*]*? ) # Group 1: sel
     \s* @ \s*
     (?:
         ( \d+ px ) # Group 2: min1
