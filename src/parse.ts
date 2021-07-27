@@ -70,10 +70,11 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     // Parse variable declarations //
 
     const cleanContent = (content: string): string => content.replace('{', ESC.OPEN_BRACE).replace('}', ESC.CLOSE_BRACE);
+    const varContentFunc = (_: string, name: string, content: string): string => (customVars[name] = cleanContent(content), '');
     const getBoolVal = (val: string): boolean => val !== '0' && val !== 'false';
     cssOutput = cssOutput
-        .replace(/@var\s(.+)=(.+)$/gm, (_, name, content) => (customVars[name] = cleanContent(content), ''))
-        .replace(/@var\s(.+)$\s+([^]+)@endvar/gm, (_, name, content) => (customVars[name] = cleanContent(content), ''))
+        .replace(/@var\s(.+)=(.+)$/gm, varContentFunc)
+        .replace(/@var\s(.+)$\s+([^]+)@endvar/gm, varContentFunc)
         .replace(/@option\s+(\S+)\s+(\S+)/g, (_, name, val) => {
             const options: Record<Uppercase<string>, () => void> = {
                 'BUILTIN_FUNCTIONS': () => constants.BUILTIN_FUNCTIONS = getBoolVal(val),
@@ -106,13 +107,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
                 const content: string = _
                     .replace(/\*\*/g, '^')
                     .replace(regexes.numberWithUnit('g'), (_, num, u) => {
-                        switch (u) {
-                            case 'mm': case 'ms': return unit = u[1], (+num / 1000).toString();
-                            case 'cm': return unit = 'm', (+num / 100).toString();
-                            case 'in': return unit = 'm', (+num * 0.0254).toString();
-                            case 'ft': return unit = 'm', (+num * 0.3048).toString();
-                            default: return unit = u, num;
-                        }
+                        const multipliers: Record<string, number> = { 'mm': 0.001, 'ms': 0.001, 'cm': 0.01, 'in': 0.0254, 'ft': 0.3048 };
+                        unit = unit === 'ms' ? 's' : (u in multipliers ? 'm' : u);
+                        return (+num * multipliers[unit]).toString();
                     })
                 try { return MathParser(content) + unit; }
                 catch { return _; }
