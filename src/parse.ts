@@ -45,7 +45,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     let cssOutput: string = styleContents
         .replace(regexes.syntacticDeclaration('gms'), ' ') // remove syntactic declarations
         .replace(regexes.blockComment('gs'), (_, content) => {
-            if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[(.+)\]\*\/$/, '/*$1*/'); // parsed comment
+            if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[/, '/*').replace(/\]\*\/$/, '*/'); // parsed comment
             if (_.startsWith('/*/') || _.endsWith('/*/')) return _; // static comment; skip
             if (commentedContent.indexOf(content) < 0) commentedContent.push(content);
             return '/*COMMENT#' + commentedContent.indexOf(content) + '*/';
