@@ -136,7 +136,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
 
         let allFunctions: CustomFunction[] = [];
         if (constants.BUILTIN_FUNCTIONS) allFunctions.push(...builtInFunctions({ constants }));
-        allFunctions.push(...(novasheets?.getFunctions() ?? []));
+        allFunctions.push(...novasheets.getFunctions());
         for (const obj of allFunctions) {
             parseFunction(obj.name, obj.body, obj.options);
         }
@@ -209,7 +209,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         cssOutput = replaceAll(cssOutput, ESC.CLOSE_BRACE, '}');
         const cssBlocks: Record<string, string> = {};
         compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
-            if (selector.includes('$(') || selector.startsWith('@')) return '';
+            if (selector.includes('$(') || selector.startsWith('@')) return ''; // todo: is this necessary?
             selector = selector.replace(/\$(<.+?>){1,2}/g, '')
             cssBlocks[strim(selector)] = css;
             return '';
