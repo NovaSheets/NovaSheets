@@ -42,18 +42,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
     let lines: string[] = styleContents.split('\n');
-    let cssOutput: string = styleContents
-        .replace(regexes.syntacticDeclaration('gms'), ' ') // remove syntactic declarations
-        .replace(regexes.blockComment('gs'), (_, content) => {
-            if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[/, '/*').replace(/\]\*\/$/, '*/'); // parsed comment
-            if (_.startsWith('/*/') || _.endsWith('/*/')) return _; // static comment; skip
-            if (commentedContent.indexOf(content) < 0) commentedContent.push(content);
-            return '/*COMMENT#' + commentedContent.indexOf(content) + '*/';
-        }) // store commented content for replacement at end
-        .replace(regexes.staticComment('gs'), (_, a) => {
-            if (staticContent.indexOf(a) < 0) staticContent.push(a);
-            return '/*STATIC#' + staticContent.indexOf(a) + '*/';
-        }) // store static content for replacement at end
+    let cssOutput: string = styleContents;
     let customVars: Record<string, string> = {};
     let constants: Constants = {
         BUILTIN_FUNCTIONS: true,
@@ -61,39 +50,40 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         KEEP_UNPARSED: false,
         MAX_ARGUMENTS: 10,
     };
-    // Generate a list of lines that start variable declarations //
 
-    for (let i in lines) {
-        if (lines[i].includes('@var')) {
-            const varDeclParts: string[] = lines[i].replace(/@var/, '').split('=');
-            const linesAfter: string[] = lines.slice(+i);
+    // Remove comments from output //
+    cssOutput = cssOutput
+        // .replace(regexes.syntacticDeclaration('gms'), ' ') // remove syntactic declarations
+        // store commented content for substitution when done
+        .replace(regexes.blockComment('gs'), (_, content) => {
+            if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[/, '/*').replace(/\]\*\/$/, '*/'); // parsed comment
+            if (_.startsWith('/*/') || _.endsWith('/*/')) return _; // static comment; skip
+            if (commentedContent.indexOf(content) < 0) commentedContent.push(content);
+            return '/*COMMENT#' + commentedContent.indexOf(content) + '*/';
+        })
+        // store static content for substitution when done
+        .replace(regexes.staticComment('gs'), (_, a) => {
+            if (staticContent.indexOf(a) < 0) staticContent.push(a);
+            return '/*STATIC#' + staticContent.indexOf(a) + '*/';
+        })
 
-            let varEnding: number = linesAfter.length;
-            for (let j in linesAfter) {
-                if (/@endvar|@var/.test(linesAfter[j]) && +j !== 0) {
-                    varEnding = +j;
-                    break;
-                }
+    // Parse variable declarations //
+
+    const cleanContent = (content: string): string => content.replace('{', ESC.OPEN_BRACE).replace('}', ESC.CLOSE_BRACE);
+    const getBoolVal = (val: string): boolean => val !== '0' && val !== 'false';
+    cssOutput = cssOutput
+        .replace(/@var\s(.+)=(.+)$/gm, (_, name, content) => (customVars[name] = cleanContent(content), ''))
+        .replace(/@var\s(.+)$\s+([^]+)@endvar/gm, (_, name, content) => (customVars[name] = cleanContent(content), ''))
+        .replace(/@option\s+(\S+)\s+(\S+)/g, (_, name, val) => {
+            const options: Record<Uppercase<string>, () => void> = {
+                'BUILTIN_FUNCTIONS': () => constants.BUILTIN_FUNCTIONS = getBoolVal(val),
+                'DECIMAL_PLACES': () => constants.DECIMAL_PLACES = val !== 'false' && +val,
+                'KEEP_UNPARSED': () => constants.KEEP_UNPARSED = getBoolVal(val),
+                'MAX_ARGUMENTS': () => constants.MAX_ARGUMENTS = +val,
             }
-
-            let varName: string = varDeclParts[0].trim().split('|')[0].trim();
-            const inlineContent: string = varDeclParts.slice(1).join('=') || '';
-            const blockContent: string = linesAfter.slice(1, varEnding).join('\n');
-            const variables: RegExp = new RegExp(r`\$\(\s*${escapeRegex(varName)}\s*\)`, 'g');
-            let varContent: string = (inlineContent + blockContent).trim().replace(variables, customVars[varName] || '');
-            customVars[varName] = varContent.replace('{', ESC.OPEN_BRACE).replace('}', ESC.CLOSE_BRACE);
-        }
-        else if (lines[i].includes('@option')) {
-            let [name, val]: string[] = lines[i].replace(/^\s*@option\s+/, '').split(/\s+/);
-            const isNotFalse = (val: string): boolean => val !== '0' && val !== 'false';
-            switch (name.toUpperCase()) {
-                case 'BUILTIN_FUNCTIONS': constants.BUILTIN_FUNCTIONS = isNotFalse(val); break;
-                case 'DECIMAL_PLACES': constants.DECIMAL_PLACES = val !== 'false' && +val; break;
-                case 'KEEP_UNPARSED': constants.KEEP_UNPARSED = isNotFalse(val); break;
-                case 'MAX_ARGUMENTS': constants.MAX_ARGUMENTS = parseInt(val); break;
-            }
-        }
-    }
+            options[name.toUpperCase()]();
+            return '';
+        })
 
     // Compile NovaSheets styles //
 
