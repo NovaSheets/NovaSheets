@@ -1,3 +1,14 @@
+# Headings
+#: General
+#: Numbers
+#: Comments
+#: Declarations
+#: Substitutions
+#: Selectors
+#: Object notation
+#: Simple breakpoints
+#: Edge cases Media queries
+
 # General
 
 openBracket: \(\s*
@@ -96,45 +107,48 @@ staticComment: |
 
 # Declarations
 
-singleLineVarDeclaration: |
-    (?:
-        @var\s # Variable declaration
-        .+?
-        =
-        .*$ # Content goes until end of line
-    |
-        @var\s* # Variable declaration
-        [^=]* # No equals on line
-        (?=
-            \n\s*
-            @var\s # Variable declaration on next line implicitly ends this one
-            .
-        )
-    )
-    (?!
-        \n\s*
-        @endvar # Explcit end
-    )
-
-singleLineDeclarations: |
-    {{parserOption}}
-    |
-    @endvar
-
-syntacticDeclaration: |
+variableDeclaration: |
     @var\s
-    .*?
-    ( (?=@var) | @endvar )
+    ([^=|\n]+) # Name # Group 1 used
+    (?: \| [^=\n]+ )* # Explicit arguments
+    (?:
+        # Inline
+        =
+        (.+?) # Content # Group 2 used
+        (?: @endvar | $ )
     |
+        # Block
+        $\s+
+        ([^]*?) # Content # Group 3 used
+        (?:
+            @endvar # Explcit ending
+        |
+            (?=@var) # Followed by other variable
+        )
+    |
+        # Void
+        $
+    )
+
+variableDeclarationInline: |
+    @var\s
+    (.+)
+    =
+    (.+)
+    $
+
+variableDeclarationBlock: |
+    @var\s
+    (.+)
+    $\s+
+    ([^]+)
     @endvar
-    |
-    {{parserOption}}
 
 parserOption: |
     @option
-    \s*
-    [A-Z_]+
-    \s*
+    \s+
+    (\w+)
+    \s+
     (true|false|[0-9]+)
 
 # Substitutions

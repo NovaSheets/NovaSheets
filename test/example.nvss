@@ -9,7 +9,7 @@
 @var border | size | type
     $[size] $[type] $(theme color)
 @endvar
-@var border | color // or just `@var border`; arguments are automatically created
+@var border col | color // or just `@var border`; arguments are automatically created
   2px solid $[color];
 @endvar
 

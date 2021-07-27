@@ -50,7 +50,7 @@ async function prepare(rawInput: string = ''): Promise<PreparedInput> {
     }
     for (let i in fileNames.full) {
         await fetch(fileNames.full[i])
-            .then(data => data.text()).then(text => stylesheetContents.push(text))
+            .then(data => data.text()).then(text => { stylesheetContents.push(text), sources.push(fileNames.rel[i]) })
             .catch(err => console.warn(`<NovaSheets> File '${fileNames.rel[i]}' is inacessible.`, err))
     }
     for (const contents of inlineSheets) {

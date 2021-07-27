@@ -1,7 +1,7 @@
-const fs = require('fs');
+import fs from 'fs';
 const yaml = require('js-yaml');
 
-const re = (regex: string, flags: string = ''): RegExp => RegExp(regex.replace(/( |^)#.+$|\s+/gm, ''), flags);
+const re = (regex: string, flags: string = ''): RegExp => RegExp(regex.replace(/( |^)#.+$|\s+?/gm, ''), flags);
 const parseVars = (val: string): string => {
     return val.replace(/\{\{(.+?)\}\}/g, (_, name) => {
         const newContent = parsedYaml[name];

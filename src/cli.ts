@@ -35,7 +35,7 @@ else if (/^-*p/.test(command)) {
     console.log(parsedContent);
 }
 else if (/^-*c/.test(command)) {
-    NovaSheets.compile(opts[0], opts[1]);
+    NovaSheets.compile(opts[0], opts[1]).catch(err => console.error(err));
 }
 else {
     console.log(' Welcome to NovaSheets, the simple but versatile CSS preprocessor.');
