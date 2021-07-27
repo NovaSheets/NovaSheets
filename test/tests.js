@@ -206,6 +206,7 @@ QUnit.module('CSS aspects', () => {
             ['/*regular block comment, $(@e)*/', ditto],
             ['/*/static comment, $(@e)/*/', 'static comment, $(@e)'],
             ['/*[parsed comment, $(@e)]*/', '/*parsed comment, 2.718281828459045*/'],
+            ['/*[\n newline $(@e) \n]*/', '/*\n newline 2.718281828459045 \n*/'],
         ];
         test(q, tests);
     });
