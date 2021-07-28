@@ -16,7 +16,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         if (new RegExp(mathOperation).test(cssOutput)) return; // only run after math is parsed
         const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
         if (!match) return;
-        const searchString: string = cssOutput.substr(cssOutput.indexOf(match[0]));
+        const searchString: string = cssOutput.substr(match.index ?? 0);
         const segment = balanced('(', ')', searchString).body;
         const fullSegment = '$(' + segment + ')';
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
@@ -41,7 +41,6 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         .replace(regexes.implicitParentSelector('g'), ';$1&@') // implicit parent selector for simple breakpoints
     let commentedContent: string[] = [];
     let staticContent: string[] = [];
-    let lines: string[] = styleContents.split('\n');
     let cssOutput: string = styleContents;
     let customVars: Record<string, string> = {};
     let constants: Constants = {
