@@ -1,12 +1,18 @@
 import { promises as fs } from 'fs';
 import path from 'path';
 const isNode = typeof process !== 'undefined' && process?.versions?.node;
-const glob = isNode && require('glob');
 
 import NovaSheets from './index';
 import parse from './parse';
 
 async function compileNovaSheets(source: string, outPath: string, novasheets: NovaSheets): Promise<void> {
+
+    let hasGlobs = false;
+    let glob: any = null;
+    if (isNode) await import('glob').then(async (Glob) => {
+        glob = Glob.glob;
+        hasGlobs = glob.hasMagic(source);
+    });
 
     const compile = async (inputFiles: string[]): Promise<void> => {
         for (const inputPath of inputFiles) {
@@ -44,9 +50,8 @@ async function compileNovaSheets(source: string, outPath: string, novasheets: No
         }
     }
 
-    const hasGlobs: boolean = glob?.hasMagic(source);
     if (hasGlobs) {
-        glob?.(source, {}, async (err: Error, files: string[]) => {
+        glob(source, {}, async (err: Error, files: string[]) => {
             if (err) throw err;
             await compile(files);
         });
@@ -55,4 +60,4 @@ async function compileNovaSheets(source: string, outPath: string, novasheets: No
     }
 }
 
-export = compileNovaSheets;
+export default compileNovaSheets;

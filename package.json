@@ -22,15 +22,14 @@
     "bin": {
         "novasheets": "bin/index.js"
     },
-	"engines": {
-		"node": ">=12"
-	},
+    "engines": {
+        "node": ">=12"
+    },
     "scripts": {
-        "prepublish": "tsc",
         "build": "tsc && node build",
         "changelog": "git log --format=\"- %h %s\" --reverse -10",
         "test": "tsc && qunit",
-        "test:compile": "node test/test-compile"
+        "test:compile": "tsc && node test/test-compile"
     },
     "repository": {
         "type": "git",
@@ -49,6 +48,8 @@
         "math-and-unit-parser": "1.3.6"
     },
     "devDependencies": {
+        "@types/balanced-match": "^1.0.2",
+        "@types/glob": "^8.1.0",
         "@types/node": "ts5.0",
         "brfs": "^2.0.2",
         "browserify": "^17.0.0",

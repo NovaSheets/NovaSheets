@@ -12,6 +12,8 @@
 ## Next
 - **Changes**
   - [General] Changed output of the CLI `--help` and `--version` commands.
+- **Fixes**
+  - [Scripting] Fixed the `parse()` function not working.
 
 ## 1.0.6
 *2021-07-27*

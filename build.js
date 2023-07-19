@@ -14,17 +14,25 @@ function cleanDeps() {
 }
 
 function inlineFiles() {
-    fs.renameSync('src/regex.js', 'src/regex.local');
-    execSync(`npx brfs src/regex.local >> src/regex.js`);
+    let fileName;
+    const getContent = () => fs.readFileSync(fileName, { encoding: 'utf-8' });
+    // Inline the content of data/regexes.yaml
+    const regexData = fs.readFileSync('data/regexes.yaml', { encoding: 'utf-8' });
+    fileName = 'dist/regex.js';
+    fs.writeFileSync(fileName, getContent().replace(/(const yamlFile.+=).+/, `$1 \`${regexData.replace(/\\/g, '\\\\')}\`;`));
+    // Remove Node-only packages
+    fileName = 'dist/compile.js';
+    fs.writeFileSync(fileName, getContent().replace(/(const glob.+=).+/, `$1 0;//GLOB UNUSED`));
 }
 
 function compile() {
     cleanDeps();
     inlineFiles();
-    const browserify = 'npx browserify --detect-globals --exclude=glob src/browser.js';
-    execSync(`${browserify} > dist/novasheets.js`);
-    execSync(`${browserify} | npx uglifyjs -cm > dist/novasheets.min.js`);
+    const browserify = 'npx browserify --detect-globals dist/browser.js';
+    execSync(`${browserify} > out/novasheets.js`);
+    execSync(`${browserify} | npx uglifyjs -cm > out/novasheets.min.js`);
 }
 
+try { execSync('mkdir out'); } catch (e) { }
 execSync('npx tsc');
 compile();

@@ -1,5 +1,5 @@
 import parse from './parse';
-import compileNovaSheets from './compile';
+import compile from './compile';
 import { CustomFunction, CustomFunctionBody, CustomFunctionOptions } from './common';
 
 class NovaSheets {
@@ -29,7 +29,7 @@ class NovaSheets {
      * @void
      */
     static async compile(source: string, outPath: string = '', novasheets: NovaSheets = new NovaSheets()): Promise<void> {
-        return compileNovaSheets(source, outPath, novasheets);
+        return compile(source, outPath, novasheets);
     }
 
     /**
@@ -54,4 +54,4 @@ class NovaSheets {
 
 }
 
-export = NovaSheets;
+export default NovaSheets;

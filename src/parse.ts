@@ -1,5 +1,5 @@
-const balanced = require('balanced-match');
-const { MathParser } = require('math-and-unit-parser');
+import balanced from 'balanced-match';
+import { MathParser } from 'math-and-unit-parser';
 
 import NovaSheets from './index';
 import { CustomFunction, CustomFunctionOptions, Constants, CustomFunctionBody } from './common';
@@ -18,7 +18,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
         if (!match) return;
         const searchString: string = cssOutput.slice(cssOutput.indexOf(match[0]));
-        const segment = balanced('(', ')', searchString).body;
+        const segment = balanced('(', ')', searchString)?.body ?? '';
         const fullSegment = '$(' + segment + ')';
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
         if (opts.trim !== false) parts = parts.map(part => part.trim());
@@ -171,7 +171,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
             let styles: string[] = data.pre.split(';');
             if (styles.length) {
                 // remove styles from child selector content
-                data.pre = styles.pop();
+                const lastStyle = styles.pop();
+                if (lastStyle)
+                    data.pre = lastStyle;
                 // add selectors to parent selector if applicable
                 if (styles.length) {
                     let styleContent: string = styles.join(';') + ';';
@@ -304,4 +306,4 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
     return cssOutput.trim() + '\n';
 }
 
-export = parse;
+export default parse;
