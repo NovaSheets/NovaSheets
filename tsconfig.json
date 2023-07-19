@@ -3,17 +3,17 @@
     /* More info: https://aka.ms/tsconfig.json */
 
     /* Basic Options */
-    "target": "es2019",
+    "target": "es2019", // Node 12
     "module": "commonjs",
     //"lib": [],
-    //"allowJs": true,
+    "allowJs": false,
     //"checkJs": true,
     //"jsx": "preserve",
     "declaration": true,
     //"declarationMap": true,
     //"sourceMap": true,
     //"outFile": "./",
-    //"outDir": "./",
+    "outDir": "./dist/",
     //"rootDir": "./",
     //"composite": true,
     //"tsBuildInfoFile": "./",

@@ -280,7 +280,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
     const logicRegex = (arg: string): RegExp => RegExp(r`([+-]?${bracketedNumber})\s*(?:${arg})\s*([+-]?${bracketedNumber})`);
     const parseLogic = (arg: string): string => {
         if (!/^([<>=!&|()-\d\s]|true|false|undefined|null|NaN|x?n?or|n?and)+$/.test(arg)) return arg;
-        for (let i = 0; i < constants.MAX_ARGUMENTS; i++) {
+        for (let i = 0; i < +constants.MAX_ARGUMENTS; i++) {
             arg = strim(arg)
                 .replace(/(?:'(.+?)'|"(.+?)")+/, '$1$2') // remove quotes
                 .replace(/\bor\b/gi, '||').replace(/\band\b/gi, '&&').replace(/\bnot\b/gi, '!') // default logical operators
@@ -297,7 +297,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
 
     novasheets.addFunction('@bitwise', (_, a) => {
         let arg: string = a;
-        for (let i = 0; i < constants.MAX_ARGUMENTS; i++) {
+        for (let i = 0; i < +constants.MAX_ARGUMENTS; i++) {
             arg = arg
                 .replace(RegExp(r`(?:~|!|not)\s*([+-]?${bracketedNumber})`), (_, a) => (~toNum(a)).toString()) // bitwise not
                 .replace(logicRegex('or|\\|'), (_, a, b) => (toNum(a) | toNum(b)).toString()) // bitwise or

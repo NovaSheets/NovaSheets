@@ -6,8 +6,9 @@ import { CustomFunction, CustomFunctionOptions, Constants, CustomFunctionBody } 
 import builtInFunctions from './functions';
 import { regexes } from './regex';
 
+const r = String.raw;
+
 function parse(content: string, novasheets: NovaSheets = new NovaSheets()): string {
-    const r = String.raw;
     const strim = (str: string): string => str.trim().replace(/\s+/g, ' ');
     const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
     const replaceAll = (src: string, a: string, b: string): string => src.replace(new RegExp(escapeRegex(a), 'g'), b);
@@ -16,7 +17,7 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         if (new RegExp(mathOperation).test(cssOutput)) return; // only run after math is parsed
         const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
         if (!match) return;
-        const searchString: string = cssOutput.substr(cssOutput.indexOf(match[0]));
+        const searchString: string = cssOutput.slice(cssOutput.indexOf(match[0]));
         const segment = balanced('(', ')', searchString).body;
         const fullSegment = '$(' + segment + ')';
         let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
@@ -24,9 +25,9 @@ function parse(content: string, novasheets: NovaSheets = new NovaSheets()): stri
         cssOutput = replaceAll(cssOutput, fullSegment, func(fullSegment, ...parts.slice(1)).toString());
     };
     const ESC: Record<string, string> = {
-        OPEN_BRACE: Math.random().toString(36).substr(2),
-        CLOSE_BRACE: Math.random().toString(36).substr(2),
-        SLASH: Math.random().toString(36).substr(2),
+        OPEN_BRACE: Math.random().toString(36).slice(2),
+        CLOSE_BRACE: Math.random().toString(36).slice(2),
+        SLASH: Math.random().toString(36).slice(2),
     }
 
     // Prepare stylesheet for parsing //

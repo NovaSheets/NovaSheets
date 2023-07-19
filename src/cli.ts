@@ -1,31 +1,43 @@
 import fs from 'fs';
 import NovaSheets from './index';
-import { version as NOVASHEETS_VERSION } from '../package.json';
+const VERSION = require('../package.json').version;
 
 const [command, ...opts] = process.argv.slice(2);
 
 if (/^-*h/.test(command)) {
     const help = `
     NovaSheets usage:
+    
         novasheets <command>
 
     Commands:
-        {--compile|-c} <input> [<output>]     Compile a NovaSheets file from an exact or globbed input.
-        {--parse|-p} "<input>"                Parse raw NovaSheets input from raw input. Accepts input from stdin.
-        {--help|-h} [<command>]               Display this help message.
-        {--versions|-v}                       Display the current version of NovaSheets.
+
+        {--compile|-c} <input> [<output>]
+            Compile a NovaSheets file from an exact or globbed input.
+
+        {--parse|-p} ["<input>"]
+            Parse raw NovaSheets input from raw input. Accepts input from stdin.
+
+        {--help|-h} [<command>]
+            Display this help message.
+
+        {--versions|-v}
+            Display the current version of NovaSheets.
     `;
 
     if (opts[0]) {
         const usage = help.split('\n').find(line => RegExp('-' + opts[0].replace(/-*/, '')).test(line));
-        console.log(usage ? `Usage for NovaSheets command '${opts[0]}':\n${usage.replace(/ {4}/, '')}` : `Invalid command '${opts[0]}'.`)
+        if (usage)
+            console.log(`Usage for NovaSheets command '${opts[0]}':\n${usage.replace(/ {4}/, '')}`);
+        else
+            console.log(`Invalid command '${opts[0]}'.`);
     }
     else {
         console.log(help);
     }
 }
 else if (/^-*v/.test(command)) {
-    console.log(`<NovaSheets> Current version: ${NOVASHEETS_VERSION}`);
+    console.log(VERSION);
 }
 else if (/^-*p/.test(command)) {
     let pipedStdin: string = '';
