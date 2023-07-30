@@ -53,26 +53,18 @@ class Lexer {
     }
 
     private getAToken(): Token {
-        if (this.cur) {
-            console.debug(this.cur)
-
-            if (this.cur.match(/\d/)) {
-                const token: Token = new Token(TokenType.NUMBER, this.collectNum());
-                //this.forward();
-                return token;
-            }
-
-            switch (this.cur) {
-                case '{': case '}':
-                    return new Token(TokenType.PUNCTUATION, this.collectCur());
-                case '+': case '-': case '*': case '/':
-                   return new Token(TokenType.OPERATION, this.collectCur());
-                default:
-                    return new Token(TokenType.PASSTHROUGH, this.collectCss());
-            }
+        switch (this.cur) {
+            case null:
+                return new Token(TokenType.EOF);
+            case String(/\d/.test(this.cur!):
+                return new Token(TokenType.NUMBER, this.collectNum());
+            case '{': case '}':
+                return new Token(TokenType.PUNCTUATION, this.collectCur());
+            case '+': case '-': case '*': case '/':
+               return new Token(TokenType.OPERATION, this.collectCur());
+            default:
+                return new Token(TokenType.PASSTHROUGH, this.collectCss());
         }
-        else
-            return new Token(TokenType.EOF);
     }
 
     tokenize(): Token[] {
