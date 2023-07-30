@@ -27,6 +27,12 @@ class Lexer {
         this.cur = this.input[this.pos];
     }
 
+    private collectCur(): string {
+        const cur = this.cur;
+        this.forward();
+        return cur ?? '';
+    }
+
     private collectNum(): string {
         let out = '';
         while (this.cur?.match(/\d/)) {
@@ -52,26 +58,17 @@ class Lexer {
 
             if (this.cur.match(/\d/)) {
                 const token: Token = new Token(TokenType.NUMBER, this.collectNum());
-                this.forward();
+                //this.forward();
                 return token;
             }
 
             switch (this.cur) {
-                case '{': case '}': {
-                    const token: Token = new Token(TokenType.PUNCTUATION, this.cur);
-                    this.forward();
-                    return token;
-                }
-                case '+': case '-': case '*': case '/': {
-                    const token: Token = new Token(TokenType.OPERATION, this.cur);
-                    this.forward();
-                    return token;
-                }
-                default: {
-                    const token: Token = new Token(TokenType.PASSTHROUGH, this.collectCss());
-                    this.forward();
-                    return token;
-                }
+                case '{': case '}':
+                    return new Token(TokenType.PUNCTUATION, this.collectCur());
+                case '+': case '-': case '*': case '/':
+                   return new Token(TokenType.OPERATION, this.collectCur());
+                default:
+                    return new Token(TokenType.PASSTHROUGH, this.collectCss());
             }
         }
         else
