@@ -52,25 +52,25 @@ class Lexer {
         return out;
     }
 
-    private getAToken(): Token {
-        switch (this.cur) {
-            case null:
-                return new Token(TokenType.EOF);
-            case String(/\d/.test(this.cur!):
-                return new Token(TokenType.NUMBER, this.collectNum());
-            case '{': case '}':
-                return new Token(TokenType.PUNCTUATION, this.collectCur());
-            case '+': case '-': case '*': case '/':
-               return new Token(TokenType.OPERATION, this.collectCur());
-            default:
-                return new Token(TokenType.PASSTHROUGH, this.collectCss());
-        }
+    private getToken(): Token {
+        if (this.cur == null)
+            return new Token(TokenType.EOF);
+        else if (this.cur.match(/\d/))
+            return new Token(TokenType.NUMBER, this.collectNum());
+        else if (this.cur.match(/[{}]/))
+            return new Token(TokenType.PUNCTUATION, this.collectCur());
+        else if (this.cur.match(/[-+*/]/))
+            return new Token(TokenType.OPERATION, this.collectCur());
+        else
+            return new Token(TokenType.PASSTHROUGH, this.collectCss());
+
+
     }
 
     tokenize(): Token[] {
         const tokens: Token[] = [];
         let token;
-        while ((token = this.getAToken()).type !== TokenType.EOF) {
+        while ((token = this.getToken()).type !== TokenType.EOF) {
             tokens.push(token);
         }
         return tokens;
