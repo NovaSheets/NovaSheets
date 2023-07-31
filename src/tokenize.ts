@@ -27,8 +27,11 @@ class Lexer {
         this.cur = this.input[this.pos] ?? null;
     }
 
-    private peek(amount: number): string {
-        return this.input.slice(this.pos, this.pos + amount);
+    private peek(amount: number, includeCur: boolean = false): string {
+        let pos = this.pos;
+        if (includeCur)
+            pos--;
+        return this.input.slice(pos, pos + amount);
     }
 
     private collectOne(): string | null {
@@ -41,6 +44,24 @@ class Lexer {
         let out = '';
         while (this.cur && chars.test(this.cur) === positive) {
             out += this.collectOne();
+        }
+        return out;
+    }
+
+    private collectBracketMatched(a: string, b: string) {
+        let level = 0;
+        let out = '';
+        let cur;
+        while ((cur = this.collectOne())) {
+            out += cur;
+            if (this.peek(a.length, true) === a) {
+                level++;
+            }
+            else if (this.peek(b.length, true) === b) {
+                level--;
+                if (level === 0)
+                    break;
+            }
         }
         return out;
     }
@@ -69,7 +90,7 @@ class Lexer {
         }
         // Variable substitution
         else if (this.peek(2) === '$(') {
-            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[)]/, false) + this.collectOne());
+            return new Token(TokenType.PASSTHROUGH, this.collectBracketMatched('$(', ')'));
         }
         // CSS/unparsed content
         else {
@@ -88,7 +109,8 @@ class Lexer {
     }
 }
 
-const code = '@var x = 1 @endvar\n .foo {bar: 1+2; quix: $(@a);}'
+// Example
+const code = '@var x = 1 @endvar\n .foo {bar: 1+2; quix: $(@a|1=$(@pi));}';
 const lexer = new Lexer(code);
 const tokens = lexer.tokenize();
 console.log(tokens);
