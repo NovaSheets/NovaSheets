@@ -1,11 +1,14 @@
 enum TokenType {
     SUBTOKENS,
     PASSTHROUGH,
-    DECLARATION,
-    SUBSTITUTION,
     PUNCTUATION,
     OPERATION,
     NUMBER,
+    DECLARATION_BLOCK,
+    SUBSTITUTION_BLOCK,
+    VARIABLE_NAME,
+    ARGUMENT_NAME,
+    ARGUMENT_CONTENT,
     EOF,
 }
 
@@ -13,35 +16,46 @@ class Token {
     constructor(public type: TokenType, public value: string | number | null, public tokens?: Token[]) { }
 }
 
-class Lexer {
-    private input: string;
-    private pos = 0;
-    private cur: string | null = null;
+abstract class Lexer {
+    protected input: string;
+    protected pos = 0;
+    protected cur: string | null = null;
 
     constructor(input: string) {
         this.input = input;
         this.cur = input[0] || null;
     }
 
-    private forward(): void {
+    abstract getToken(): Token;
+
+    tokenize(): Token[] {
+        const tokens: Token[] = [];
+        let token;
+        while ((token = this.getToken()).type !== TokenType.EOF) {
+            tokens.push(token);
+        }
+        return tokens;
+    }
+
+    protected forward(): void {
         this.pos++;
         this.cur = this.input[this.pos] || null;
     }
 
-    private peek(amount: number, includeCur: boolean = false): string {
+    protected peek(amount: number, includeCur: boolean = false): string {
         let pos = this.pos;
         if (includeCur)
             pos--;
         return this.input.slice(pos, pos + amount);
     }
 
-    private collectOne(): string | null {
+    protected collectOne(): string | null {
         const res = this.cur;
         this.forward();
         return res;
     }
 
-    private collectChars(chars: RegExp, positive: boolean = true): string {
+    protected collectChars(chars: RegExp, positive: boolean = true): string {
         let out = '';
         while (this.cur && chars.test(this.cur) === positive) {
             out += this.collectOne();
@@ -49,7 +63,7 @@ class Lexer {
         return out;
     }
 
-    private collectBracketMatched(a: string, b: string): string {
+    protected collectBracketMatched(a: string, b: string): string {
         let level = 0;
         let out = '';
         let cur;
@@ -66,11 +80,11 @@ class Lexer {
         }
         return out;
     }
+}
 
-    private getToken(): Token {
+class MainLexer extends Lexer {
+    protected getTokenMain(): Token {
         const cur = this.cur;
-        console.debug(cur);
-        // End of file
         if (cur === null) {
             return new Token(TokenType.EOF, null);
         }
@@ -88,19 +102,14 @@ class Lexer {
         }
         // Variable declaration
         else if (/@/.test(cur) && this.peek(4) === '@var') {
-            return new Token(TokenType.DECLARATION, this.collectChars(/[\n]/, false));
+            return new Token(TokenType.DECLARATION_BLOCK, this.collectChars(/[\n]/, false));
         }
         // Variable substitution
         else if (this.peek(2) === '$(') {
             const content = this.collectBracketMatched('$(', ')');
             const inner = content.replace(/^\$\(/, '').replace(/\)$/, '');
-            if (inner.includes('$(')) {
-                const subTokens = new Lexer(inner).tokenize();
-                return new Token(TokenType.SUBTOKENS, null, subTokens);
-            }
-            else {
-                return new Token(TokenType.PASSTHROUGH, content);
-            }
+            const tokens = new SubstitutionLexer(inner).tokenize();
+            return new Token(TokenType.SUBTOKENS, null, tokens);
         }
         // Group words
         else if (/\w/.test(cur)) {
@@ -108,22 +117,47 @@ class Lexer {
         }
         // CSS/unparsed content
         return new Token(TokenType.PASSTHROUGH, this.collectOne());
-        return new Token(TokenType.PASSTHROUGH, this.collectChars(/[$@\d]/, false));
-
     }
 
-    tokenize(): Token[] {
-        const tokens: Token[] = [];
-        let token;
-        while ((token = this.getToken()).type !== TokenType.EOF) {
-            tokens.push(token);
+    getToken(): Token {
+        return this.getTokenMain();
+    }
+}
+
+class SubstitutionLexer extends MainLexer {
+
+    private varNameRead = false;
+    private readingArgName = true;
+
+    getToken(): Token {
+        const cur = this.cur;
+        // End of block
+        if (cur === null) {
+            return new Token(TokenType.EOF, null);
         }
-        return tokens;
+        // Punctuation
+        else if (/[|=]/.test(cur)) {
+            return new Token(TokenType.PUNCTUATION, this.collectOne());
+        }
+        // Variable name
+        else if (!this.varNameRead) {
+            const varName = this.collectChars(/[|]/, false);
+            this.varNameRead = true;
+            return new Token(TokenType.VARIABLE_NAME, varName);
+        }
+        // Argument name
+        else if (this.readingArgName) {
+            const argName = this.collectChars(/[|=]/, false);
+            this.readingArgName = false;
+            return new Token(TokenType.ARGUMENT_NAME, argName);
+        }
+        // Pass through
+        return this.getTokenMain();
     }
 }
 
 // Example
 const code = '@var x = 1 @endvar\n .foo {bar: 1+2; quix: $(@a|1=$(@pi));}';
-const lexer = new Lexer(code);
+const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
-for (const token of tokens) console.log(token);
+console.log(JSON.stringify(tokens, null, 4))
