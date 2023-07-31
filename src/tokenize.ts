@@ -49,16 +49,28 @@ abstract class Lexer {
         return this.input.slice(pos, pos + amount);
     }
 
+    protected nextIs(str: string): boolean {
+        return this.peek(str.length) === str;
+    }
+
+    protected discard(amount: number): void {
+        for (let i = 0; i < amount; i++)
+        this.collectOne();
+    }
+
     protected collectOne(): string | null {
         const res = this.cur;
         this.forward();
         return res;
     }
 
-    protected collectChars(chars: RegExp, positive: boolean = true): string {
+    protected collectChars(chars: RegExp, positive: boolean = true, endAt?: string): string {
         let out = '';
         while (this.cur && chars.test(this.cur) === positive) {
             out += this.collectOne();
+            if (endAt && this.nextIs(endAt)) {
+                break;
+            }
         }
         return out;
     }
@@ -84,6 +96,7 @@ abstract class Lexer {
 
 class MainLexer extends Lexer {
     protected getTokenMain(): Token {
+        console.debug(this.cur, this.input.slice(this.pos));
         const cur = this.cur;
         if (cur === null) {
             return new Token(TokenType.EOF, null);
@@ -100,9 +113,14 @@ class MainLexer extends Lexer {
         else if (/[-+*/]/.test(cur)) {
             return new Token(TokenType.OPERATION, this.collectOne());
         }
+        // End of variable declaration
+        else if (this.nextIs('@endvar')) {
+            this.discard('@endvar'.length);
+            return new Token(TokenType.PASSTHROUGH, '');
+        }
         // Variable declaration
-        else if (/@/.test(cur) && this.peek(4) === '@var') {
-            return new Token(TokenType.DECLARATION_BLOCK, this.collectChars(/[\n]/, false));
+        else if (this.nextIs('@var')) {
+            return new Token(TokenType.DECLARATION_BLOCK, this.collectChars(/[\n]/, false, '@endvar'));
         }
         // Variable substitution
         else if (this.peek(2) === '$(') {
@@ -157,7 +175,7 @@ class SubstitutionLexer extends MainLexer {
 }
 
 // Example
-const code = '@var x = 1 @endvar\n .foo {bar: 1+2; quix: $(@a|1=$(@pi));}';
+const code = '@var x = 1 @endvar .foo {bar: 1+2; quix: $(@a|1=$(@pi));}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
-console.log(JSON.stringify(tokens, null, 4))
+console.log(tokens)
