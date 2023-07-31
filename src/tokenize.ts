@@ -1,7 +1,7 @@
 enum TokenType {
     PASSTHROUGH,
-    VARIABLE_DECLARATION,
-    VARIABLE_SUBSTITUTION,
+    DECLARATION,
+    SUBSTITUTION,
     PUNCTUATION,
     OPERATION,
     NUMBER,
@@ -9,61 +9,72 @@ enum TokenType {
 }
 
 class Token {
-    constructor(public type: TokenType, public value?: string | number) { }
+    constructor(public type: TokenType, public value: string | number | null) { }
 }
 
 class Lexer {
-    private input: string = '';
+    private input: string;
     private pos = 0;
     private cur: string | null = null;
 
     constructor(input: string) {
         this.input = input;
-        this.cur = input[0] || null;
+        this.cur = input[0] ?? null;
     }
 
     private forward(): void {
         this.pos++;
-        this.cur = this.input[this.pos];
+        this.cur = this.input[this.pos] ?? null;
     }
 
-    private collectCur(): string {
-        const cur = this.cur;
+    private peek(amount: number): string {
+        return this.input.slice(this.pos, this.pos + amount);
+    }
+
+    private collectOne(): string | null {
+        const res = this.cur;
         this.forward();
-        return cur ?? '';
+        return res;
     }
 
-    private collectNum(): string {
+    private collectChars(chars: RegExp, positive: boolean): string {
         let out = '';
-        while (this.cur?.match(/\d/)) {
-            out += this.cur;
-            this.forward();
-        }
-        return out;
-    }
-
-    private collectCss(): string {
-        let out = '';
-        const nonSpecial = /[^$@\d]/;
-        while (this.cur?.match(nonSpecial)) {
-            out += this.cur;
-            this.forward();
+        while (this.cur && chars.test(this.cur) === positive) {
+            out += this.collectOne();
         }
         return out;
     }
 
     private getToken(): Token {
-        if (this.cur == null)
-            return new Token(TokenType.EOF);
-        else if (this.cur.match(/\d/))
-            return new Token(TokenType.NUMBER, this.collectNum());
-        else if (this.cur.match(/[{}]/))
-            return new Token(TokenType.PUNCTUATION, this.collectCur());
-        else if (this.cur.match(/[-+*/]/))
-            return new Token(TokenType.OPERATION, this.collectCur());
-        else
-            return new Token(TokenType.PASSTHROUGH, this.collectCss());
-
+        const cur = this.cur;
+        // End of file
+        if (cur === null) {
+            return new Token(TokenType.EOF, null);
+        }
+        // Numbers
+        else if (/\d/.test(cur)) {
+            return new Token(TokenType.NUMBER, this.collectChars(/[\d]/, true));
+        }
+        // Punctuation
+        else if (/[{}]/.test(cur)) {
+            return new Token(TokenType.PUNCTUATION, this.collectOne());
+        }
+        // Math operations
+        else if (/[-+*/]/.test(cur)) {
+            return new Token(TokenType.OPERATION, this.collectOne());
+        }
+        // Variable declaration
+        else if (this.peek(4) === '@var') {
+            return new Token(TokenType.DECLARATION, this.collectChars(/[\n]/, false));
+        }
+        // Variable substitution
+        else if (this.peek(2) === '$(') {
+            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[)]/, false) + this.collectOne());
+        }
+        // CSS/unparsed content
+        else {
+            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[$@\d]/, false));
+        }
 
     }
 
@@ -77,8 +88,7 @@ class Lexer {
     }
 }
 
-// Example
-const code = '.foo {bar: 2+2;}'
+const code = '@var x = 1 @endvar\n .foo {bar: 1+2; quix: $(@a);}'
 const lexer = new Lexer(code);
 const tokens = lexer.tokenize();
 console.log(tokens);
