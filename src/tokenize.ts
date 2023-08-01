@@ -55,7 +55,7 @@ abstract class Lexer {
 
     protected discard(amount: number): void {
         for (let i = 0; i < amount; i++)
-        this.collectOne();
+            this.collectOne();
     }
 
     protected collectOne(): string | null {
@@ -96,7 +96,6 @@ abstract class Lexer {
 
 class MainLexer extends Lexer {
     protected getTokenMain(): Token {
-        console.debug(this.cur, this.input.slice(this.pos));
         const cur = this.cur;
         if (cur === null) {
             return new Token(TokenType.EOF, null);
@@ -174,8 +173,39 @@ class SubstitutionLexer extends MainLexer {
     }
 }
 
+class Compiler {
+
+    private variables: Record<string, string> = {};
+
+    constructor(private tokens: Token[] | undefined) { }
+
+    private parseToken(token: Token): string {
+        const { type, value, tokens: subtokens } = token;
+        switch (type) {
+            case TokenType.SUBTOKENS:
+                return '';
+            case TokenType.EOF:
+                return '';
+            case TokenType.VARIABLE_NAME:
+                
+            default:
+                return value ? value + '' : '';
+        }
+    }
+
+    compile(): string {
+        let out = '';
+        for (const token of tokens) {
+            out += this.parseToken(token);
+        }
+        return out;
+    }
+}
+
 // Example
 const code = '@var x = 1 @endvar .foo {bar: 1+2; quix: $(@a|1=$(@pi));}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
 console.log(tokens)
+const compiler = new Compiler(tokens);
+console.log(compiler.compile());
