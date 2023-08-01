@@ -1,5 +1,6 @@
-import fs from 'fs';
+import * as readline from 'readline';
 import NovaSheets from './index';
+
 const VERSION = require('../package.json').version;
 
 const [command, ...opts] = process.argv.slice(2);
@@ -7,7 +8,7 @@ const [command, ...opts] = process.argv.slice(2);
 if (/^-*h/.test(command)) {
     const help = `
     NovaSheets usage:
-    
+
         novasheets <command>
 
     Commands:
@@ -40,11 +41,27 @@ else if (/^-*v/.test(command)) {
     console.log(VERSION);
 }
 else if (/^-*p/.test(command)) {
-    let pipedStdin: string = '';
-    try { pipedStdin = fs.readFileSync(process.stdin.fd, 'utf-8'); }
-    catch { }
-    let parsedContent: string = NovaSheets.parse(opts[0] || pipedStdin).trim();
-    console.log(parsedContent);
+    async function readFromStdin() {
+        let stdinput = '';
+        const rl = readline.createInterface({
+            input: process.stdin,
+            output: process.stdout,
+            terminal: false,
+        });
+        for await (const line of rl) {
+            stdinput += line + '\n';
+        }
+        const parsedContent = NovaSheets.parse(stdinput).trim();
+        console.log(parsedContent);
+    }
+    // Read from given argument if present
+    if (opts[0]) {
+        const parsedContent = NovaSheets.parse(opts[0]).trim();
+        console.log(parsedContent);
+    }
+    else {
+        readFromStdin();
+    }
 }
 else if (/^-*c/.test(command)) {
     NovaSheets.compile(opts[0], opts[1]).catch(err => console.error(err));

@@ -1,7 +1,8 @@
 import fs from 'fs';
-const yaml = require('js-yaml');
+import path from 'path';
+import yaml from 'js-yaml';
 
-const YAML_FILE = __dirname + '/../data/regexes.yaml';
+const YAML_FILE = path.join(__dirname, '../data/regexes.yaml');
 
 const re = (regex: string, flags: string = ''): RegExp => RegExp(regex.replace(/( |^)#.+$|\s+?/gm, ''), flags);
 const parseVars = (val: string): string => {

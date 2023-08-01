@@ -9,12 +9,18 @@
 - [0.2.0](#020) • [0.2.1](#021)
 - [0.1.0](#010) • [0.1.1](#011) • [0.1.2](#012)
 
+## Next
+
+- **Fixes**
+  - [General] Fixed a crash occurring when invoking NovaSheets.
+  - [CLI] Fixed input from piped stdin not being parsed.
+
 ## 1.0.7
 *2023-07-20*
 - **Changes**
   - [General] Changed output of the CLI `--help` and `--version` commands.
 - **Fixes**
-  - [Scripting] Fixed the `parse()` function not working.
+  - [Scripting] Fixed the `parse()` function not working when used in browser.
 
 ## 1.0.6
 *2021-07-27*
