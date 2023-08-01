@@ -1,6 +1,6 @@
 {
     "name": "novasheets",
-    "version": "1.0.7",
+    "version": "1.0.8",
     "description": "A simple, powerful, and versatile CSS preprocessor",
     "keywords": [
         "novasheets",
@@ -50,6 +50,7 @@
     "devDependencies": {
         "@types/balanced-match": "^1.0.2",
         "@types/glob": "^8.1.0",
+        "@types/js-yaml": "^4.0.5",
         "@types/node": "ts5.0",
         "brfs": "^2.0.2",
         "browserify": "^17.0.0",

@@ -296,7 +296,7 @@ function addBuiltInFunctions({ constants }: { constants: Constants }): CustomFun
 
     novasheets.addFunction('@bitwise', (_, a) => {
         let arg: string = a;
-        for (let i = 0; i < +constants.MAX_ARGUMENTS; i++) {
+        for (let lastArg = ''; arg !== lastArg; lastArg = arg) {
             arg = arg
                 .replace(RegExp(r`(?:~|!|not)\s*([+-]?${bracketedNumber})`), (_, a) => (~toNum(a)).toString()) // bitwise not
                 .replace(logicRegex('or|\\|'), (_, a, b) => (toNum(a) | toNum(b)).toString()) // bitwise or
