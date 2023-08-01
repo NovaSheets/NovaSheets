@@ -7,6 +7,7 @@ enum TokenType {
     DECLARATION_BLOCK,
     SUBSTITUTION_BLOCK,
     VARIABLE_NAME,
+    VARIABLE_CONTENTS,
     ARGUMENT_NAME,
     ARGUMENT_CONTENT,
     EOF,
@@ -119,7 +120,15 @@ class MainLexer extends Lexer {
         }
         // Variable declaration
         else if (this.nextIs('@var')) {
-            return new Token(TokenType.DECLARATION_BLOCK, this.collectChars(/[\n]/, false, '@endvar'));
+            const declContent = this.collectChars(/[\n]/, false, '@endvar');
+            const [varDefnStr, ...varContentStrs] = declContent.split('=');
+            const varName = varDefnStr.replace('@var ', '').trim();
+            const varContent = varContentStrs.join('=');
+            const tokens = [
+                { type: TokenType.VARIABLE_NAME, value: varName },
+                { type: TokenType.VARIABLE_CONTENTS, value: varContent },
+            ]
+            return new Token(TokenType.DECLARATION_BLOCK, null, tokens);
         }
         // Variable substitution
         else if (this.peek(2) === '$(') {
@@ -187,7 +196,7 @@ class Compiler {
             case TokenType.EOF:
                 return '';
             case TokenType.VARIABLE_NAME:
-                
+
             default:
                 return value ? value + '' : '';
         }
