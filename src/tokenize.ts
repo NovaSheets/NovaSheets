@@ -195,8 +195,9 @@ class Compiler {
                 return '';
             case TokenType.EOF:
                 return '';
-            case TokenType.VARIABLE_NAME:
-
+            case TokenType.DECLARATION_BLOCK:
+                const [varName, varContent] = subtokens!.map(token => token.value + '');
+                this.variables[varName] = varContent;
             default:
                 return value ? value + '' : '';
         }
