@@ -70,11 +70,11 @@ abstract class Lexer {
         return res;
     }
 
-    protected collectChars(chars: RegExp, endAt?: string): string {
+    protected collectChars(chars: RegExp, endAt: string[] = []): string {
         let out = '';
         while (this.cur && chars.test(this.cur)) {
             out += this.collectOne();
-            if (endAt && this.nextIs(endAt)) {
+            if (endAt.filter(str => this.nextIs(str)).length) {
                 break;
             }
         }
@@ -124,14 +124,22 @@ class MainLexer extends Lexer {
             return new Token(TokenType.PASSTHROUGH, '');
         }
         // Variable declaration
-        else if (this.nextIs('@var')) {
-            const declContent = this.collectChars(/[^\n]/, '@endvar');
-            const [varDefnStr, ...varContentStrs] = declContent.split('=');
-            const varName = varDefnStr.replace('@var ', '').trim();
-            const varContent = varContentStrs.join('=');
+        else if (this.nextIs('@var ')) {
+            this.discard('@var '.length);
+            const firstLine = this.collectChars(/[^\n]/, ['@endvar', '@var']);
+            const isSingleLine = firstLine.includes('=');
+            let varName, content;
+            if (isSingleLine) {
+                varName = firstLine.replace(/=.+/, '');
+                content = firstLine.replace(/.+?=/, '');
+            }
+            else {
+                varName = firstLine;
+                content = this.collectChars(/./s, ['@endvar', '@var']);
+            }
             const tokens = [
-                { type: TokenType.VARIABLE_NAME, value: varName },
-                { type: TokenType.VARIABLE_CONTENTS, value: varContent },
+                new Token(TokenType.VARIABLE_NAME, varName.trim()),
+                new Token(TokenType.VARIABLE_CONTENTS, null, new MainLexer(content).tokenize()),
             ]
             return new Token(TokenType.DECLARATION_BLOCK, null, tokens);
         }
@@ -154,7 +162,6 @@ class MainLexer extends Lexer {
         return this.getTokenMain();
     }
 }
-
 
 class SubstitutionLexer extends MainLexer {
 
@@ -195,9 +202,9 @@ class SubstitutionLexer extends MainLexer {
 
 class Compiler {
 
-    private variables: Record<string, string> = {};
+    private variables: Record<string, Token> = {};
 
-    constructor(private tokens: Token[] | undefined) { }
+    constructor(private tokens: Token[]) { }
 
     private parseToken(token: Token): string {
         const { type, value, tokens: subtokens } = token;
@@ -212,7 +219,7 @@ class Compiler {
             }
             case TokenType.DECLARATION_BLOCK: {
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
-                const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS).value!;
+                const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS);
                 this.variables[varName] = varContent;
                 return '';
             }
@@ -220,16 +227,10 @@ class Compiler {
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
                 const argNames = getTokensOfType(TokenType.ARGUMENT_NAME).map(token => token.value!);
                 const argValues = getTokensOfType(TokenType.ARGUMENT_CONTENT);
-                let content = this.variables[varName];
+                let content = new Compiler(this.variables[varName].tokens!).compile();
                 if (!content)
                     return '';
-                // Parse given variables
-                for (let i in argNames) {
-                    const replacer = '$[' + argNames[i] + ']';
-                    const replacement = argValues[i].tokens!.map(token => this.parseToken(token)).join('');
-                    while (content.includes(replacer))
-                        content = content.replace(replacer, replacement);
-                }
+                // TODO parse $[arguments]
                 return content;
             }
             default: {
@@ -240,7 +241,7 @@ class Compiler {
 
     compile(): string {
         let out = '';
-        for (const token of tokens) {
+        for (const token of this.tokens) {
             out += this.parseToken(token);
         }
         return out;
@@ -248,9 +249,8 @@ class Compiler {
 }
 
 // Example
-const code = '@var x = 1 $[1] $[2|sample] @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3);}';
+const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3);}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
-console.log(tokens)
 const compiler = new Compiler(tokens);
 console.log(compiler.compile());
