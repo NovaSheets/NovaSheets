@@ -184,7 +184,9 @@ class SubstitutionLexer extends MainLexer {
         // Argument value
         else {
             // Pass through
-            return new Token(TokenType.ARGUMENT_CONTENT, null, [this.getTokenMain()]);
+            const argValue = this.collectChars(/[|=]/, false);
+            this.readingArgName = true;
+            return new Token(TokenType.ARGUMENT_CONTENT, null, new MainLexer(argValue).tokenize());
         }
     }
 }
@@ -210,7 +212,7 @@ class Compiler {
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
                 const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS).value!;
                 this.variables[varName] = varContent;
-                console.debug(varName, varContent);
+                console.debug({varName, varContent});
                 return '';
             }
             case TokenType.SUBSTITUTION_BLOCK: {
@@ -218,7 +220,7 @@ class Compiler {
                 const argNames = getTokensOfType(TokenType.ARGUMENT_NAME).map(token => token.value!);
                 const argValues = getTokensOfType(TokenType.ARGUMENT_CONTENT);
                 let content = this.variables[varName];
-                console.debug(varName, argNames, argValues);
+                console.debug({varName, argNames, argValues});
                 if (!content)
                     return '';
                 for (let i in argNames) {
@@ -242,7 +244,7 @@ class Compiler {
 }
 
 // Example
-const code = '@var x = 1 $[1] @endvar .foo {bar: 1+2; quix: $(x|1=true);}';
+const code = '@var x = 1 $[1] @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3);}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
 console.log(tokens)
