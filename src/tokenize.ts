@@ -8,8 +8,11 @@ enum TokenType {
     SUBSTITUTION_BLOCK,
     VARIABLE_NAME,
     VARIABLE_CONTENTS,
+    PARAMETER_NAME,
+    PARAMETER_CONTENT,
+    ARGUMENT_BLOCK,
     ARGUMENT_NAME,
-    ARGUMENT_CONTENT,
+    ARGUMENT_DEFAULT,
     EOF,
 }
 
@@ -81,7 +84,7 @@ abstract class Lexer {
         return out;
     }
 
-    protected collectBracketMatched(a: string, b: string): string {
+    protected collectBracketMatched(a: string, b: string, inner = false): string {
         let level = 0;
         let out = '';
         let cur;
@@ -96,7 +99,10 @@ abstract class Lexer {
                     break;
             }
         }
-        return out;
+        if (inner)
+            return out.slice(a.length, out.length - b.length);
+        else
+            return out;
     }
 }
 
@@ -145,10 +151,19 @@ class MainLexer extends Lexer {
         }
         // Variable substitution
         else if (this.peek(2) === '$(') {
-            const content = this.collectBracketMatched('$(', ')');
-            const inner = content.replace(/^\$\(/, '').replace(/\)$/, '');
+            const inner = this.collectBracketMatched('$(', ')', true);
             const tokens = new SubstitutionLexer(inner).tokenize();
             return new Token(TokenType.SUBSTITUTION_BLOCK, null, tokens);
+        }
+        // Argument substitution
+        else if (this.peek(2) == '$[') {
+            const inner = this.collectBracketMatched('$[', ']', true);
+            const [argName, defaultVal] = inner.split('|');
+            const tokens = [
+                new Token(TokenType.ARGUMENT_NAME, argName.trim()),
+                new Token(TokenType.ARGUMENT_DEFAULT, null, new MainLexer(defaultVal ?? '').tokenize()),
+            ];
+            return new Token(TokenType.ARGUMENT_BLOCK, null, tokens);
         }
         // Group words
         else if (/\w/.test(cur)) {
@@ -184,18 +199,17 @@ class SubstitutionLexer extends MainLexer {
             this.varNameRead = true;
             return new Token(TokenType.VARIABLE_NAME, varName);
         }
-        // Argument name
+        // Parameter name
         else if (this.readingArgName) {
             const argName = this.collectChars(/[^|=]/);
             this.readingArgName = false;
-            return new Token(TokenType.ARGUMENT_NAME, argName);
+            return new Token(TokenType.PARAMETER_NAME, argName);
         }
-        // Argument value
+        // Parameter value
         else {
-            // Pass through
             const argValue = this.collectChars(/[^|=]/);
             this.readingArgName = true;
-            return new Token(TokenType.ARGUMENT_CONTENT, null, new MainLexer(argValue).tokenize());
+            return new Token(TokenType.PARAMETER_CONTENT, null, new MainLexer(argValue).tokenize());
         }
     }
 }
@@ -204,7 +218,7 @@ class Compiler {
 
     private variables: Record<string, Token> = {};
 
-    constructor(private tokens: Token[]) { }
+    constructor(private tokens: Token[] = []) { }
 
     private parseToken(token: Token): string {
         const { type, value, tokens: subtokens } = token;
@@ -225,13 +239,18 @@ class Compiler {
             }
             case TokenType.SUBSTITUTION_BLOCK: {
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
-                const argNames = getTokensOfType(TokenType.ARGUMENT_NAME).map(token => token.value!);
-                const argValues = getTokensOfType(TokenType.ARGUMENT_CONTENT);
-                let content = new Compiler(this.variables[varName].tokens!).compile();
+                const argNames = getTokensOfType(TokenType.PARAMETER_NAME).map(token => token.value!);
+                const argContents = getTokensOfType(TokenType.PARAMETER_CONTENT);
+                let content = new Compiler(this.variables[varName].tokens).compile();
                 if (!content)
                     return '';
-                // TODO parse $[arguments]
                 return content;
+            }
+            case TokenType.ARGUMENT_BLOCK: {
+                const varName = getTokenOfType(TokenType.ARGUMENT_NAME).value!;
+                const defaultContent = getTokenOfType(TokenType.ARGUMENT_DEFAULT);
+                const replacements = this.variables[varName] ?? defaultContent;
+                return new Compiler(replacements.tokens).compile();
             }
             default: {
                 return value ?? '';
