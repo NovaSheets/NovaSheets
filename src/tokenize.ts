@@ -39,6 +39,7 @@ abstract class Lexer {
         while ((token = this.getToken()).type !== TokenType.EOF) {
             tokens.push(token);
         }
+        tokens.push(new Token(TokenType.EOF, null));
         return tokens;
     }
 
@@ -69,9 +70,9 @@ abstract class Lexer {
         return res;
     }
 
-    protected collectChars(chars: RegExp, positive: boolean = true, endAt?: string): string {
+    protected collectChars(chars: RegExp, endAt?: string): string {
         let out = '';
-        while (this.cur && chars.test(this.cur) === positive) {
+        while (this.cur && chars.test(this.cur)) {
             out += this.collectOne();
             if (endAt && this.nextIs(endAt)) {
                 break;
@@ -124,7 +125,7 @@ class MainLexer extends Lexer {
         }
         // Variable declaration
         else if (this.nextIs('@var')) {
-            const declContent = this.collectChars(/[\n]/, false, '@endvar');
+            const declContent = this.collectChars(/[^\n]/, '@endvar');
             const [varDefnStr, ...varContentStrs] = declContent.split('=');
             const varName = varDefnStr.replace('@var ', '').trim();
             const varContent = varContentStrs.join('=');
@@ -154,6 +155,7 @@ class MainLexer extends Lexer {
     }
 }
 
+
 class SubstitutionLexer extends MainLexer {
 
     private varNameRead = false;
@@ -171,20 +173,20 @@ class SubstitutionLexer extends MainLexer {
         }
         // Variable name
         else if (!this.varNameRead) {
-            const varName = this.collectChars(/[|]/, false);
+            const varName = this.collectChars(/[^|]/);
             this.varNameRead = true;
             return new Token(TokenType.VARIABLE_NAME, varName);
         }
         // Argument name
         else if (this.readingArgName) {
-            const argName = this.collectChars(/[|=]/, false);
+            const argName = this.collectChars(/[^|=]/);
             this.readingArgName = false;
             return new Token(TokenType.ARGUMENT_NAME, argName);
         }
         // Argument value
         else {
             // Pass through
-            const argValue = this.collectChars(/[|=]/, false);
+            const argValue = this.collectChars(/[^|=]/);
             this.readingArgName = true;
             return new Token(TokenType.ARGUMENT_CONTENT, null, new MainLexer(argValue).tokenize());
         }
@@ -212,7 +214,6 @@ class Compiler {
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
                 const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS).value!;
                 this.variables[varName] = varContent;
-                console.debug({varName, varContent});
                 return '';
             }
             case TokenType.SUBSTITUTION_BLOCK: {
@@ -220,11 +221,14 @@ class Compiler {
                 const argNames = getTokensOfType(TokenType.ARGUMENT_NAME).map(token => token.value!);
                 const argValues = getTokensOfType(TokenType.ARGUMENT_CONTENT);
                 let content = this.variables[varName];
-                console.debug({varName, argNames, argValues});
                 if (!content)
                     return '';
+                // Parse given variables
                 for (let i in argNames) {
-                    content = content.replace('$[' + argNames[i] + ']', JSON.stringify(argValues[i].tokens));
+                    const replacer = '$[' + argNames[i] + ']';
+                    const replacement = argValues[i].tokens!.map(token => this.parseToken(token)).join('');
+                    while (content.includes(replacer))
+                        content = content.replace(replacer, replacement);
                 }
                 return content;
             }
@@ -244,7 +248,7 @@ class Compiler {
 }
 
 // Example
-const code = '@var x = 1 $[1] @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3);}';
+const code = '@var x = 1 $[1] $[2|sample] @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3);}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
 console.log(tokens)
