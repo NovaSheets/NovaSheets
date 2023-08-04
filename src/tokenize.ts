@@ -14,7 +14,11 @@ enum TokenType {
 }
 
 class Token {
-    constructor(public type: TokenType, public value: string | number | null, public tokens?: Token[]) { }
+    constructor(
+        public type: TokenType,
+        public value: string | null,
+        public tokens?: Token[],
+    ) { }
 }
 
 abstract class Lexer {
@@ -135,7 +139,7 @@ class MainLexer extends Lexer {
             const content = this.collectBracketMatched('$(', ')');
             const inner = content.replace(/^\$\(/, '').replace(/\)$/, '');
             const tokens = new SubstitutionLexer(inner).tokenize();
-            return new Token(TokenType.SUBTOKENS, null, tokens);
+            return new Token(TokenType.SUBSTITUTION_BLOCK, null, tokens);
         }
         // Group words
         else if (/\w/.test(cur)) {
@@ -177,8 +181,11 @@ class SubstitutionLexer extends MainLexer {
             this.readingArgName = false;
             return new Token(TokenType.ARGUMENT_NAME, argName);
         }
-        // Pass through
-        return this.getTokenMain();
+        // Argument value
+        else {
+            // Pass through
+            return new Token(TokenType.ARGUMENT_CONTENT, null, [this.getTokenMain()]);
+        }
     }
 }
 
@@ -190,16 +197,38 @@ class Compiler {
 
     private parseToken(token: Token): string {
         const { type, value, tokens: subtokens } = token;
+        const getTokensOfType = (type: TokenType) => subtokens!.filter(token => token.type === type);
+        const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
         switch (type) {
-            case TokenType.SUBTOKENS:
+            case TokenType.SUBTOKENS: {
                 return '';
-            case TokenType.EOF:
+            }
+            case TokenType.EOF: {
                 return '';
-            case TokenType.DECLARATION_BLOCK:
-                const [varName, varContent] = subtokens!.map(token => token.value + '');
+            }
+            case TokenType.DECLARATION_BLOCK: {
+                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
+                const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS).value!;
                 this.variables[varName] = varContent;
-            default:
-                return value ? value + '' : '';
+                console.debug(varName, varContent);
+                return '';
+            }
+            case TokenType.SUBSTITUTION_BLOCK: {
+                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
+                const argNames = getTokensOfType(TokenType.ARGUMENT_NAME).map(token => token.value!);
+                const argValues = getTokensOfType(TokenType.ARGUMENT_CONTENT);
+                let content = this.variables[varName];
+                console.debug(varName, argNames, argValues);
+                if (!content)
+                    return '';
+                for (let i in argNames) {
+                    content = content.replace('$[' + argNames[i] + ']', JSON.stringify(argValues[i].tokens));
+                }
+                return content;
+            }
+            default: {
+                return value ?? '';
+            }
         }
     }
 
@@ -213,7 +242,7 @@ class Compiler {
 }
 
 // Example
-const code = '@var x = 1 @endvar .foo {bar: 1+2; quix: $(@a|1=$(@pi));}';
+const code = '@var x = 1 $[1] @endvar .foo {bar: 1+2; quix: $(x|1=true);}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
 console.log(tokens)
