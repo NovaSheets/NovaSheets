@@ -124,7 +124,9 @@ class MainLexer extends Lexer {
         }
         // Numbers
         else if (/\d/.test(cur)) {
-            return new Token(TokenType.NUMBER, this.collectChars(/[\d.e]/));
+            // TODO e-notation not supported
+            const number = this.collectChars(/[\d.]/);
+            return new Token(TokenType.NUMBER, number);
         }
         // Punctuation
         else if (/[{}]/.test(cur)) {
@@ -243,7 +245,8 @@ class Compiler {
         private globals = parserConstants,
     ) { }
 
-    private parseToken(token: Token): string {
+    private parseToken(index: number): string {
+        const token = this.tokens[index];
         const { type, value, tokens: subtokens } = token;
         const getTokensOfType = (type: TokenType) => subtokens?.filter(token => token.type === type) ?? [];
         const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
@@ -285,6 +288,8 @@ class Compiler {
                 return new Compiler(result.tokens).compile();
             }
             case TokenType.NUMBER: {
+                // TODO if tokens[n+1] === '+' (e.g.) then tokens[n+1] = '' && tokens[n+2] = tokens[n] + tokens[n+2]
+                // Return formatted number
                 if (!value)
                     return '';
                 if (!this.globals.DECIMAL_PLACES)
@@ -300,8 +305,8 @@ class Compiler {
 
     compile(): string {
         let out = '';
-        for (const token of this.tokens) {
-            out += this.parseToken(token);
+        for (const i in this.tokens) {
+            out += this.parseToken(+i);
         }
         return out;
     }
