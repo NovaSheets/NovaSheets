@@ -222,7 +222,7 @@ class Compiler {
 
     private parseToken(token: Token): string {
         const { type, value, tokens: subtokens } = token;
-        const getTokensOfType = (type: TokenType) => subtokens!.filter(token => token.type === type);
+        const getTokensOfType = (type: TokenType) => subtokens?.filter(token => token.type === type) ?? [];
         const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
         switch (type) {
             case TokenType.SUBTOKENS: {
@@ -232,24 +232,33 @@ class Compiler {
                 return '';
             }
             case TokenType.DECLARATION_BLOCK: {
-                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
+                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value;
                 const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS);
-                this.variables[varName] = varContent;
+                if (varName)
+                    this.variables[varName] = varContent;
                 return '';
             }
             case TokenType.SUBSTITUTION_BLOCK: {
-                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value!;
-                const argNames = getTokensOfType(TokenType.PARAMETER_NAME).map(token => token.value!);
+                const varName = getTokenOfType(TokenType.VARIABLE_NAME)?.value;
+                if (!varName || !this.variables[varName])
+                    // TODO check when implementing KEEP_UNPARSED
+                    return '';
+
+                const argNames = getTokensOfType(TokenType.PARAMETER_NAME).map(token => token.value);
                 const argContents = getTokensOfType(TokenType.PARAMETER_CONTENT);
                 let content = new Compiler(this.variables[varName].tokens).compile();
-                if (!content)
-                    return '';
-                return content;
+                return content ?? '';
             }
             case TokenType.ARGUMENT_BLOCK: {
-                const varName = getTokenOfType(TokenType.ARGUMENT_NAME).value!;
+                const varName = getTokenOfType(TokenType.ARGUMENT_NAME).value;
+                if (!varName)
+                    // TODO check when implementing KEEP_UNPARSED
+                    return '';
+
                 const defaultContent = getTokenOfType(TokenType.ARGUMENT_DEFAULT);
                 const replacements = this.variables[varName] ?? defaultContent;
+                // NOTE $[null] is equivalent $[null| ] currently
+                // TODO check when implementing KEEP_UNPARSED
                 return new Compiler(replacements.tokens).compile();
             }
             default: {
@@ -268,7 +277,7 @@ class Compiler {
 }
 
 // Example
-const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3);}';
+const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3); $(ERROR)}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
 const compiler = new Compiler(tokens);
