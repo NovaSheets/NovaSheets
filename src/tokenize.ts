@@ -1,5 +1,5 @@
 enum TokenType {
-    SUBTOKENS,
+    EOF,
     PASSTHROUGH,
     PUNCTUATION,
     OPERATION,
@@ -13,7 +13,6 @@ enum TokenType {
     ARGUMENT_BLOCK,
     ARGUMENT_NAME,
     ARGUMENT_DEFAULT,
-    EOF,
 }
 
 class Token {
@@ -214,20 +213,19 @@ class SubstitutionLexer extends MainLexer {
     }
 }
 
+type VariableStore = { content: Token, arguments: Record<string, Token> };
+
 class Compiler {
 
     private variables: Record<string, Token> = {};
 
-    constructor(private tokens: Token[] = []) { }
+    constructor(private tokens: Token[] = [], private locals?: Record<string, Token>) { }
 
     private parseToken(token: Token): string {
         const { type, value, tokens: subtokens } = token;
         const getTokensOfType = (type: TokenType) => subtokens?.filter(token => token.type === type) ?? [];
         const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
         switch (type) {
-            case TokenType.SUBTOKENS: {
-                return '';
-            }
             case TokenType.EOF: {
                 return '';
             }
@@ -239,6 +237,7 @@ class Compiler {
                 return '';
             }
             case TokenType.SUBSTITUTION_BLOCK: {
+                // TODO FIX $(... | [!] = ...) doesn't work
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME)?.value;
                 if (!varName || !this.variables[varName])
                     // TODO check when implementing KEEP_UNPARSED
@@ -246,20 +245,23 @@ class Compiler {
 
                 const argNames = getTokensOfType(TokenType.PARAMETER_NAME).map(token => token.value);
                 const argContents = getTokensOfType(TokenType.PARAMETER_CONTENT);
-                let content = new Compiler(this.variables[varName].tokens).compile();
+                const argsMap: Record<string, Token> = {};
+                for (const i in argNames)
+                    argsMap[argNames[i]!] = argContents[i];
+                let content = new Compiler(this.variables[varName].tokens, argsMap).compile();
                 return content ?? '';
             }
             case TokenType.ARGUMENT_BLOCK: {
-                const varName = getTokenOfType(TokenType.ARGUMENT_NAME).value;
-                if (!varName)
+                const argName = getTokenOfType(TokenType.ARGUMENT_NAME).value;
+                if (!argName)
                     // TODO check when implementing KEEP_UNPARSED
                     return '';
 
                 const defaultContent = getTokenOfType(TokenType.ARGUMENT_DEFAULT);
-                const replacements = this.variables[varName] ?? defaultContent;
+                const result = this.locals?.[argName] ?? defaultContent;
                 // NOTE $[null] is equivalent $[null| ] currently
                 // TODO check when implementing KEEP_UNPARSED
-                return new Compiler(replacements.tokens).compile();
+                return new Compiler(result.tokens).compile();
             }
             default: {
                 return value ?? '';
