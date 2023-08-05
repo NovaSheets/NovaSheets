@@ -15,6 +15,13 @@ enum TokenType {
     ARGUMENT_DEFAULT,
 }
 
+const parserConstants: Record<string, boolean | number> = {
+    BUILTIN_FUNCTIONS: true,
+    DECIMAL_PLACES: false,
+    KEEP_UNPARSED: false, // TODO needs to be checked if kept
+    MAX_ARGUMENTS: 10, // TODO this phase out
+}
+
 class Token {
     constructor(
         public type: TokenType,
@@ -123,6 +130,16 @@ class MainLexer extends Lexer {
         else if (/[-+*/]/.test(cur)) {
             return new Token(TokenType.OPERATION, this.collectOne());
         }
+        // Parser constant
+        else if (this.nextIs('@option ')) {
+            this.discard('@option '.length);
+            const optName = this.collectChars(/[\w]/).toUpperCase();
+            this.collectChars(/[\s+]/);
+            const optValRaw = this.collectChars(/[\dtruefalse]/);
+            const optVal = /\d+/.test(optValRaw) ? +optValRaw : optValRaw === 'true';
+            parserConstants[optName] = optVal;
+            return new Token(TokenType.PASSTHROUGH, '');
+        }
         // End of variable declaration
         else if (this.nextIs('@endvar')) {
             this.discard('@endvar'.length);
@@ -219,7 +236,11 @@ class Compiler {
 
     private variables: Record<string, Token> = {};
 
-    constructor(private tokens: Token[] = [], private locals?: Record<string, Token>) { }
+    constructor(
+        private tokens: Token[] = [],
+        private locals?: Record<string, Token>,
+        private globals: typeof parserConstants = parserConstants,
+    ) { }
 
     private parseToken(token: Token): string {
         const { type, value, tokens: subtokens } = token;
@@ -237,7 +258,6 @@ class Compiler {
                 return '';
             }
             case TokenType.SUBSTITUTION_BLOCK: {
-                // TODO FIX $(... | [!] = ...) doesn't work
                 const varName = getTokenOfType(TokenType.VARIABLE_NAME)?.value;
                 if (!varName || !this.variables[varName])
                     // TODO check when implementing KEEP_UNPARSED
