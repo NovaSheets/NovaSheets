@@ -2,7 +2,7 @@ enum TokenType {
     EOF,
     PASSTHROUGH,
     PUNCTUATION,
-    OPERATION,
+    OPERATOR,
     NUMBER,
     DECLARATION_BLOCK,
     SUBSTITUTION_BLOCK,
@@ -118,9 +118,15 @@ class MainLexer extends Lexer {
         if (cur === null) {
             return new Token(TokenType.EOF, null);
         }
+        // Words
+        else if (/[A-Za-z]/.test(cur)) {
+            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[A-Za-z]/));
+        }
         // Numbers
         else if (/\d/.test(cur)) {
-            return new Token(TokenType.NUMBER, this.collectChars(/[\d]/));
+            // TODO e-notation not supported
+            const number = this.collectChars(/[\d.]/);
+            return new Token(TokenType.NUMBER, number);
         }
         // Punctuation
         else if (/[{}]/.test(cur)) {
@@ -128,7 +134,7 @@ class MainLexer extends Lexer {
         }
         // Math operations
         else if (/[-+*/]/.test(cur)) {
-            return new Token(TokenType.OPERATION, this.collectOne());
+            return new Token(TokenType.OPERATOR, this.collectOne());
         }
         // Parser constant
         else if (this.nextIs('@option ')) {
@@ -137,7 +143,8 @@ class MainLexer extends Lexer {
             this.collectChars(/[\s+]/);
             const optValRaw = this.collectChars(/[\dtruefalse]/);
             const optVal = /\d+/.test(optValRaw) ? +optValRaw : optValRaw === 'true';
-            parserConstants[optName] = optVal;
+            if (optName in parserConstants)
+                parserConstants[optName] = optVal;
             return new Token(TokenType.PASSTHROUGH, '');
         }
         // End of variable declaration
@@ -180,10 +187,6 @@ class MainLexer extends Lexer {
                 new Token(TokenType.ARGUMENT_DEFAULT, null, new MainLexer(defaultVal ?? '').tokenize()),
             ];
             return new Token(TokenType.ARGUMENT_BLOCK, null, tokens);
-        }
-        // Group words
-        else if (/\w/.test(cur)) {
-            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[\w]/));
         }
         // CSS/unparsed content
         return new Token(TokenType.PASSTHROUGH, this.collectOne());
@@ -239,10 +242,11 @@ class Compiler {
     constructor(
         private tokens: Token[] = [],
         private locals?: Record<string, Token>,
-        private globals: typeof parserConstants = parserConstants,
+        private globals = parserConstants,
     ) { }
 
-    private parseToken(token: Token): string {
+    private parseToken(index: number): string {
+        const token = this.tokens[index];
         const { type, value, tokens: subtokens } = token;
         const getTokensOfType = (type: TokenType) => subtokens?.filter(token => token.type === type) ?? [];
         const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
@@ -283,6 +287,16 @@ class Compiler {
                 // TODO check when implementing KEEP_UNPARSED
                 return new Compiler(result.tokens).compile();
             }
+            case TokenType.NUMBER: {
+                // TODO if tokens[n+1] === '+' (e.g.) then tokens[n+1] = '' && tokens[n+2] = tokens[n] + tokens[n+2]
+                // Return formatted number
+                if (!value)
+                    return '';
+                if (!this.globals.DECIMAL_PLACES)
+                    return value;
+                else
+                    return (+value).toFixed(+this.globals.DECIMAL_PLACES);
+            }
             default: {
                 return value ?? '';
             }
@@ -291,15 +305,16 @@ class Compiler {
 
     compile(): string {
         let out = '';
-        for (const token of this.tokens) {
-            out += this.parseToken(token);
+        for (const i in this.tokens) {
+            out += this.parseToken(+i);
         }
         return out;
     }
 }
 
 // Example
-const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3); $(ERROR)}';
+const code = '@option DECIMAL_PLACES 3 3.1415926'
+// const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3); $(ERROR)}';
 const lexer = new MainLexer(code);
 const tokens = lexer.tokenize();
 const compiler = new Compiler(tokens);

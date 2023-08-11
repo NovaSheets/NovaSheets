@@ -1,321 +1,309 @@
-enum TokenType {
-    EOF,
-    PASSTHROUGH,
-    PUNCTUATION,
-    OPERATOR,
-    NUMBER,
-    DECLARATION_BLOCK,
-    SUBSTITUTION_BLOCK,
-    VARIABLE_NAME,
-    VARIABLE_CONTENTS,
-    PARAMETER_NAME,
-    PARAMETER_CONTENT,
-    ARGUMENT_BLOCK,
-    ARGUMENT_NAME,
-    ARGUMENT_DEFAULT,
+import balanced from 'balanced-match';
+import { MathParser } from 'math-and-unit-parser';
+
+import NovaSheets from './index';
+import { CustomFunction, CustomFunctionOptions, Constants, CustomFunctionBody } from './common';
+import builtInFunctions from './functions';
+import { regexes } from './regex';
+
+const r = String.raw;
+
+function parse(content: string, novasheets: NovaSheets = new NovaSheets()): string {
+    const strim = (str: string): string => str.trim().replace(/\s+/g, ' ');
+    const escapeRegex = (str: string): string => str.replace(/[.*+?^/${}()|[\]\\]/g, '\\$&');
+    const replaceAll = (src: string, a: string, b: string): string => src.replace(new RegExp(escapeRegex(a), 'g'), b);
+    const mathOperation: string = regexes.mathChecker().source;
+    const parseFunction = (name: string, func: CustomFunctionBody, opts: CustomFunctionOptions = {}): void => {
+        if (new RegExp(mathOperation).test(cssOutput)) return; // only run after math is parsed
+        const match = cssOutput.match(RegExp(r`\$\(\s*(?:${name})\b`, 'i'));
+        if (!match) return;
+        const searchString: string = cssOutput.slice(cssOutput.indexOf(match[0]));
+        const segment = balanced('(', ')', searchString)?.body ?? '';
+        const fullSegment = '$(' + segment + ')';
+        let parts: string[] = segment.split('|'); // [name, arg1, arg2, ...]
+        if (opts.trim !== false) parts = parts.map(part => part.trim());
+        cssOutput = replaceAll(cssOutput, fullSegment, func(fullSegment, ...parts.slice(1)).toString());
+    };
+    const ESC: Record<string, string> = {
+        OPEN_BRACE: Math.random().toString(36).slice(2),
+        CLOSE_BRACE: Math.random().toString(36).slice(2),
+        SLASH: Math.random().toString(36).slice(2),
+    }
+
+    // Prepare stylesheet for parsing //
+
+    let styleContents: string = content
+        .replace(/&gt;/g, '>').replace(/&lt;/g, '<').replace(/&amp;/g, '&') // fix html
+        .replace(regexes.singleLineComment('gm'), '') // remove single-line comments
+        .replace(/@(var|const|endvar)/g, '\n$&') // put each declarator on its own line for parsing
+        .replace(/}}/g, '} }') // ensure the second brace is not skipped over
+        .replace(regexes.implicitParentSelector('g'), ';$1&@') // implicit parent selector for simple breakpoints
+    let commentedContent: string[] = [];
+    let staticContent: string[] = [];
+    let cssOutput: string = styleContents;
+    let customVars: Record<string, string> = {};
+    let constants: Constants = {
+        BUILTIN_FUNCTIONS: true,
+        DECIMAL_PLACES: false,
+        KEEP_UNPARSED: false,
+        MAX_ARGUMENTS: 10,
+    };
+
+    // Parse and store comments //
+
+    cssOutput = cssOutput
+        // store commented content for substitution when done
+        .replace(regexes.blockComment('gs'), (_, content) => {
+            if (_.startsWith('/*[') && _.endsWith(']*/')) return _.replace(/^\/\*\[/, '/*').replace(/\]\*\/$/, '*/'); // parsed comment
+            if (_.startsWith('/*/') || _.endsWith('/*/')) return _; // static comment; skip
+            if (commentedContent.indexOf(content) < 0) commentedContent.push(content);
+            return '/*COMMENT#' + commentedContent.indexOf(content) + '*/';
+        })
+        // store static content for substitution when done
+        .replace(regexes.staticComment('gs'), (_, a) => {
+            if (staticContent.indexOf(a) < 0) staticContent.push(a);
+            return '/*STATIC#' + staticContent.indexOf(a) + '*/';
+        })
+
+    // Parse and store variable declarations //
+
+    cssOutput = cssOutput
+        .replace(regexes.variableDeclaration('gm'), (_, name, inline = '', block = '') => {
+            const value = (inline + block).trim().replace('{', ESC.OPEN_BRACE).replace('}', ESC.CLOSE_BRACE);
+            customVars[name.trim()] = value;
+            return '';
+        })
+        .replace(/@endvar/g, '')
+        .replace(regexes.parserOption('g'), (_, name, val) => {
+            const options: Record<Uppercase<string>, () => void> = {
+                'BUILTIN_FUNCTIONS': () => constants.BUILTIN_FUNCTIONS = val !== '0' && val !== 'false',
+                'KEEP_UNPARSED': () => constants.KEEP_UNPARSED = val !== '0' && val !== 'false',
+                'DECIMAL_PLACES': () => constants.DECIMAL_PLACES = val !== 'false' && +val,
+                'MAX_ARGUMENTS': () => constants.MAX_ARGUMENTS = +val,
+            }
+            options[name.toUpperCase()]?.();
+            return '';
+        })
+
+    // Compile NovaSheets styles //
+
+    let lastCssOutput = '';
+    do {
+        if (lastCssOutput === cssOutput) break;
+        lastCssOutput = cssOutput;
+
+        // Parse math //
+        cssOutput = cssOutput
+            // convert exponential notation
+            .replace(regexes.exponential('gi'), (_, a, b) => (+a * 10 ** +b).toString())
+            // fix slash edge cases
+            .replace(regexes.slashEdgeCaseFunction('g'), '$1' + ESC.SLASH + '$2')
+            .replace(regexes.slashEdgeCaseAttribute('g'), '$1' + ESC.SLASH + '$2')
+            // compile math
+            .replace(new RegExp(mathOperation, 'g'), _ => {
+                if (regexes.edgeCaseDelimited('g').test(_)) return _; // delimited values, not subtraction
+                let unit: string = '';
+                const content: string = _
+                    .replace(/\*\*/g, '^')
+                    .replace(regexes.numberWithUnit('g'), (_, num, u) => {
+                        const multipliers: Record<string, number> = { 'mm': 0.001, 'ms': 0.001, 'cm': 0.01, 'in': 0.0254, 'ft': 0.3048 };
+                        const value = u in multipliers ? +num * multipliers[u] : +num;
+                        unit = u === 'ms' ? 's' : (u in multipliers ? 'm' : u);
+                        return value.toString();
+                    })
+                try { return MathParser(content) + unit; }
+                catch { return _; }
+            })
+
+        // Parse variable contents //
+
+        for (const name in customVars) {
+            parseFunction(name, (_, ...paramArgs) => {
+                let content: string = customVars[name];
+                for (const i in paramArgs) {
+                    if (!paramArgs[i]) continue;
+                    const parts: string[] = paramArgs[i].split('=');
+                    const param: string = parts[1] ? strim(parts[0]) : (+i + 1).toString();
+                    const arg: string = parts[1] ? strim(parts.slice(1).join('=')) : strim(parts[0]);
+                    content = content.replace(new RegExp(r`\$\[${escapeRegex(param)}[^\]]*\]`, 'g'), arg);
+                }
+                content = content.replace(regexes.defaultArguments('g'), '$1');
+                return content;
+            });
+        }
+
+        // Parse built-in functions //
+
+        let allFunctions: CustomFunction[] = [];
+        if (constants.BUILTIN_FUNCTIONS) allFunctions.push(...builtInFunctions({ constants }));
+        allFunctions.push(...novasheets.getFunctions());
+        for (const obj of allFunctions) {
+            parseFunction(obj.name, obj.body, obj.options);
+        }
+
+        // Parse nesting //
+
+        let compiledOutput = '';
+        const check = (s: string) => balanced('{', '}', s);
+        const unnest = (css: string, parent: string): void => {
+            // early return if block has no parent (is an object literal)
+            if (!parent && /^\s*{/.test(css)) {
+                compiledOutput += css;
+                return;
+            }
+            // parse data
+            const data = check(css);
+            // check if block has no children
+            if (!data) {
+                // write styles if there are any
+                let styleContent: string = css.trim();
+                if (styleContent) compiledOutput += parent ? `{${styleContent}}` : styleContent;
+                return;
+            }
+            // move any trailing styles to front of block
+            let endStylesMatch: string = data.body.match(/(?<=})[^{}]+?$/g)?.[0] ?? '';
+            if (endStylesMatch) {
+                let endStyles = endStylesMatch;
+                if (endStyles.trim() && !/}\s*$/.test(data.body)) endStyles += ';';
+                data.body = data.body.replace(endStylesMatch, '').replace(/[^;]+{/, endStyles + '$&');
+            }
+            // check if block has both styles and children
+            let styles: string[] = data.pre.split(';');
+            if (styles.length) {
+                // remove styles from child selector content
+                const lastStyle = styles.pop();
+                if (lastStyle)
+                    data.pre = lastStyle;
+                // add selectors to parent selector if applicable
+                if (styles.length) {
+                    let styleContent: string = styles.join(';') + ';';
+                    compiledOutput += parent ? `${parent} {${styleContent}}` : styleContent;
+                }
+            }
+            // create selector
+            let fullSelector: string = '';
+            if (data.pre.includes('@media')) fullSelector = data.pre + parent.replace(regexes.mediaQuery('g'), '');
+            else if (data.pre.includes('&')) fullSelector = data.pre.replace(/&/g, parent);
+            else fullSelector = parent + ' ' + data.pre;
+            fullSelector = strim(fullSelector).replace(regexes.blockComment('g'), '');
+            // write selector if the block has styles
+            if (!/}\s*$/.test(data.body)) compiledOutput += fullSelector;
+            // add empty styles if selector has no styles
+            if (!data.body) compiledOutput += '{}';
+            // parse children
+            unnest(data.body, fullSelector);
+            // continue to next block
+            unnest(data.post, strim(parent));
+        }
+        unnest(cssOutput, '');
+        cssOutput = compiledOutput
+            .replace(regexes.mediaQueryBlock('gs'), '$1 { $2 }')
+            .replace(regexes.emptyMediaQueryBlock('g'), '')
+            .replace(regexes.nonEmptyMediaQueryBlock('g'), '$1 { $2 {$3} }')
+
+        // Parse CSS block substitutions //
+
+        // save CSS declarations as variables
+        cssOutput = replaceAll(cssOutput, ESC.OPEN_BRACE, '{');
+        cssOutput = replaceAll(cssOutput, ESC.CLOSE_BRACE, '}');
+        const cssBlocks: Record<string, string> = {};
+        compiledOutput.replace(/([^{}]+)({.+?})/gms, (_: string, selector: string, css: string) => {
+            if (selector.includes('$(') || selector.startsWith('@')) return '';
+            selector = selector.replace(/\$(<.+?>){1,2}/g, '')
+            cssBlocks[strim(selector)] = css;
+            return '';
+        });
+        // substitute blocks
+        for (const name in cssBlocks) {
+            cssOutput = cssOutput.replace(new RegExp(r`\$<\s*${escapeRegex(name)}\s*>`, 'g'), cssBlocks[name] ?? '{}');
+        }
+        // substitute leftovers
+        cssOutput = cssOutput.replace(/\$<.+?>/g, '{}');
+        // parse object notation
+        cssOutput = cssOutput.replace(regexes.objectNotation('gm'), (_, css, item) => {
+            const statements: string[] = css.split(';');
+            for (const statement of statements) {
+                const [attr, val] = statement.trim().split(':');
+                if (attr.trim() === item.trim()) return val ?? '';
+            }
+            return '';
+        });
+        cssOutput = cssOutput.replace(regexes.blockSubstitutions('gm'), (_, css) => css);
+
+        // Parse simple breakpoints //
+
+        cssOutput = cssOutput.replace(regexes.simpleBreakpoint('gms'), (_, sel, min1, max1, min2, max2, selAfter, block) => {
+            let [min, max]: string[] = [min1 ?? min2, max1 ?? max2];
+            let selMatch: string[] = selAfter.match(regexes.simpleBreakpointValue('g')) ?? [];
+            if (selMatch.length > 0) {
+                const matches: string[] = selMatch[selMatch.length - 1].match(regexes.simpleBreakpointValue('')) ?? [];
+                [, min, max] = matches;
+            }
+            let selector: string = (sel + selAfter).replace(regexes.simpleBreakpointValue('g'), '');
+
+            let query: string[] = [];
+            if (min) query.push(`(min-width: ${min})`);
+            if (max) query.push(`(max-width: ${max.replace(/\d+/, (d) => (+d - 1).toString())})`);
+            return `@media ${query.join(' and ')} { ${selector} { ${block} } }`;
+        });
+
+    }
+    while (cssOutput.includes('$(') || new RegExp(mathOperation).test(cssOutput))
+
+    // Remove unparsed variables //
+
+    if (!constants.KEEP_UNPARSED) {
+        const unparsedContent: string[] = cssOutput.match(regexes.unparsedContent('g')) ?? [];
+        for (const val of unparsedContent) {
+            cssOutput = cssOutput.replace(val, '');
+            const varName: string = strim(val.replace(regexes.variableName(''), '$1'));
+            const type: string = val.includes('$(') ? 'variable' : 'argument';
+            console.log(`<NovaSheets> Instances of unparsed ${type} '${varName}' have been removed from the output.`);
+        }
+    }
+
+    // Cleanup output //
+
+    cssOutput = cssOutput
+        // cleanup whitespace
+        .replace(/(?<!^ *) +/gm, ' ') // remove redundant whitespace
+        .replace(/\*\/\s*/g, '$&\n') // newline after block comment
+        .replace(/}\s*/g, '}\n').replace(/}\s*}/g, '} }') // space after braces
+        .replace(/\s*{/g, ' {') // space before braces
+        .replace(/^([ \t])\1+/gm, '$1') // single indent
+        .replace(/^([ \t].+)}/gm, '$1\n}') // newline before indented block ending
+        .replace(/{\s*(.+\r?\n)([ \t])/g, '{\n$2$1$2') // newline after indent block start
+        // remove extra punctutation
+        .replace(/(\s*;)+/g, ';')
+        // clean up length units
+        .replace(/(?<![1-9]+)(0\.\d+)\s*(m|s)/, (_, n, u) => +n * 1000 + 'm' + u)
+        .replace(/(?<=\d)0\s*mm/g, 'cm')
+        .replace(/(?<=\d)(000\s*mm|00\s*cm)/g, 'm')
+        // fix floating point errors
+        .replace(/\.?0{10,}\d/g, '')
+        .replace(/((\d)\2{9,})\d/g, '$1')
+        .replace(/(\d+)([5-9])\2{10,}\d?(?=\D)/g, (_, a) => (+a + 1).toString())
+        .replace(/\d*\.?\d+e-(?:7|8|9|\d{2,})/, '0')
+        // cleanup decimal places
+        .replace(/\d\.\d+/g, (val) => constants.DECIMAL_PLACES === false ? val : (+val).toFixed(+constants.DECIMAL_PLACES))
+        // fix calc() output
+        .replace(/calc(\d)/g, '$1')
+        // restore characters
+        .replace(RegExp(ESC.SLASH, 'g'), '/')
+    // remove duplicate media queries
+    while (regexes.duplicateMediaQueries('gs').test(cssOutput)) {
+        cssOutput = cssOutput.replace(regexes.duplicateMediaQueries('gs'), `$1 {$2 $3}`);
+    }
+    // re-add comments to output
+    for (const i in staticContent) {
+        cssOutput = cssOutput.replace(RegExp(r`\/\*STATIC#${i}\*\/`, 'g'), strim(staticContent[i]));
+    }
+    for (const i in commentedContent) {
+        cssOutput = cssOutput.replace(RegExp(r`\/\*COMMENT#${i}\*\/`, 'g'), '/*' + commentedContent[i] + '*/');
+    }
+
+    // Return output //
+    return cssOutput.trim() + '\n';
 }
 
-const parserConstants: Record<string, boolean | number> = {
-    BUILTIN_FUNCTIONS: true,
-    DECIMAL_PLACES: false,
-    KEEP_UNPARSED: false, // TODO needs to be checked if kept
-    MAX_ARGUMENTS: 10, // TODO this phase out
-}
-
-class Token {
-    constructor(
-        public type: TokenType,
-        public value: string | null,
-        public tokens?: Token[],
-    ) { }
-}
-
-abstract class Lexer {
-    protected input: string;
-    protected pos = 0;
-    protected cur: string | null = null;
-
-    constructor(input: string) {
-        this.input = input;
-        this.cur = input[0] || null;
-    }
-
-    abstract getToken(): Token;
-
-    tokenize(): Token[] {
-        const tokens: Token[] = [];
-        let token;
-        while ((token = this.getToken()).type !== TokenType.EOF) {
-            tokens.push(token);
-        }
-        tokens.push(new Token(TokenType.EOF, null));
-        return tokens;
-    }
-
-    protected forward(): void {
-        this.pos++;
-        this.cur = this.input[this.pos] || null;
-    }
-
-    protected peek(amount: number, includeCur: boolean = false): string {
-        let pos = this.pos;
-        if (includeCur)
-            pos--;
-        return this.input.slice(pos, pos + amount);
-    }
-
-    protected nextIs(str: string): boolean {
-        return this.peek(str.length) === str;
-    }
-
-    protected discard(amount: number): void {
-        for (let i = 0; i < amount; i++)
-            this.collectOne();
-    }
-
-    protected collectOne(): string | null {
-        const res = this.cur;
-        this.forward();
-        return res;
-    }
-
-    protected collectChars(chars: RegExp, endAt: string[] = []): string {
-        let out = '';
-        while (this.cur && chars.test(this.cur)) {
-            out += this.collectOne();
-            if (endAt.filter(str => this.nextIs(str)).length) {
-                break;
-            }
-        }
-        return out;
-    }
-
-    protected collectBracketMatched(a: string, b: string, inner = false): string {
-        let level = 0;
-        let out = '';
-        let cur;
-        while ((cur = this.collectOne())) {
-            out += cur;
-            if (this.peek(a.length, true) === a) {
-                level++;
-            }
-            else if (this.peek(b.length, true) === b) {
-                level--;
-                if (level === 0)
-                    break;
-            }
-        }
-        if (inner)
-            return out.slice(a.length, out.length - b.length);
-        else
-            return out;
-    }
-}
-
-class MainLexer extends Lexer {
-    protected getTokenMain(): Token {
-        const cur = this.cur;
-        if (cur === null) {
-            return new Token(TokenType.EOF, null);
-        }
-        // Words
-        else if (/[A-Za-z]/.test(cur)) {
-            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[A-Za-z]/));
-        }
-        // Numbers
-        else if (/\d/.test(cur)) {
-            // TODO e-notation not supported
-            const number = this.collectChars(/[\d.]/);
-            return new Token(TokenType.NUMBER, number);
-        }
-        // Punctuation
-        else if (/[{}]/.test(cur)) {
-            return new Token(TokenType.PUNCTUATION, this.collectOne());
-        }
-        // Math operations
-        else if (/[-+*/]/.test(cur)) {
-            return new Token(TokenType.OPERATOR, this.collectOne());
-        }
-        // Parser constant
-        else if (this.nextIs('@option ')) {
-            this.discard('@option '.length);
-            const optName = this.collectChars(/[\w]/).toUpperCase();
-            this.collectChars(/[\s+]/);
-            const optValRaw = this.collectChars(/[\dtruefalse]/);
-            const optVal = /\d+/.test(optValRaw) ? +optValRaw : optValRaw === 'true';
-            if (optName in parserConstants)
-                parserConstants[optName] = optVal;
-            return new Token(TokenType.PASSTHROUGH, '');
-        }
-        // End of variable declaration
-        else if (this.nextIs('@endvar')) {
-            this.discard('@endvar'.length);
-            return new Token(TokenType.PASSTHROUGH, '');
-        }
-        // Variable declaration
-        else if (this.nextIs('@var ')) {
-            this.discard('@var '.length);
-            const firstLine = this.collectChars(/[^\n]/, ['@endvar', '@var']);
-            const isSingleLine = firstLine.includes('=');
-            let varName, content;
-            if (isSingleLine) {
-                varName = firstLine.replace(/=.+/, '');
-                content = firstLine.replace(/.+?=/, '');
-            }
-            else {
-                varName = firstLine;
-                content = this.collectChars(/./s, ['@endvar', '@var']);
-            }
-            const tokens = [
-                new Token(TokenType.VARIABLE_NAME, varName.trim()),
-                new Token(TokenType.VARIABLE_CONTENTS, null, new MainLexer(content).tokenize()),
-            ]
-            return new Token(TokenType.DECLARATION_BLOCK, null, tokens);
-        }
-        // Variable substitution
-        else if (this.peek(2) === '$(') {
-            const inner = this.collectBracketMatched('$(', ')', true);
-            const tokens = new SubstitutionLexer(inner).tokenize();
-            return new Token(TokenType.SUBSTITUTION_BLOCK, null, tokens);
-        }
-        // Argument substitution
-        else if (this.peek(2) == '$[') {
-            const inner = this.collectBracketMatched('$[', ']', true);
-            const [argName, defaultVal] = inner.split('|');
-            const tokens = [
-                new Token(TokenType.ARGUMENT_NAME, argName.trim()),
-                new Token(TokenType.ARGUMENT_DEFAULT, null, new MainLexer(defaultVal ?? '').tokenize()),
-            ];
-            return new Token(TokenType.ARGUMENT_BLOCK, null, tokens);
-        }
-        // CSS/unparsed content
-        return new Token(TokenType.PASSTHROUGH, this.collectOne());
-    }
-
-    getToken(): Token {
-        return this.getTokenMain();
-    }
-}
-
-class SubstitutionLexer extends MainLexer {
-
-    private varNameRead = false;
-    private readingArgName = true;
-
-    getToken(): Token {
-        const cur = this.cur;
-        // End of block
-        if (cur === null) {
-            return new Token(TokenType.EOF, null);
-        }
-        // Punctuation
-        else if (/[|=]/.test(cur)) {
-            return new Token(TokenType.PUNCTUATION, this.collectOne());
-        }
-        // Variable name
-        else if (!this.varNameRead) {
-            const varName = this.collectChars(/[^|]/);
-            this.varNameRead = true;
-            return new Token(TokenType.VARIABLE_NAME, varName);
-        }
-        // Parameter name
-        else if (this.readingArgName) {
-            const argName = this.collectChars(/[^|=]/);
-            this.readingArgName = false;
-            return new Token(TokenType.PARAMETER_NAME, argName);
-        }
-        // Parameter value
-        else {
-            const argValue = this.collectChars(/[^|=]/);
-            this.readingArgName = true;
-            return new Token(TokenType.PARAMETER_CONTENT, null, new MainLexer(argValue).tokenize());
-        }
-    }
-}
-
-type VariableStore = { content: Token, arguments: Record<string, Token> };
-
-class Compiler {
-
-    private variables: Record<string, Token> = {};
-
-    constructor(
-        private tokens: Token[] = [],
-        private locals?: Record<string, Token>,
-        private globals = parserConstants,
-    ) { }
-
-    private parseToken(index: number): string {
-        const token = this.tokens[index];
-        const { type, value, tokens: subtokens } = token;
-        const getTokensOfType = (type: TokenType) => subtokens?.filter(token => token.type === type) ?? [];
-        const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
-        switch (type) {
-            case TokenType.EOF: {
-                return '';
-            }
-            case TokenType.DECLARATION_BLOCK: {
-                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value;
-                const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS);
-                if (varName)
-                    this.variables[varName] = varContent;
-                return '';
-            }
-            case TokenType.SUBSTITUTION_BLOCK: {
-                const varName = getTokenOfType(TokenType.VARIABLE_NAME)?.value;
-                if (!varName || !this.variables[varName])
-                    // TODO check when implementing KEEP_UNPARSED
-                    return '';
-
-                const argNames = getTokensOfType(TokenType.PARAMETER_NAME).map(token => token.value);
-                const argContents = getTokensOfType(TokenType.PARAMETER_CONTENT);
-                const argsMap: Record<string, Token> = {};
-                for (const i in argNames)
-                    argsMap[argNames[i]!] = argContents[i];
-                let content = new Compiler(this.variables[varName].tokens, argsMap).compile();
-                return content ?? '';
-            }
-            case TokenType.ARGUMENT_BLOCK: {
-                const argName = getTokenOfType(TokenType.ARGUMENT_NAME).value;
-                if (!argName)
-                    // TODO check when implementing KEEP_UNPARSED
-                    return '';
-
-                const defaultContent = getTokenOfType(TokenType.ARGUMENT_DEFAULT);
-                const result = this.locals?.[argName] ?? defaultContent;
-                // NOTE $[null] is equivalent $[null| ] currently
-                // TODO check when implementing KEEP_UNPARSED
-                return new Compiler(result.tokens).compile();
-            }
-            case TokenType.NUMBER: {
-                // TODO if tokens[n+1] === '+' (e.g.) then tokens[n+1] = '' && tokens[n+2] = tokens[n] + tokens[n+2]
-                // Return formatted number
-                if (!value)
-                    return '';
-                if (!this.globals.DECIMAL_PLACES)
-                    return value;
-                else
-                    return (+value).toFixed(+this.globals.DECIMAL_PLACES);
-            }
-            default: {
-                return value ?? '';
-            }
-        }
-    }
-
-    compile(): string {
-        let out = '';
-        for (const i in this.tokens) {
-            out += this.parseToken(+i);
-        }
-        return out;
-    }
-}
-
-// Example
-const code = '@option DECIMAL_PLACES 3 3.1415926'
-// const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3); $(ERROR)}';
-const lexer = new MainLexer(code);
-const tokens = lexer.tokenize();
-const compiler = new Compiler(tokens);
-console.log(compiler.compile());
+export default parse;
