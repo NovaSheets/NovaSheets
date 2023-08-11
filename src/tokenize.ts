@@ -1,0 +1,321 @@
+enum TokenType {
+    EOF,
+    PASSTHROUGH,
+    PUNCTUATION,
+    OPERATOR,
+    NUMBER,
+    DECLARATION_BLOCK,
+    SUBSTITUTION_BLOCK,
+    VARIABLE_NAME,
+    VARIABLE_CONTENTS,
+    PARAMETER_NAME,
+    PARAMETER_CONTENT,
+    ARGUMENT_BLOCK,
+    ARGUMENT_NAME,
+    ARGUMENT_DEFAULT,
+}
+
+const parserConstants: Record<string, boolean | number> = {
+    BUILTIN_FUNCTIONS: true,
+    DECIMAL_PLACES: false,
+    KEEP_UNPARSED: false, // TODO needs to be checked if kept
+    MAX_ARGUMENTS: 10, // TODO this phase out
+}
+
+class Token {
+    constructor(
+        public type: TokenType,
+        public value: string | null,
+        public tokens?: Token[],
+    ) { }
+}
+
+abstract class Lexer {
+    protected input: string;
+    protected pos = 0;
+    protected cur: string | null = null;
+
+    constructor(input: string) {
+        this.input = input;
+        this.cur = input[0] || null;
+    }
+
+    abstract getToken(): Token;
+
+    tokenize(): Token[] {
+        const tokens: Token[] = [];
+        let token;
+        while ((token = this.getToken()).type !== TokenType.EOF) {
+            tokens.push(token);
+        }
+        tokens.push(new Token(TokenType.EOF, null));
+        return tokens;
+    }
+
+    protected forward(): void {
+        this.pos++;
+        this.cur = this.input[this.pos] || null;
+    }
+
+    protected peek(amount: number, includeCur: boolean = false): string {
+        let pos = this.pos;
+        if (includeCur)
+            pos--;
+        return this.input.slice(pos, pos + amount);
+    }
+
+    protected nextIs(str: string): boolean {
+        return this.peek(str.length) === str;
+    }
+
+    protected discard(amount: number): void {
+        for (let i = 0; i < amount; i++)
+            this.collectOne();
+    }
+
+    protected collectOne(): string | null {
+        const res = this.cur;
+        this.forward();
+        return res;
+    }
+
+    protected collectChars(chars: RegExp, endAt: string[] = []): string {
+        let out = '';
+        while (this.cur && chars.test(this.cur)) {
+            out += this.collectOne();
+            if (endAt.filter(str => this.nextIs(str)).length) {
+                break;
+            }
+        }
+        return out;
+    }
+
+    protected collectBracketMatched(a: string, b: string, inner = false): string {
+        let level = 0;
+        let out = '';
+        let cur;
+        while ((cur = this.collectOne())) {
+            out += cur;
+            if (this.peek(a.length, true) === a) {
+                level++;
+            }
+            else if (this.peek(b.length, true) === b) {
+                level--;
+                if (level === 0)
+                    break;
+            }
+        }
+        if (inner)
+            return out.slice(a.length, out.length - b.length);
+        else
+            return out;
+    }
+}
+
+class MainLexer extends Lexer {
+    protected getTokenMain(): Token {
+        const cur = this.cur;
+        if (cur === null) {
+            return new Token(TokenType.EOF, null);
+        }
+        // Words
+        else if (/[A-Za-z]/.test(cur)) {
+            return new Token(TokenType.PASSTHROUGH, this.collectChars(/[A-Za-z]/));
+        }
+        // Numbers
+        else if (/\d/.test(cur)) {
+            // TODO e-notation not supported
+            const number = this.collectChars(/[\d.]/);
+            return new Token(TokenType.NUMBER, number);
+        }
+        // Punctuation
+        else if (/[{}]/.test(cur)) {
+            return new Token(TokenType.PUNCTUATION, this.collectOne());
+        }
+        // Math operations
+        else if (/[-+*/]/.test(cur)) {
+            return new Token(TokenType.OPERATOR, this.collectOne());
+        }
+        // Parser constant
+        else if (this.nextIs('@option ')) {
+            this.discard('@option '.length);
+            const optName = this.collectChars(/[\w]/).toUpperCase();
+            this.collectChars(/[\s+]/);
+            const optValRaw = this.collectChars(/[\dtruefalse]/);
+            const optVal = /\d+/.test(optValRaw) ? +optValRaw : optValRaw === 'true';
+            if (optName in parserConstants)
+                parserConstants[optName] = optVal;
+            return new Token(TokenType.PASSTHROUGH, '');
+        }
+        // End of variable declaration
+        else if (this.nextIs('@endvar')) {
+            this.discard('@endvar'.length);
+            return new Token(TokenType.PASSTHROUGH, '');
+        }
+        // Variable declaration
+        else if (this.nextIs('@var ')) {
+            this.discard('@var '.length);
+            const firstLine = this.collectChars(/[^\n]/, ['@endvar', '@var']);
+            const isSingleLine = firstLine.includes('=');
+            let varName, content;
+            if (isSingleLine) {
+                varName = firstLine.replace(/=.+/, '');
+                content = firstLine.replace(/.+?=/, '');
+            }
+            else {
+                varName = firstLine;
+                content = this.collectChars(/./s, ['@endvar', '@var']);
+            }
+            const tokens = [
+                new Token(TokenType.VARIABLE_NAME, varName.trim()),
+                new Token(TokenType.VARIABLE_CONTENTS, null, new MainLexer(content).tokenize()),
+            ]
+            return new Token(TokenType.DECLARATION_BLOCK, null, tokens);
+        }
+        // Variable substitution
+        else if (this.peek(2) === '$(') {
+            const inner = this.collectBracketMatched('$(', ')', true);
+            const tokens = new SubstitutionLexer(inner).tokenize();
+            return new Token(TokenType.SUBSTITUTION_BLOCK, null, tokens);
+        }
+        // Argument substitution
+        else if (this.peek(2) == '$[') {
+            const inner = this.collectBracketMatched('$[', ']', true);
+            const [argName, defaultVal] = inner.split('|');
+            const tokens = [
+                new Token(TokenType.ARGUMENT_NAME, argName.trim()),
+                new Token(TokenType.ARGUMENT_DEFAULT, null, new MainLexer(defaultVal ?? '').tokenize()),
+            ];
+            return new Token(TokenType.ARGUMENT_BLOCK, null, tokens);
+        }
+        // CSS/unparsed content
+        return new Token(TokenType.PASSTHROUGH, this.collectOne());
+    }
+
+    getToken(): Token {
+        return this.getTokenMain();
+    }
+}
+
+class SubstitutionLexer extends MainLexer {
+
+    private varNameRead = false;
+    private readingArgName = true;
+
+    getToken(): Token {
+        const cur = this.cur;
+        // End of block
+        if (cur === null) {
+            return new Token(TokenType.EOF, null);
+        }
+        // Punctuation
+        else if (/[|=]/.test(cur)) {
+            return new Token(TokenType.PUNCTUATION, this.collectOne());
+        }
+        // Variable name
+        else if (!this.varNameRead) {
+            const varName = this.collectChars(/[^|]/);
+            this.varNameRead = true;
+            return new Token(TokenType.VARIABLE_NAME, varName);
+        }
+        // Parameter name
+        else if (this.readingArgName) {
+            const argName = this.collectChars(/[^|=]/);
+            this.readingArgName = false;
+            return new Token(TokenType.PARAMETER_NAME, argName);
+        }
+        // Parameter value
+        else {
+            const argValue = this.collectChars(/[^|=]/);
+            this.readingArgName = true;
+            return new Token(TokenType.PARAMETER_CONTENT, null, new MainLexer(argValue).tokenize());
+        }
+    }
+}
+
+type VariableStore = { content: Token, arguments: Record<string, Token> };
+
+class Compiler {
+
+    private variables: Record<string, Token> = {};
+
+    constructor(
+        private tokens: Token[] = [],
+        private locals?: Record<string, Token>,
+        private globals = parserConstants,
+    ) { }
+
+    private parseToken(index: number): string {
+        const token = this.tokens[index];
+        const { type, value, tokens: subtokens } = token;
+        const getTokensOfType = (type: TokenType) => subtokens?.filter(token => token.type === type) ?? [];
+        const getTokenOfType = (type: TokenType) => getTokensOfType(type)[0];
+        switch (type) {
+            case TokenType.EOF: {
+                return '';
+            }
+            case TokenType.DECLARATION_BLOCK: {
+                const varName = getTokenOfType(TokenType.VARIABLE_NAME).value;
+                const varContent = getTokenOfType(TokenType.VARIABLE_CONTENTS);
+                if (varName)
+                    this.variables[varName] = varContent;
+                return '';
+            }
+            case TokenType.SUBSTITUTION_BLOCK: {
+                const varName = getTokenOfType(TokenType.VARIABLE_NAME)?.value;
+                if (!varName || !this.variables[varName])
+                    // TODO check when implementing KEEP_UNPARSED
+                    return '';
+
+                const argNames = getTokensOfType(TokenType.PARAMETER_NAME).map(token => token.value);
+                const argContents = getTokensOfType(TokenType.PARAMETER_CONTENT);
+                const argsMap: Record<string, Token> = {};
+                for (const i in argNames)
+                    argsMap[argNames[i]!] = argContents[i];
+                let content = new Compiler(this.variables[varName].tokens, argsMap).compile();
+                return content ?? '';
+            }
+            case TokenType.ARGUMENT_BLOCK: {
+                const argName = getTokenOfType(TokenType.ARGUMENT_NAME).value;
+                if (!argName)
+                    // TODO check when implementing KEEP_UNPARSED
+                    return '';
+
+                const defaultContent = getTokenOfType(TokenType.ARGUMENT_DEFAULT);
+                const result = this.locals?.[argName] ?? defaultContent;
+                // NOTE $[null] is equivalent $[null| ] currently
+                // TODO check when implementing KEEP_UNPARSED
+                return new Compiler(result.tokens).compile();
+            }
+            case TokenType.NUMBER: {
+                // TODO if tokens[n+1] === '+' (e.g.) then tokens[n+1] = '' && tokens[n+2] = tokens[n] + tokens[n+2]
+                // Return formatted number
+                if (!value)
+                    return '';
+                if (!this.globals.DECIMAL_PLACES)
+                    return value;
+                else
+                    return (+value).toFixed(+this.globals.DECIMAL_PLACES);
+            }
+            default: {
+                return value ?? '';
+            }
+        }
+    }
+
+    compile(): string {
+        let out = '';
+        for (const i in this.tokens) {
+            out += this.parseToken(+i);
+        }
+        return out;
+    }
+}
+
+// Example
+const code = '@option DECIMAL_PLACES 3 3.1415926'
+// const code = '@var x = 1 $[1] $[2|sample] \n @var y \n multiline @endvar .foo {bar: 1+2; quix: $(x|1=true 1.3); $(ERROR)}';
+const lexer = new MainLexer(code);
+const tokens = lexer.tokenize();
+const compiler = new Compiler(tokens);
+console.log(compiler.compile());
